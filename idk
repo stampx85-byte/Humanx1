@@ -100,6 +100,90 @@ local jumpValue = 100  -- ค่ากระโดดเริ่มต้น
 local speedLoop = nil
 local jumpLoop = nil
 
+-- ================================
+-- เพิ่ม Firefly Script เริ่มต้นที่นี่
+-- ================================
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local stopAllActions = false
+
+-- ฟังก์ชันสำหรับเสก Fireflies (หัวใจหลักของสคริปต์)
+local function spawnFireflies(count)
+    if stopAllActions then return end
+    
+    -- ค้นหาไอเทม Fireflies ในตัวผู้เล่น
+    local fireflies = player.Backpack:FindFirstChild("Fireflies") or 
+                     player.Character:FindFirstChild("Fireflies")
+    
+    if not fireflies then
+        warn("❌ ไม่พบไอเทม Fireflies ในกระเป๋าหรือในตัว")
+        return
+    end
+    
+    local remote = fireflies:FindFirstChild("RemoteEvent")
+    if not remote then
+        warn("❌ ไม่พบ RemoteEvent สำหรับการเสก")
+        return
+    end
+    
+    print("⚡ กำลังเริ่มเสก " .. count .. " ตัว...")
+    
+    task.spawn(function()
+        for i = 1, count do
+            if stopAllActions then break end
+            
+            -- ส่งคำสั่งไปที่ Server
+            pcall(function()
+                remote:FireServer()
+            end)
+            
+            -- ปรับความเร็วในการเสก (ถ้าน้อยไปอาจจะโดนเตะ หรือถ้ามากไปเครื่องจะค้าง)
+            if i % 100 == 0 then
+                task.wait() -- พักเล็กน้อยทุกๆ 100 ตัวเพื่อลดภาระเครื่อง
+            end
+        end
+        print("✅ เสกเสร็จสิ้น!")
+    end)
+end
+
+-- ระบบคำสั่งแชท (ไว้พิมพ์สั่งการ)
+player.Chatted:Connect(function(message)
+    local msg = string.lower(message)
+    local parts = string.split(msg, " ")
+    local cmd = parts[1]
+    
+    if cmd == "!firefly" then
+        local amount = tonumber(parts[2]) or 100 -- ถ้าไม่ใส่จำนวน จะเสก 100
+        spawnFireflies(amount)
+        
+    elseif cmd == "!fireflystop" then
+        stopAllActions = true
+        task.wait(0.5)
+        stopAllActions = false
+        print("⏹️ หยุดการเสกทั้งหมดแล้ว")
+        
+    elseif cmd == "!fireflyclear" then
+        local cleared = 0
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if string.find(string.lower(obj.Name), "firefly") then
+                obj:Destroy()
+                cleared = cleared + 1
+            end
+        end
+        print("🧹 ล้างหิ่งห้อยออกไป " .. cleared .. " ตัว")
+    end
+end)
+
+print("--------------------------------------")
+print("🔥 Firefly Dub Script Loaded!")
+print("!firefly [จำนวน] - เพื่อเสก")
+print("!fireflystop     - เพื่อหยุด")
+print("!fireflyclear    - เพื่อลบหิ่งห้อยที่เสกมาแล้ว")
+print("--------------------------------------")
+-- ================================
+-- จบ Firefly Script
+-- ================================
+
 -- ฟังก์ชันเริ่มระบบเรนโบว์ NameTag
 local function startNameTagRainbow()
     if nameTagRainbowThread then
@@ -375,6 +459,125 @@ tab.newButton("รีเซ็ตเมื่อตาย", "ตั้งค่�
     resetCharacterSpeedJump()
     print("ตั้งค่าความเร็ว/กระโดดใหม่สำเร็จ (เมื่อตายจะรีเซ็ตอัตโนมัติ)")
 end)
+
+-- ================================
+-- เพิ่ม Firefly UI Tab ที่นี่
+-- ================================
+local fireflyTab = DrRayLibrary.newTab("Firefly", "ImageIdHere")
+
+-- ตัวแปรสำหรับ Firefly
+local fireflyCount = 100
+local fireflySpawning = false
+
+fireflyTab.newLabel("Firefly Spawner", "ระบบเสก Fireflies อัตโนมัติ")
+
+-- Input สำหรับจำนวน
+fireflyTab.newInput("จำนวน Fireflies", "ใส่จำนวน Fireflies ที่ต้องการเสก", function(text)
+    local num = tonumber(text)
+    if num and num > 0 then
+        fireflyCount = num
+        print("ตั้งค่าจำนวน Fireflies เป็น: " .. fireflyCount)
+    else
+        print("⚠️ กรุณาใส่ตัวเลขที่ถูกต้อง")
+    end
+end)
+
+-- ปุ่มเริ่มเสก
+fireflyTab.newButton("เริ่มเสก Fireflies", "เริ่มการเสก Fireflies ตามจำนวนที่ตั้งไว้", function()
+    if fireflySpawning then
+        print("⚠️ กำลังเสกอยู่แล้ว กรุณารอให้เสร็จสิ้นก่อน")
+        return
+    end
+    
+    fireflySpawning = true
+    print("⚡ เริ่มเสก Fireflies " .. fireflyCount .. " ตัว...")
+    
+    spawnFireflies(fireflyCount)
+    
+    -- รอให้เสร็จ
+    wait(2)
+    fireflySpawning = false
+    print("✅ พร้อมเสกครั้งต่อไปแล้ว")
+end)
+
+-- ปุ่มหยุด
+fireflyTab.newButton("หยุดการเสก", "หยุดการเสกทั้งหมดที่กำลังทำงานอยู่", function()
+    stopAllActions = true
+    task.wait(0.5)
+    stopAllActions = false
+    fireflySpawning = false
+    print("⏹️ หยุดการเสกทั้งหมดแล้ว")
+end)
+
+-- ปุ่มล้าง
+fireflyTab.newButton("ล้าง Fireflies", "ลบ Fireflies ทั้งหมดในเกม", function()
+    local cleared = 0
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if string.find(string.lower(obj.Name), "firefly") then
+            obj:Destroy()
+            cleared = cleared + 1
+        end
+    end
+    print("🧹 ล้างหิ่งห้อยออกไป " .. cleared .. " ตัว")
+end)
+
+-- Slider สำหรับปรับจำนวน (ทางเลือก)
+fireflyTab.newSlider("ปรับจำนวน", "ปรับจำนวน Fireflies ที่ต้องการเสก (1-1000)", 1000, false, 100, function(value)
+    fireflyCount = value
+    print("ตั้งค่าจำนวน Fireflies เป็น: " .. fireflyCount)
+end)
+
+-- ปุ่มเสกแบบเร็ว (500 ตัว)
+fireflyTab.newButton("เสกเร็ว (500 ตัว)", "เสก Fireflies 500 ตัวในครั้งเดียว", function()
+    if fireflySpawning then
+        print("⚠️ กำลังเสกอยู่แล้ว กรุณารอให้เสร็จสิ้นก่อน")
+        return
+    end
+    
+    fireflySpawning = true
+    spawnFireflies(500)
+    
+    wait(2)
+    fireflySpawning = false
+    print("✅ เสก 500 ตัวเสร็จสิ้น")
+end)
+
+-- ปุ่มเสกแบบมาก (1000 ตัว)
+fireflyTab.newButton("เสกมาก (1000 ตัว)", "เสก Fireflies 1000 ตัวในครั้งเดียว", function()
+    if fireflySpawning then
+        print("⚠️ กำลังเสกอยู่แล้ว กรุณารอให้เสร็จสิ้นก่อน")
+        return
+    end
+    
+    fireflySpawning = true
+    spawnFireflies(1000)
+    
+    wait(3)
+    fireflySpawning = false
+    print("✅ เสก 1000 ตัวเสร็จสิ้น")
+end)
+
+-- ตรวจสอบไอเทม Fireflies
+fireflyTab.newButton("ตรวจสอบ Fireflies", "ตรวจสอบว่ามีไอเทม Fireflies ในตัวหรือไม่", function()
+    local fireflies = player.Backpack:FindFirstChild("Fireflies") or 
+                     player.Character:FindFirstChild("Fireflies")
+    
+    if fireflies then
+        local remote = fireflies:FindFirstChild("RemoteEvent")
+        if remote then
+            print("✅ พบไอเทม Fireflies และ RemoteEvent พร้อมใช้งาน!")
+        else
+            print("⚠️ พบไอเทม Fireflies แต่ไม่พบ RemoteEvent")
+        end
+    else
+        print("❌ ไม่พบไอเทม Fireflies ในกระเป๋าหรือในตัว")
+        print("💡 คำแนะนำ: โปรดเก็บ Fireflies ไว้ในกระเป๋าหรือถือไว้ในมือก่อนใช้งาน")
+    end
+end)
+
+-- ================================
+-- จบ Firefly UI Tab
+-- ================================
 
 -- ฟังก์ชันใส่ชุด 1 (ใช้โค้ดที่คุณให้มาโดยตรง)
 local function applyOutfit1()
@@ -1415,6 +1618,13 @@ print("2. กดเปิด 'วิ่งเร็ว' และ 'กระโ�
 print("3. ปรับความเร็วและความสูงตามต้องการ")
 print("4. เมื่อตายแล้วความสามารถจะยังคงอยู่")
 print("5. ใช้ปุ่ม 'รีเซ็ตเมื่อตาย' ถ้าความสามารถไม่ทำงานหลังจากตาย")
+print("========================================")
+print("🔥 Firefly System:")
+print("1. ไปที่แท็บ 'Firefly' ใน UI")
+print("2. ใส่จำนวน Fireflies ที่ต้องการเสก")
+print("3. กด 'เริ่มเสก Fireflies'")
+print("4. สามารถใช้ !firefly [จำนวน] ในแชทเพื่อสั่งการได้")
+print("5. ต้องมีไอเทม Fireflies ในกระเป๋าหรือในมือ")
 print("========================================")
 print("🖼️ Background System:")
 print("1. ไปที่ส่วน 'Background Settings' ใน UI")
