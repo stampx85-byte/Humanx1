@@ -1,0 +1,745 @@
+--[[
+  ระบบลอยไปหา Nooby และ Cutie Noob
+  เวอร์ชัน: Fly Hunt Nooby V6 - ปรับความสูงเหมาะสม
+]]
+
+local Player = game:GetService("Players").LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+-- ตัวแปรระบบ
+local isActive = false
+local isFollowing = false
+local isKilling = false
+local warpSpeed = 2000
+local searchDistance = 5000
+local currentTarget = nil
+local followConnection = nil
+local isFlying = false
+local flyTween = nil
+local lastSearchTime = 0
+local searchCooldown = 1.5
+local emergencyStop = false
+local lastPosition = nil
+
+-- เป้าหมายที่ต้องการหา (เจาะจงแค่ 2 ชื่อเท่านั้น)
+local targetNames = {
+    "nooby",
+    "cutie noob"
+}
+
+-- UI เรียบง่าย
+local function CreateSimpleUI()
+    local CoreGui = game:GetService("CoreGui")
+    local oldUI = CoreGui:FindFirstChild("NoobyHunterUI")
+    if oldUI then oldUI:Destroy() end
+    
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "NoobyHunterUI"
+    ScreenGui.Parent = CoreGui
+    ScreenGui.ResetOnSpawn = false
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 320, 0, 250)
+    MainFrame.Position = UDim2.new(0.02, 0, 0.02, 0)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 30, 40)
+    MainFrame.BackgroundTransparency = 0.1
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+    
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 12)
+    UICorner.Parent = MainFrame
+    
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0, 45)
+    Title.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
+    Title.Text = "🎯 NOOBY HUNTER V6"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 22
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = MainFrame
+    
+    local TitleCorner = Instance.new("UICorner")
+    TitleCorner.CornerRadius = UDim.new(0, 12)
+    TitleCorner.Parent = Title
+    
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0.9, 0, 0, 55)
+    ToggleBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
+    ToggleBtn.Text = "▶️ เริ่มล่า Nooby"
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextSize = 18
+    ToggleBtn.Font = Enum.Font.GothamBold
+    ToggleBtn.Name = "ToggleButton"
+    ToggleBtn.Parent = MainFrame
+    
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 10)
+    BtnCorner.Parent = ToggleBtn
+    
+    local StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Size = UDim2.new(1, 0, 0, 120)
+    StatusLabel.Position = UDim2.new(0, 0, 0.55, 0)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Text = "📊 สถานะ: พร้อม\n🎯 เป้าหมาย: Nooby & Cutie Noob\n🔄 ปรับความสูงเหมาะสมแล้ว\n💀 โจมตีจนตาย"
+    StatusLabel.TextColor3 = Color3.fromRGB(200, 230, 255)
+    StatusLabel.TextSize = 14
+    StatusLabel.Font = Enum.Font.Gotham
+    StatusLabel.TextWrapped = true
+    StatusLabel.Parent = MainFrame
+    
+    local KeybindLabel = Instance.new("TextLabel")
+    KeybindLabel.Size = UDim2.new(1, 0, 0, 25)
+    KeybindLabel.Position = UDim2.new(0, 0, 0.95, -25)
+    KeybindLabel.BackgroundTransparency = 1
+    KeybindLabel.Text = "F=เปิด/ปิด | Space=หยุดฉุกเฉิน | R=รีเฟรช"
+    KeybindLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
+    KeybindLabel.TextSize = 12
+    KeybindLabel.Font = Enum.Font.GothamMedium
+    KeybindLabel.Parent = MainFrame
+    
+    return ScreenGui, ToggleBtn, StatusLabel
+end
+
+-- ฟังก์ชันค้นหา Nooby และ Cutie Noob เจาะจง
+local function findTargetNPCs()
+    local npcList = {}
+    local foundCount = 0
+    
+    -- ค้นหาเฉพาะชื่อที่เจาะจง (ไม่มีค้นหาแบบ partial)
+    for _, obj in ipairs(Workspace:GetChildren()) do
+        if obj:IsA("Model") and obj ~= Character then
+            local objName = string.lower(obj.Name)
+            local isExactMatch = false
+            
+            for _, targetName in ipairs(targetNames) do
+                if objName == targetName then
+                    isExactMatch = true
+                    break
+                end
+            end
+            
+            if isExactMatch then
+                local hrp = obj:FindFirstChild("HumanoidRootPart")
+                local humanoid = obj:FindFirstChildOfClass("Humanoid")
+                
+                if hrp and humanoid and humanoid.Health > 0 then
+                    -- ตรวจสอบว่าไม่ใช่ผู้เล่น
+                    local isPlayer = false
+                    for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+                        if obj == player.Character then
+                            isPlayer = true
+                            break
+                        end
+                    end
+                    
+                    if not isPlayer then
+                        local distance = 0
+                        if Character and Character:FindFirstChild("HumanoidRootPart") then
+                            distance = (Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                        end
+                        
+                        table.insert(npcList, {
+                            Model = obj,
+                            Name = obj.Name,
+                            Position = hrp.Position,
+                            Humanoid = humanoid,
+                            Distance = distance
+                        })
+                        foundCount = foundCount + 1
+                    end
+                end
+            end
+        end
+    end
+    
+    -- ค้นหาเพิ่มเติมจาก Workspace.GetDescendants
+    if foundCount == 0 then
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("Model") and obj ~= Character then
+                local objName = string.lower(obj.Name)
+                local isExactMatch = false
+                
+                for _, targetName in ipairs(targetNames) do
+                    if objName == targetName then
+                        isExactMatch = true
+                        break
+                    end
+                end
+                
+                if isExactMatch then
+                    local hrp = obj:FindFirstChild("HumanoidRootPart")
+                    local humanoid = obj:FindFirstChildOfClass("Humanoid")
+                    
+                    if hrp and humanoid and humanoid.Health > 0 then
+                        local alreadyAdded = false
+                        for _, npc in ipairs(npcList) do
+                            if npc.Model == obj then
+                                alreadyAdded = true
+                                break
+                            end
+                        end
+                        
+                        if not alreadyAdded then
+                            local isPlayer = false
+                            for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+                                if obj == player.Character then
+                                    isPlayer = true
+                                    break
+                                end
+                            end
+                            
+                            if not isPlayer then
+                                local distance = 0
+                                if Character and Character:FindFirstChild("HumanoidRootPart") then
+                                    distance = (Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+                                end
+                                
+                                table.insert(npcList, {
+                                    Model = obj,
+                                    Name = obj.Name,
+                                    Position = hrp.Position,
+                                    Humanoid = humanoid,
+                                    Distance = distance
+                                })
+                                foundCount = foundCount + 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return npcList
+end
+
+-- ค้นหาเป้าหมายที่ใกล้ที่สุด
+local function findNearestTarget()
+    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+        return nil, "ไม่มีตัวละคร", 0, nil
+    end
+    
+    local currentTime = tick()
+    if currentTime - lastSearchTime < searchCooldown then
+        return nil, "กำลังคูลดาวน์", 0, nil
+    end
+    
+    lastSearchTime = currentTime
+    local playerPos = Character.HumanoidRootPart.Position
+    local allNPCs = findTargetNPCs()
+    
+    if #allNPCs == 0 then
+        return nil, "ไม่พบเป้าหมาย", 0, nil
+    end
+    
+    local closestTarget = nil
+    local closestHumanoid = nil
+    local closestDistance = searchDistance
+    local targetName = ""
+    
+    -- คำนวณระยะทางและเลือกตัวที่ใกล้ที่สุด
+    for _, npc in ipairs(allNPCs) do
+        if npc.Model and npc.Model.Parent then
+            local hrp = npc.Model:FindFirstChild("HumanoidRootPart")
+            if hrp and npc.Humanoid then
+                local distance = (playerPos - hrp.Position).Magnitude
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestTarget = npc.Model
+                    closestHumanoid = npc.Humanoid
+                    targetName = npc.Name
+                end
+            end
+        end
+    end
+    
+    return closestTarget, targetName, closestDistance, closestHumanoid
+end
+
+-- ฟังก์ชันวาร์ปแบบใหม่ที่ปรับความสูงเหมาะสม (ลดความสูงลง)
+local function optimalWarpToTarget(target)
+    if not target or not target:FindFirstChild("HumanoidRootPart") then
+        return false
+    end
+    
+    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+        return false
+    end
+    
+    local playerHrp = Character.HumanoidRootPart
+    local targetHrp = target.HumanoidRootPart
+    
+    -- ตำแหน่งบนหัว (ลดความสูงเหลือ 2-3 หน่วย แทนที่จะเป็น 10)
+    local headPosition = targetHrp.Position + Vector3.new(0, 2.5, 0)  -- ลดจาก 10 เหลือ 2.5
+    
+    -- ตรวจสอบว่าตำแหน่งที่เราจะวาร์ปไปอยู่ในอากาศหรือไม่
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {Character, target}
+    
+    -- ตรวจสอบจากตำแหน่งหัวลงมาด้านล่าง 5 หน่วย (ลดลงจาก 20)
+    local raycastResult = workspace:Raycast(headPosition, Vector3.new(0, -5, 0), raycastParams)
+    
+    if raycastResult then
+        -- ถ้ามีอะไรขวางด้านล่าง (เช่น พื้น) ให้อยู่เหนือมัน 1 หน่วย (ลดจาก 2)
+        headPosition = Vector3.new(headPosition.X, raycastResult.Position.Y + 1, headPosition.Z)
+    end
+    
+    -- วาร์ปไปยังตำแหน่งที่ปรับแล้ว
+    local success = pcall(function()
+        -- ใช้ CFrame.New เพื่อป้องกันความผิดพลาด
+        playerHrp.CFrame = CFrame.new(headPosition)
+        
+        -- รีเซ็ตความเร็ว
+        playerHrp.Velocity = Vector3.new(0, 0, 0)
+        playerHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        playerHrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        
+        -- ปิดการชนชั่วคราว
+        playerHrp.CanCollide = false
+        task.wait(0.05)
+        playerHrp.CanCollide = true
+    end)
+    
+    if success then
+        print("[WARP] วาร์ปไปที่หัว " .. target.Name .. " สำเร็จ (ความสูง: 2.5 หน่วย)")
+        return true
+    else
+        print("[ERROR] วาร์ปล้มเหลว")
+        return false
+    end
+end
+
+-- ฟังก์ชันติดตามบนหัวแบบใหม่ที่ปรับความสูงเหมาะสม
+local function optimizedFollowAndKill(target, humanoid)
+    if not target or not humanoid then return end
+    
+    isFollowing = true
+    isKilling = true
+    currentTarget = target
+    
+    -- ตั้งค่า PlatformStand เพื่อให้ลอยได้
+    if Character:FindFirstChild("Humanoid") then
+        Character.Humanoid.PlatformStand = true
+        Character.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+    end
+    
+    print("[ATTACK] เริ่มโจมตีแบบเหมาะสม: " .. target.Name)
+    
+    -- หยุดการบินถ้ามี
+    if flyTween then
+        flyTween:Cancel()
+        flyTween = nil
+    end
+    
+    -- สร้าง connection สำหรับติดตามบนหัวแบบปรับความสูง
+    if followConnection then
+        followConnection:Disconnect()
+    end
+    
+    local stuckCheckCount = 0
+    local damageCounter = 0
+    
+    followConnection = RunService.Heartbeat:Connect(function(deltaTime)
+        if not isFollowing or not isActive or emergencyStop then
+            return
+        end
+        
+        if not target or not target.Parent or not target:FindFirstChild("HumanoidRootPart") then
+            isFollowing = false
+            isKilling = false
+            if followConnection then
+                followConnection:Disconnect()
+            end
+            return
+        end
+        
+        if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+            return
+        end
+        
+        -- ตรวจสอบว่าเป้ายังมีชีวิตอยู่หรือไม่
+        if humanoid.Health <= 0 then
+            print("[KILL] เป้าหมายตายแล้ว: " .. target.Name)
+            isFollowing = false
+            isKilling = false
+            if followConnection then
+                followConnection:Disconnect()
+            end
+            return
+        end
+        
+        local targetHrp = target.HumanoidRootPart
+        local playerHrp = Character.HumanoidRootPart
+        
+        -- คำนวณตำแหน่งที่อยู่บนหัว (ลดความสูงเหลือ 2.5 หน่วย)
+        local targetPosition = Vector3.new(
+            targetHrp.Position.X,
+            targetHrp.Position.Y + 2.5,  -- ลดจาก 8 เหลือ 2.5
+            targetHrp.Position.Z
+        )
+        
+        -- ตรวจสอบว่าเราอยู่สูงเกินไปหรือไม่
+        local currentY = playerHrp.Position.Y
+        local targetY = targetHrp.Position.Y
+        
+        if currentY - targetY > 5 then  -- ถ้าสูงกว่าเป้ามากเกิน 5 หน่วย
+            -- ลดความสูงลง
+            targetPosition = Vector3.new(targetPosition.X, targetY + 1, targetPosition.Z)
+            print("[DEBUG] ปรับลดความสูงลง")
+        end
+        
+        -- ใช้การเคลื่อนที่แบบ Lerp เพื่อความลื่นไหล
+        local currentCFrame = playerHrp.CFrame
+        local targetCFrame = CFrame.new(targetPosition)
+        local smoothness = 0.8  -- เพิ่มความลื่น
+        
+        local newCFrame = CFrame.new(
+            currentCFrame.Position:Lerp(targetPosition, smoothness),
+            targetHrp.Position
+        )
+        
+        -- ตั้งค่าตำแหน่ง
+        pcall(function()
+            playerHrp.CFrame = newCFrame
+            
+            -- รีเซ็ตความเร็วทุกครั้ง
+            playerHrp.Velocity = Vector3.new(0, 0, 0)
+            
+            -- หมุนตัวให้หันหน้าไปทางเป้า
+            playerHrp.CFrame = CFrame.new(playerHrp.Position, targetHrp.Position)
+        end)
+        
+        -- โจมตีเป้าหมาย
+        damageCounter = damageCounter + deltaTime
+        if damageCounter >= 0.3 then -- โจมตีทุก 0.3 วินาที
+            -- โจมตีโดยตรง
+            humanoid:TakeDamage(20)  -- เพิ่มความเสียหาย
+            
+            -- ลองใช้ RemoteEvents สำหรับโจมตี (ถ้ามี)
+            if Character:FindFirstChildOfClass("Tool") then
+                local tool = Character:FindFirstChildOfClass("Tool")
+                if tool:FindFirstChild("Handle") then
+                    for _, v in pairs(tool:GetChildren()) do
+                        if v:IsA("RemoteEvent") then
+                            pcall(function()
+                                v:FireServer(targetHrp.Position)
+                            end)
+                        end
+                    end
+                end
+            end
+            
+            -- ลองใช้ ClickDetector ถ้ามี
+            if target:FindFirstChild("ClickDetector") then
+                pcall(function()
+                    target.ClickDetector:FireServer()
+                end)
+            end
+            
+            damageCounter = 0
+        end
+        
+        -- ตรวจสอบว่าติดอยู่กับที่หรือไม่
+        local currentPos = playerHrp.Position
+        if lastPosition then
+            local distanceMoved = (currentPos - lastPosition).Magnitude
+            if distanceMoved < 0.5 then  -- เคลื่อนที่น้อยเกินไป
+                stuckCheckCount = stuckCheckCount + 1
+                if stuckCheckCount > 10 then  -- ติดมานานแล้ว
+                    -- พยายามวาร์ปใหม่
+                    pcall(function()
+                        playerHrp.CFrame = CFrame.new(targetPosition)
+                    end)
+                    stuckCheckCount = 0
+                end
+            else
+                stuckCheckCount = 0
+            end
+        end
+        lastPosition = currentPos
+    end)
+end
+
+-- ฟังก์ชันสำรวจพื้นที่แบบปรับความสูง
+local function optimalExplore()
+    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+        return
+    end
+    
+    -- หยุด Tween เก่า
+    if flyTween then
+        flyTween:Cancel()
+        flyTween = nil
+    end
+    
+    local hrp = Character.HumanoidRootPart
+    local currentPos = hrp.Position
+    
+    -- สุ่มทิศทางและระยะทาง (ลดความสูงการสำรวจ)
+    local randomAngle = math.random() * math.pi * 2
+    local randomDirection = Vector3.new(
+        math.cos(randomAngle),
+        0.2,  -- ลดความสูงการสำรวจลง
+        math.sin(randomAngle)
+    )
+    
+    local randomDistance = math.random(200, 500)  -- ลดระยะทางลง
+    local targetPosition = currentPos + (randomDirection * randomDistance)
+    
+    -- ตรวจสอบว่าไม่สูงเกินไป
+    if targetPosition.Y > currentPos.Y + 20 then
+        targetPosition = Vector3.new(targetPosition.X, currentPos.Y + 5, targetPosition.Z)
+    end
+    
+    -- วาร์ปไปยังตำแหน่ง
+    pcall(function()
+        hrp.CFrame = CFrame.new(targetPosition)
+        hrp.Velocity = Vector3.new(0, 0, 0)
+    end)
+    
+    print("[EXPLORE] สำรวจพื้นที่ใหม่อย่างเหมาะสม")
+end
+
+-- เริ่มระบบ
+local function startSystem()
+    local _, toggleBtn, statusLabel = CreateSimpleUI()
+    local lastTargetName = ""
+    local targetFoundCount = 0
+    
+    -- ฟังก์ชันอัปเดตสถานะ
+    local function updateStatus(text)
+        statusLabel.Text = "📊 " .. text
+    end
+    
+    -- ฟังก์ชันหยุดระบบทั้งหมด
+    local function stopAllActions()
+        if followConnection then
+            followConnection:Disconnect()
+            followConnection = nil
+        end
+        
+        if flyTween then
+            flyTween:Cancel()
+            flyTween = nil
+        end
+        
+        if Character and Character:FindFirstChild("Humanoid") then
+            Character.Humanoid.PlatformStand = false
+            Character.Humanoid:ChangeState(Enum.HumanoidStateType.Running)
+        end
+        
+        if Character and Character:FindFirstChild("HumanoidRootPart") then
+            Character.HumanoidRootPart.CanCollide = true
+        end
+        
+        isFollowing = false
+        isKilling = false
+        isFlying = false
+        currentTarget = nil
+        lastPosition = nil
+    end
+    
+    -- การทำงานหลัก
+    local function mainLoop()
+        while isActive do
+            if emergencyStop then
+                updateStatus("⛔ หยุดฉุกเฉิน!\nกำลังรีเซ็ตระบบ...")
+                stopAllActions()
+                task.wait(1)
+                emergencyStop = false
+            end
+            
+            if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+                updateStatus("กำลังรอตัวละคร...")
+                task.wait(1)
+                Character = Player.Character or Player.CharacterAdded:Wait()
+                continue
+            end
+            
+            -- ถ้ากำลังติดตามหรือฆ่าอยู่ รอจนกว่าจะเสร็จ
+            if isFollowing or isKilling then
+                task.wait(0.2)
+                continue
+            end
+            
+            -- ค้นหาเป้าหมาย
+            local target, name, distance, humanoid = findNearestTarget()
+            
+            if target and humanoid then
+                if name ~= lastTargetName then
+                    lastTargetName = name
+                    targetFoundCount = targetFoundCount + 1
+                end
+                
+                updateStatus(string.format("🎯 พบ: %s\n📏 ระยะ: %.0f หน่วย\n⚡ กำลังวาร์ปความสูงเหมาะสม...\n🗺️ พบทั้งหมด: %d ครั้ง", 
+                    name, distance, targetFoundCount))
+                
+                -- วาร์ปไปหาเป้าหมายแบบความสูงเหมาะสม
+                local success = optimalWarpToTarget(target)
+                
+                if success then
+                    -- รอสักครู่ให้วาร์ปเสร็จ
+                    task.wait(0.3)
+                    
+                    -- เริ่มโจมตีและติดตามบนหัวแบบใหม่
+                    if not isFollowing and target:FindFirstChild("HumanoidRootPart") and humanoid.Health > 0 then
+                        optimizedFollowAndKill(target, humanoid)
+                        updateStatus(string.format("⚔️ กำลังโจมตี: %s\n💀 ความสูงเหมาะสม (2.5 หน่วย)...", name))
+                    end
+                    
+                    -- รอจนกว่าเป้าหมายจะตาย
+                    local killStart = tick()
+                    while isFollowing and isActive and not emergencyStop do
+                        if not target or not target.Parent or humanoid.Health <= 0 then
+                            break
+                        end
+                        
+                        -- ถ้าใช้เวลานานเกินไป ให้ออกจากลูป
+                        if tick() - killStart > 15 then -- ลดเหลือ 15 วินาทีต่อเป้า
+                            updateStatus("⏰ ใช้เวลานานเกินไป\nกำลังเปลี่ยนเป้าหมาย...")
+                            break
+                        end
+                        
+                        task.wait(0.3)
+                    end
+                    
+                    -- เมื่อฆ่าเสร็จ
+                    if not emergencyStop then
+                        updateStatus(string.format("✅ ฆ่าเสร็จ: %s\n🎯 กำลังค้นหาใหม่...", name))
+                        stopAllActions()
+                        task.wait(1.0)  -- ลดเวลารอ
+                    end
+                else
+                    updateStatus("❌ วาร์ปไม่สำเร็จ\nกำลังลองใหม่...")
+                    task.wait(0.5)
+                end
+            else
+                updateStatus("🔍 กำลังค้นหา Nooby/Cutie Noob...\n🔄 สำรวจพื้นที่ความสูงเหมาะสม")
+                
+                -- สำรวจพื้นที่ใหม่แบบความสูงเหมาะสม
+                optimalExplore()
+                
+                -- รอให้สำรวจเสร็จ
+                task.wait(2.0)  -- ลดเวลารอ
+            end
+        end
+    end
+    
+    -- ปุ่มเปิด/ปิด
+    toggleBtn.MouseButton1Click:Connect(function()
+        isActive = not isActive
+        
+        if isActive then
+            toggleBtn.Text = "⏸️ หยุดล่า"
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+            updateStatus("🎯 เริ่มระบบล่า Nooby...\nกำลังค้นหาเป้าหมาย\n🔄 ความสูงเหมาะสม (2.5 หน่วย)")
+            
+            print("[SYSTEM] เริ่มระบบล่า Nooby V6 (ปรับความสูงเหมาะสม)")
+            
+            -- เริ่ม Loop ใหม่ใน Task แยก
+            task.spawn(function()
+                mainLoop()
+            end)
+        else
+            toggleBtn.Text = "▶️ เริ่มล่า Nooby"
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+            updateStatus("ระบบหยุดทำงาน\nกดเปิดเพื่อเริ่มใหม่")
+            
+            -- หยุดการทำงานทั้งหมด
+            stopAllActions()
+            
+            emergencyStop = false
+            print("[SYSTEM] หยุดระบบล่า")
+        end
+    end)
+    
+    -- คีย์ลัด F
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.F then
+            toggleBtn:Activate()
+        end
+    end)
+    
+    -- ปุ่มหยุดฉุกเฉิน (Space)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.Space then
+            emergencyStop = true
+            stopAllActions()
+            updateStatus("⛔ หยุดฉุกเฉิน!\nกดเปิดระบบใหม่เพื่อเริ่มอีกครั้ง")
+            print("[EMERGENCY] หยุดฉุกเฉินทั้งหมด!")
+        end
+    end)
+    
+    -- ปุ่มรีเฟรชการค้นหา (R)
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == Enum.KeyCode.R then
+            lastSearchTime = 0 -- รีเซ็ตคูลดาวน์
+            updateStatus("🔄 รีเฟรชการค้นหา...")
+            print("[REFRESH] รีเฟรชการค้นหา")
+        end
+    end)
+end
+
+-- ตรวจสอบและเริ่มระบบ
+task.spawn(function()
+    task.wait(3)
+    
+    print("========================================")
+    print("🎯 NOOBY & CUTIE NOOB HUNTER V6")
+    print("🔄 ปรับปรุง: ความสูงเหมาะสม (2.5 หน่วย)")
+    print("🎯 ระบบจะวาร์ปไปหาเป้าหมายที่ความสูงเหมาะสม")
+    print("💀 ติดตามบนหัวและโจมตีจนตาย (ไม่สูงเกินไป)")
+    print("📌 กดปุ่ม F เพื่อเปิด/ปิดระบบ")
+    print("📌 กด Space เพื่อหยุดฉุกเฉินทันที")
+    print("📌 กด R เพื่อรีเฟรชการค้นหา")
+    print("========================================")
+    
+    -- เริ่ม UI
+    startSystem()
+    
+    -- แจ้งเตือน
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Nooby Hunter V6",
+        Text = "ปรับความสูงเหมาะสมแล้ว! กด F เพื่อเริ่มล่า",
+        Duration = 5,
+        Icon = "rbxassetid://3944680095"
+    })
+end)
+
+-- อัพเดทเมื่อตัวละครเปลี่ยน
+Player.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    task.wait(2)
+    print("[EVENT] เปลี่ยนตัวละครใหม่")
+    
+    -- หยุดการทำงานทั้งหมด
+    stopAllActions()
+    emergencyStop = false
+end)
+
+-- หยุดการลอยเมื่อตัวละครตาย
+local function onHumanoidDied()
+    stopAllActions()
+    emergencyStop = true
+    if isActive then
+        print("[INFO] ตัวละครตาย หยุดระบบลอยชั่วคราว")
+    end
+end
+
+-- เชื่อมต่อ Event
+if Character:FindFirstChild("Humanoid") then
+    Character.Humanoid.Died:Connect(onHumanoidDied)
+end
+
+Player.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid").Died:Connect(onHumanoidDied)
+end)
+
+print("[SUCCESS] สคริปต์ Nooby Hunter V6 (ปรับความสูงเหมาะสม) โหลดสำเร็จ!")
