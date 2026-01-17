@@ -1,0 +1,70 @@
+--[[ 
+  วิธีใช้: 
+  1. ถืออาวุธในมือ (เพื่อให้สคริปต์หา Parent เจอ)
+  2. กด Execute สคริปต์นี้
+]]
+
+local Player = game.Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local RS = game:GetService("ReplicatedStorage")
+
+-- ฟังก์ชันสร้าง GUI แบบแสดงผลแน่นอน
+local function CreateUI()
+    if game:GetService("CoreGui"):FindFirstChild("UltimateFix") then game:GetService("CoreGui").UltimateFix:Destroy() end
+    local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+    ScreenGui.Name = "UltimateFix"
+    local Btn = Instance.new("TextButton", ScreenGui)
+    Btn.Size = UDim2.new(0, 150, 0, 50)
+    Btn.Position = UDim2.new(0.5, -75, 0.1, 0)
+    Btn.Text = "AUTO ATTACK: OFF"
+    Btn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    return Btn
+end
+
+local Toggle = CreateUI()
+local Enabled = false
+
+Toggle.MouseButton1Click:Connect(function()
+    Enabled = not Enabled
+    Toggle.Text = Enabled and "AUTO ATTACK: ON" or "AUTO ATTACK: OFF"
+    Toggle.BackgroundColor3 = Enabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+end)
+
+-- ลูปที่ลอกเลียนแบบการทำงานของสคริปต์แท้ แต่ปรับให้โหดขึ้น
+task.spawn(function()
+    while task.wait() do
+        if Enabled then
+            pcall(function()
+                -- 1. ค้นหา Module และ Remote ตามชื่อในสคริปต์เดิมของคุณ
+                local module_upvr = require(RS:WaitForChild("Module"):WaitForChild("Hitbox"))
+                
+                -- พยายามหา Remote ในตัวละครหรือในกระเป๋า (Backpack)
+                local Remote = nil
+                for _, v in pairs(Player.Backpack:GetDescendants()) do
+                    if v.Name == "Combat_Event" then Remote = v break end
+                end
+                if not Remote and Player.Character then
+                    Remote = Player.Character:FindFirstChild("Combat_Event", true)
+                end
+
+                if Remote and Player.Character then
+                    local Root = Player.Character.HumanoidRootPart
+                    local Hum = Player.Character.Humanoid
+                    
+                    -- 2. ยิง Overlap แบบรัศมีกว้างมหาศาล (200x200x200)
+                    local TargetArea = module_upvr:Overlap({
+                        MaxTarget = 100;
+                        Humanoid = Hum;
+                        CF = Root.CFrame; -- ตีรอบตัว
+                        Size = Vector3.new(200, 200, 200); -- ปรับกว้างสุดๆ ตรงนี้
+                    })
+
+                    -- 3. ยิง Event ส่งไปที่ Server ทันที (ตัด Punch_Function ทิ้งเพื่อความรัว)
+                    if #TargetArea > 0 then
+                        Remote:FireServer(TargetArea)
+                    end
+                end
+            end)
+        end
+    end
+end)
