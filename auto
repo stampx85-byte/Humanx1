@@ -1,23 +1,26 @@
 --[[ 
-  วิธีใช้: 
-  1. ถืออาวุธในมือ (เพื่อให้สคริปต์หา Parent เจอ)
-  2. กด Execute สคริปต์นี้
+  Fast Attack Mod + Force Equip OFA[Deku] (Improved)
+  แก้ไข: ระบบค้นหาไอเทมและบังคับถือแบบ Force Parent
 ]]
 
 local Player = game.Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
 local RS = game:GetService("ReplicatedStorage")
+local ToolName = "OFA[Deku]" -- ชื่อที่ต้องการค้นหา
 
--- ฟังก์ชันสร้าง GUI แบบแสดงผลแน่นอน
+-- 1. สร้าง UI
 local function CreateUI()
-    if game:GetService("CoreGui"):FindFirstChild("UltimateFix") then game:GetService("CoreGui").UltimateFix:Destroy() end
+    if game:GetService("CoreGui"):FindFirstChild("FastAttackFix") then 
+        game:GetService("CoreGui").FastAttackFix:Destroy() 
+    end
     local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-    ScreenGui.Name = "UltimateFix"
+    ScreenGui.Name = "FastAttackFix"
     local Btn = Instance.new("TextButton", ScreenGui)
     Btn.Size = UDim2.new(0, 150, 0, 50)
-    Btn.Position = UDim2.new(0.5, -75, 0.1, 0)
-    Btn.Text = "AUTO ATTACK: OFF"
+    Btn.Position = UDim2.new(0.5, -75, 0.05, 0)
+    Btn.Text = "FAST ATTACK: OFF"
     Btn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", Btn)
     return Btn
 end
 
@@ -26,42 +29,62 @@ local Enabled = false
 
 Toggle.MouseButton1Click:Connect(function()
     Enabled = not Enabled
-    Toggle.Text = Enabled and "AUTO ATTACK: ON" or "AUTO ATTACK: OFF"
+    Toggle.Text = Enabled and "FAST ATTACK: ON" or "FAST ATTACK: OFF"
     Toggle.BackgroundColor3 = Enabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
 end)
 
--- ลูปที่ลอกเลียนแบบการทำงานของสคริปต์แท้ แต่ปรับให้โหดขึ้น
+-- 2. ระบบ Force Equip (ตรวจสอบและบังคับถือ)
 task.spawn(function()
-    while task.wait() do
+    while true do
+        task.wait(0.1) -- เช็คเร็วขึ้นเพื่อให้ถือทันทีที่เกิด
+        pcall(function()
+            local Character = Player.Character
+            if not Character then return end
+            
+            -- ตรวจสอบว่าในมือถือของชื่อตรงกันหรือไม่
+            local currentItem = Character:FindFirstChildOfClass("Tool")
+            if not currentItem or (currentItem and not string.find(currentItem.Name, "OFA")) then
+                
+                -- ค้นหาใน Backpack (หาแบบ partial match เพื่อความชัวร์)
+                for _, item in pairs(Player.Backpack:GetChildren()) do
+                    if string.find(item.Name, "OFA") or string.find(item.Name, "Deku") then
+                        -- วิธีที่ 1: ใช้ Humanoid สวมใส่
+                        local Hum = Character:FindFirstChildOfClass("Humanoid")
+                        if Hum then
+                            Hum:EquipTool(item)
+                        end
+                        -- วิธีที่ 2: ถ้าวิธีแรกไม่ติด (Force Parent)
+                        item.Parent = Character
+                        break
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- 3. Loop การโจมตี (Fast Attack เดิม)
+task.spawn(function()
+    while true do
+        task.wait(0.01)
         if Enabled then
             pcall(function()
-                -- 1. ค้นหา Module และ Remote ตามชื่อในสคริปต์เดิมของคุณ
-                local module_upvr = require(RS:WaitForChild("Module"):WaitForChild("Hitbox"))
+                local Character = Player.Character
+                if not Character then return end
                 
-                -- พยายามหา Remote ในตัวละครหรือในกระเป๋า (Backpack)
-                local Remote = nil
-                for _, v in pairs(Player.Backpack:GetDescendants()) do
-                    if v.Name == "Combat_Event" then Remote = v break end
-                end
-                if not Remote and Player.Character then
-                    Remote = Player.Character:FindFirstChild("Combat_Event", true)
-                end
+                local HitboxModule = require(RS:WaitForChild("Module"):WaitForChild("Hitbox"))
+                local Remote = Character:FindFirstChild("Combat_Event", true) or Player.Backpack:FindFirstChild("Combat_Event", true)
 
-                if Remote and Player.Character then
-                    local Root = Player.Character.HumanoidRootPart
-                    local Hum = Player.Character.Humanoid
-                    
-                    -- 2. ยิง Overlap แบบรัศมีกว้างมหาศาล (200x200x200)
-                    local TargetArea = module_upvr:Overlap({
+                if Remote and Character:FindFirstChild("HumanoidRootPart") then
+                    local TargetArea = HitboxModule:Overlap({
                         MaxTarget = 100;
-                        Humanoid = Hum;
-                        CF = Root.CFrame; -- ตีรอบตัว
-                        Size = Vector3.new(200, 200, 200); -- ปรับกว้างสุดๆ ตรงนี้
+                        Humanoid = Character.Humanoid;
+                        CF = Character.HumanoidRootPart.CFrame;
+                        Size = Vector3.new(150, 150, 150);
                     })
 
-                    -- 3. ยิง Event ส่งไปที่ Server ทันที (ตัด Punch_Function ทิ้งเพื่อความรัว)
                     if #TargetArea > 0 then
-                        Remote:FireServer(TargetArea)
+                        Remote:FireServer("Attack", TargetArea)
                     end
                 end
             end)
