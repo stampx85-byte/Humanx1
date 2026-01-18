@@ -1,5 +1,5 @@
 local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
-local window = DrRayLibrary:Load("Fruity & Boss Hub (Complete Edition)", "Default")
+local window = DrRayLibrary:Load("Fruity & Boss Hub (Original Logic)", "Default")
 
 -- [ Services ]
 local Player = game:GetService("Players").LocalPlayer
@@ -9,27 +9,45 @@ local Workspace = game:GetService("Workspace")
 
 -- [ Global Config ]
 local Config = {
-    SlimeHunter = false, KingSlimeHunter = false, EliteNoobHunter = false, KingNoobHunter = false,
-    DuckHunter = false, SwordMasterHunter = false, CutieBossHunter = false, NoobyHunter = false, 
-    ShinoaHunter = false, CharaHunter = false, EvilThugHunter = false, UnknownBossHunter = false,
+    SlimeGroupHunter = false, 
+    NoobyHunter = false,      
+    NoobGroupHunter = false,  
+    ThugHunter = false,
+    DuckHunter = false, 
+    SwordMasterHunter = false, 
+    CutieBossHunter = false,
+    ShinoaHunter = false, 
+    CharaHunter = false, 
+    EvilThugHunter = false, 
+    UnknownBossHunter = false,
     SansHunter = false,
-    AutoRandom = false, FastAttack = false, AutoEquip = false, 
-    ToolName = "OFA[Deku]", AttackRange = 60,
+    -- Settings
+    AutoRandom = false, 
+    FastAttack = false, 
+    AutoEquip = false, 
+    ToolName = "", 
+    AttackRange = 60, -- ใช้ระยะเดิม
     AutoFruit = false, AutoMelee = false, AutoDefense = false, AutoStrength = false
 }
+
+-- ตัวแปรฮาคิ (ตามที่คุณสั่ง: เปิดรอบเดียว และรีเซ็ตเมื่อตาย)
+local HasUsedHakiThisLife = false
+Player.CharacterAdded:Connect(function()
+    HasUsedHakiThisLife = false
+end)
 
 -- [ Core Functions ]
 local function GetCharacter() return Player.Character or Player.CharacterAdded:Wait() end
 
--- ระบบเปิดฮาคิอัตโนมัติ (เช็คก่อนเปิดรอบเดียว)
 local function EnsureHaki()
+    if HasUsedHakiThisLife then return end
     pcall(function()
         local char = GetCharacter()
-        -- เช็คทั้งชื่อ Busoshoku_Effect และ Buso ตามสคริปต์เกม
         if not char:FindFirstChild("Busoshoku_Effect") and not char:FindFirstChild("Buso") then
             local HakiTool = Player.Backpack:FindFirstChild("Busoshoku") or char:FindFirstChild("Busoshoku")
             if HakiTool then 
                 HakiTool.Remote.Haki_Event:FireServer() 
+                HasUsedHakiThisLife = true 
             end
         end
     end)
@@ -47,75 +65,93 @@ local function FindBoss(name)
     return nil
 end
 
+-- ระบบตีรัวแบบ OFA [Deku] (เพิ่มเข้าไปตามสั่ง)
 local function DoFastAttack()
     pcall(function()
         local Char = GetCharacter()
-        local Remote = Char:FindFirstChild("Combat_Event", true) or Player.Backpack:FindFirstChild("Combat_Event", true)
+        local CombatRemote = Char:FindFirstChild("Combat_Event", true) or Player.Backpack:FindFirstChild("Combat_Event", true)
+        local WeaponRemote = Char:FindFirstChild("Weapon_Event", true) or Player.Backpack:FindFirstChild("Weapon_Event", true)
         local HitboxModule = require(RS:WaitForChild("Module"):WaitForChild("Hitbox"))
-        if Remote and Char:FindFirstChild("HumanoidRootPart") then
-            EnsureHaki() -- เปิดฮาคิให้ถ้ายังไม่ได้เปิด
-            local TargetArea = HitboxModule:Overlap({
-                MaxTarget = 100, Humanoid = Char.Humanoid,
-                CF = Char.HumanoidRootPart.CFrame, Size = Vector3.new(Config.AttackRange, Config.AttackRange, Config.AttackRange)
+        
+        if (CombatRemote or WeaponRemote) and Char:FindFirstChild("HumanoidRootPart") then
+            EnsureHaki() -- เปิดฮาคิรอบเดียวตอนเริ่มตี
+            
+            local Targets = HitboxModule:Overlap({
+                MaxTarget = 100, 
+                Humanoid = Char.Humanoid,
+                CF = Char.HumanoidRootPart.CFrame, 
+                Size = Vector3.new(Config.AttackRange, Config.AttackRange, Config.AttackRange)
             })
-            if #TargetArea > 0 then 
-                Remote:FireServer("Attack", TargetArea) 
-                Remote:FireServer("Attack", TargetArea) -- เบิ้ลความเร็ว
+            
+            if #Targets > 0 then
+                if CombatRemote then 
+                    CombatRemote:FireServer("Attack", Targets) 
+                    CombatRemote:FireServer("Attack", Targets) 
+                end
+                if WeaponRemote then 
+                    WeaponRemote:FireServer("Slash", Targets) 
+                    WeaponRemote:FireServer("Slash", Targets) 
+                end
             end
         end
     end)
 end
 
--- [ UI Tabs ]
+----------------------------------------------------------------
+-- [ UI Setup ] - บอสครบถ้วนเหมือนอันแรกสุด
+----------------------------------------------------------------
+
 local tabFarm = DrRayLibrary.newTab("Boss Farm", "rbxassetid://4483345998")
 local tabCombat = DrRayLibrary.newTab("Combat", "rbxassetid://4483345998")
 local tabStats = DrRayLibrary.newTab("Stats", "rbxassetid://4483345998")
-local tabShop = DrRayLibrary.newTab("Shop", "rbxassetid://4483345998")
 local tabMisc = DrRayLibrary.newTab("Misc", "rbxassetid://4483345998")
 
--- บอสครบทุกตัว
-tabFarm.newToggle("Slime", "ล่า Slime", false, function(s) Config.SlimeHunter = s end)
-tabFarm.newToggle("King Slime", "ล่า King Slime", false, function(s) Config.KingSlimeHunter = s end)
-tabFarm.newToggle("Elite Noob", "ล่า Elite Noob", false, function(s) Config.EliteNoobHunter = s end)
-tabFarm.newToggle("King Noob", "ล่า King Noob", false, function(s) Config.KingNoobHunter = s end)
+tabFarm.newToggle("Slime Group", "ล่า Slime & King Slime", false, function(s) Config.SlimeGroupHunter = s end)
+tabFarm.newToggle("Nooby Group", "ล่า Nooby & Cutie Noob", false, function(s) Config.NoobyHunter = s end)
+tabFarm.newToggle("Noob Group", "ล่า Elite & King Noob", false, function(s) Config.NoobGroupHunter = s end)
+tabFarm.newToggle("Thug", "ล่า Thug", false, function(s) Config.ThugHunter = s end)
+tabFarm.newToggle("Evil Thug", "ล่า Evil Thug", false, function(s) Config.EvilThugHunter = s end)
 tabFarm.newToggle("Cutie Boss", "ล่า Cutie Boss", false, function(s) Config.CutieBossHunter = s end)
 tabFarm.newToggle("Sans", "ล่า Sans", false, function(s) Config.SansHunter = s end)
 tabFarm.newToggle("Chara", "ล่า Chara", false, function(s) Config.CharaHunter = s end)
-tabFarm.newToggle("Evil Thug", "ล่า Evil Thug", false, function(s) Config.EvilThugHunter = s end)
 tabFarm.newToggle("Unknown Boss", "ล่า Unknown Boss", false, function(s) Config.UnknownBossHunter = s end)
 tabFarm.newToggle("Duck Boss", "ล่า Duck Boss", false, function(s) Config.DuckHunter = s end)
 tabFarm.newToggle("Sword Master", "ล่า Sword Master", false, function(s) Config.SwordMasterHunter = s end)
 tabFarm.newToggle("Shinoa", "ล่า Shinoa", false, function(s) Config.ShinoaHunter = s end)
-tabFarm.newToggle("Nooby Hunter", "ล่า Nooby/Cutie Noob", false, function(s) Config.NoobyHunter = s end)
 
--- ต่อสู้
-tabCombat.newToggle("Auto Equip", "บังคับถือไอเทม", false, function(s) Config.AutoEquip = s end)
-tabCombat.newInput("ชื่อไอเทม", "ใส่ชื่อของที่จะถือ", function(text) Config.ToolName = text end)
-tabCombat.newToggle("Fast Attack (+Haki)", "ตีเร็ว + เปิดฮาคิออโต้", false, function(s) Config.FastAttack = s end)
+tabCombat.newToggle("Auto Equip", "ถือของอัตโนมัติ", false, function(s) Config.AutoEquip = s end)
+local ToolList = {"Epic Sword", "Youru", "True Yorou", "Elucidator", "Dual Sword", "Real Knife", "True Knife", "Saber", "Bisento", "Amethyst Scythe", "Lighting Sword", "Limitless", "Black leg", "OFA [Deku]", "Combat"}
+tabCombat.newDropdown("Select Tool", "เลือกไอเทมที่จะถือ", ToolList, function(selected) Config.ToolName = selected end)
+tabCombat.newToggle("Fast Attack (No Animation)", "ตีรัว + เปิดฮาคิรอบเดียว", false, function(s) Config.FastAttack = s end)
 tabCombat.newSlider("Attack Range", "ระยะการตี", 500, false, function(num) Config.AttackRange = num end)
 
--- สเตตัส (ใช้ Code รีเซ็ตที่ส่งมา)
-tabStats.newButton("Reset Stats (Money)", "รีเซ็ตสเตตัส (เงิน)", function()
-    RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Reset","Stats","Money")
-end)
+tabStats.newButton("Reset Stats (Money)", "รีเซ็ตสเตตัส (เงิน)", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Reset","Stats","Money") end)
 tabStats.newToggle("Auto Devil Fruit", "อัพผลไม้", false, function(s) Config.AutoFruit = s end)
 tabStats.newToggle("Auto Melee", "อัพหมัด", false, function(s) Config.AutoMelee = s end)
 tabStats.newToggle("Auto Defense", "อัพป้องกัน", false, function(s) Config.AutoDefense = s end)
 tabStats.newToggle("Auto Strength", "อัพดาบ/กำลัง", false, function(s) Config.AutoStrength = s end)
-
--- ร้านค้า (เพิ่มของตามที่สั่ง)
-tabShop.newButton("Buy Black Leg", "ซื้อสไตล์ขาดำ", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Fighting Style","Black leg") end)
-tabShop.newButton("Buy Saber", "ซื้อดาบ Saber", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Sword","Saber") end)
-tabShop.newButton("Buy Triple Katana", "ซื้อ 3 ดาบ", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Sword","Triple Katana") end)
-tabShop.newButton("Buy OFA [Deku]", "ซื้อ Deku", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Fighting Style","OFA [Deku]") end)
-tabShop.newButton("Buy Soru", "ซื้อโซรุ", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Technique","Soru") end)
-tabShop.newButton("Buy Geppo", "ซื้อเก็ปโปะ", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Technique","Geppo") end)
-tabShop.newButton("Buy Buso Haki", "ซื้อฮาคิ", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Haki","BusoHaki") end)
-
--- อื่นๆ (ใช้ Code สุ่มผลที่ส่งมา)
 tabMisc.newToggle("Auto Random Fruity", "สุ่มผลไม้อัตโนมัติ", false, function(s) Config.AutoRandom = s end)
 
--- [ Main Loops ]
+----------------------------------------------------------------
+-- [ Loops ]
+----------------------------------------------------------------
+
+-- Loop ถือของ
+task.spawn(function()
+    while task.wait(0.4) do
+        if Config.AutoEquip and Config.ToolName ~= "" then
+            pcall(function()
+                local Char = GetCharacter()
+                if not Char:FindFirstChild(Config.ToolName) then
+                    local Tool = Player.Backpack:FindFirstChild(Config.ToolName)
+                    if Tool then Char.Humanoid:EquipTool(Tool) end
+                end
+            end)
+        end
+    end
+end)
+
+-- Loop ฟาร์มบอส (ย้อนกลับไปใช้ Logic วาร์ปเดิมที่คุณต้องการ)
 task.spawn(function()
     while true do
         RunService.Heartbeat:Wait()
@@ -124,43 +160,39 @@ task.spawn(function()
             local Hrp = Char.HumanoidRootPart
             local Hum = Char.Humanoid
             
-            local targetName = nil
-            if Config.SlimeHunter then targetName = "Slime"
-            elseif Config.KingSlimeHunter then targetName = "King Slime"
-            elseif Config.EliteNoobHunter then targetName = "Elite Noob"
-            elseif Config.KingNoobHunter then targetName = "King Noob"
-            elseif Config.CutieBossHunter then targetName = "cutie boss"
-            elseif Config.SansHunter then targetName = "Sans"
-            elseif Config.CharaHunter then targetName = "Chara"
-            elseif Config.EvilThugHunter then targetName = "Evil Thug"
-            elseif Config.UnknownBossHunter then targetName = "Unknown Boss"
-            elseif Config.DuckHunter then targetName = "Duck Boss"
-            elseif Config.SwordMasterHunter then targetName = "Sword Master"
-            elseif Config.ShinoaHunter then targetName = "Shinoa"
+            local targetObj, targetHrp = nil, nil
+
+            if Config.SlimeGroupHunter then
+                local b, bh = FindBoss("slime")
+                if not b then b, bh = FindBoss("king slime") end
+                targetObj, targetHrp = b, bh
             elseif Config.NoobyHunter then
-                local b, bh, bu = FindBoss("nooby")
-                if not b then b, bh, bu = FindBoss("cutie noob") end
-                if b then
-                    Hum.PlatformStand = true
-                    Hrp.CFrame = CFrame.new(bh.Position + Vector3.new(0, 2.5, 0), bh.Position)
-                    Hrp.Velocity = Vector3.new(0,0,0)
-                    DoFastAttack()
-                    return
-                end
+                local b, bh = FindBoss("nooby")
+                if not b then b, bh = FindBoss("cutie noob") end
+                targetObj, targetHrp = b, bh
+            elseif Config.NoobGroupHunter then
+                local b, bh = FindBoss("elite noob")
+                if not b then b, bh = FindBoss("king noob") end
+                targetObj, targetHrp = b, bh
+            elseif Config.ThugHunter then targetObj, targetHrp = FindBoss("thug")
+            elseif Config.EvilThugHunter then targetObj, targetHrp = FindBoss("evil thug")
+            elseif Config.CutieBossHunter then targetObj, targetHrp = FindBoss("cutie boss")
+            elseif Config.SansHunter then targetObj, targetHrp = FindBoss("sans")
+            elseif Config.CharaHunter then targetObj, targetHrp = FindBoss("chara")
+            elseif Config.UnknownBossHunter then targetObj, targetHrp = FindBoss("unknown boss")
+            elseif Config.DuckHunter then targetObj, targetHrp = FindBoss("duck boss")
+            elseif Config.SwordMasterHunter then targetObj, targetHrp = FindBoss("sword master")
+            elseif Config.ShinoaHunter then targetObj, targetHrp = FindBoss("shinoa")
             end
 
-            if targetName then
-                local b, bh, bu = FindBoss(targetName)
-                if b then
-                    Hum.PlatformStand = true
-                    Hrp.CFrame = CFrame.new(bh.Position + Vector3.new(0, 2.8, 0), bh.Position)
-                    Hrp.Velocity = Vector3.new(0,0,0)
-                    DoFastAttack()
-                else
-                    Hum.PlatformStand = false
-                end
+            if targetObj then
+                Hum.PlatformStand = true
+                Hrp.CFrame = CFrame.new(targetHrp.Position + Vector3.new(0, 2.8, 0), targetHrp.Position)
+                Hrp.Velocity = Vector3.new(0,0,0)
+                if Config.FastAttack then DoFastAttack() end -- ตีเฉพาะตอนเจอบอส
             elseif Config.FastAttack then
-                DoFastAttack()
+                DoFastAttack() -- ตีปกติถ้าเปิดไว้
+                Hum.PlatformStand = false
             else
                 Hum.PlatformStand = false
             end
@@ -168,13 +200,10 @@ task.spawn(function()
     end
 end)
 
+-- Loop อัพ Stats
 task.spawn(function()
     while task.wait(0.3) do
         if Config.AutoRandom then RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Random Fruity","Money") end
-        if Config.AutoEquip then
-            local t = Player.Backpack:FindFirstChild(Config.ToolName)
-            if t then GetCharacter().Humanoid:EquipTool(t) end
-        end
         if Config.AutoFruit then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","DevilFruit","1") end
         if Config.AutoMelee then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","Melee","1") end
         if Config.AutoDefense then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","Defense","1") end
