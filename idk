@@ -101,6 +101,44 @@ local speedLoop = nil
 local jumpLoop = nil
 
 -- ================================
+-- เพิ่มระบบ RGB Rainbow สำหรับตัวละคร
+-- ================================
+local bodyRainbowEnabled = false
+local bodyRainbowSpeed = 0.2
+local bodyRainbowThread = nil
+
+-- ฟังก์ชันเริ่มระบบ RGB Rainbow สำหรับตัวละคร
+local function startBodyRainbowLoop()
+    if bodyRainbowThread then
+        coroutine.close(bodyRainbowThread)
+    end
+    
+    bodyRainbowThread = coroutine.create(function()
+        local hue = 0
+        while bodyRainbowEnabled do
+            -- คำนวณสีจากค่า Hue (0-1)
+            local color = Color3.fromHSV(hue, 1, 1)
+            
+            -- ส่งสีไปยังตัวละครโดยใช้ RemoteEvent เดียวกันกับที่ใช้ใน Outfit
+            pcall(function()
+                game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({["BodyColor"] = color})
+            end)
+            
+            -- เปลี่ยนค่า Hue สำหรับสีถัดไป
+            hue = hue + 0.01
+            if hue > 1 then
+                hue = 0
+            end
+            
+            wait(bodyRainbowSpeed)
+        end
+        bodyRainbowThread = nil
+    end)
+    
+    coroutine.resume(bodyRainbowThread)
+end
+
+-- ================================
 -- เพิ่ม Firefly Script เริ่มต้นที่นี่
 -- ================================
 local Players = game:GetService("Players")
@@ -196,8 +234,7 @@ local function startNameTagRainbow()
             -- คำนวณสีจากค่า Hue (0-1)
             local color = Color3.fromHSV(hue, 1, 1)
             
-            -- ส่งสีไปยัง NameTag (ชื่อคงที่ที่คุณบอกว่ามีให้เปลี่ยนในเกมแล้ว)
-            -- ใช้เลข 38 ตามที่คุณให้มา
+            -- ส่งสีไปยัง NameTag
             game:GetService("ReplicatedStorage").NameTagRemoteEvent:FireServer("name", color, 38)
             print("เปลี่ยนสี NameTag เป็น: " .. tostring(color))
             
@@ -342,6 +379,59 @@ tab.newButton("ปิดเรนโบว์ NameTag", "ปิดระบบ�
         nameTagRainbowThread = nil
     end
     print("ปิดระบบเรนโบว์ NameTag แล้ว")
+end)
+
+-- ================================
+-- เพิ่มระบบ RGB Rainbow สำหรับตัวละคร
+-- ================================
+tab.newLabel("RGB Body Rainbow", "ระบบเปลี่ยนสีตัวละครแบบเรนโบว์")
+
+-- Toggle สำหรับเปิด/ปิดระบบ RGB Rainbow สำหรับตัวละคร
+tab.newToggle("เปิด RGB Body Rainbow", "เปิด/ปิดระบบเปลี่ยนสีตัวละครแบบเรนโบว์", false, function(state)
+    bodyRainbowEnabled = state
+    if state then
+        print("เปิดระบบ RGB Body Rainbow แล้ว!")
+        startBodyRainbowLoop()
+    else
+        print("ปิดระบบ RGB Body Rainbow แล้ว")
+        if bodyRainbowThread then
+            coroutine.close(bodyRainbowThread)
+            bodyRainbowThread = nil
+        end
+    end
+end)
+
+-- Slider สำหรับปรับความเร็ว
+tab.newSlider("ความเร็ว RGB Rainbow", "ปรับความเร็วในการเปลี่ยนสี (0.05-1 วินาที)", 1, true, 0.2, function(value)
+    bodyRainbowSpeed = value
+    print("ตั้งค่าความเร็ว RGB Rainbow เป็น: " .. value .. " วินาที")
+    
+    -- ถ้าระบบเรนโบว์กำลังทำงานอยู่ ให้รีสตาร์ทด้วยความเร็วใหม่
+    if bodyRainbowEnabled then
+        if bodyRainbowThread then
+            coroutine.close(bodyRainbowThread)
+        end
+        startBodyRainbowLoop()
+    end
+end)
+
+-- ปุ่มเปลี่ยนสีตัวละครอย่างเดียว
+tab.newButton("เปลี่ยนสีตัวละคร", "เปลี่ยนสีตัวละครเป็นสีลานโบเชยๆ", function()
+    local color = Color3.fromHSV(math.random(), 1, 1)
+    pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({["BodyColor"] = color})
+    end)
+    print("เปลี่ยนสีตัวละครเป็น: " .. tostring(color))
+end)
+
+-- ปุ่มปิด RGB Rainbow
+tab.newButton("ปิด RGB Rainbow", "ปิดระบบเปลี่ยนสีตัวละครแบบเรนโบว์", function()
+    bodyRainbowEnabled = false
+    if bodyRainbowThread then
+        coroutine.close(bodyRainbowThread)
+        bodyRainbowThread = nil
+    end
+    print("ปิดระบบ RGB Rainbow แล้ว")
 end)
 
 -- เพิ่มระบบวิ่งเร็วและกระโดดสูง
@@ -1611,6 +1701,12 @@ print("🌈 Rainbow NameTag System:")
 print("1. ไปที่ส่วน 'Rainbow NameTag' ใน UI")
 print("2. กดเปิดระบบเรนโบว์ NameTag")
 print("3. ปรับความเร็วตามต้องการ")
+print("========================================")
+print("🌈 RGB Body Rainbow System:")
+print("1. ไปที่ส่วน 'RGB Body Rainbow' ใน UI")
+print("2. กดเปิดระบบ RGB Body Rainbow")
+print("3. ปรับความเร็วตามต้องการ")
+print("4. ระบบจะเปลี่ยนสีตัวละครแบบเรนโบว์อัตโนมัติ")
 print("========================================")
 print("🏃 Movement Hacks System:")
 print("1. ไปที่ส่วน 'Movement Hacks' ใน UI")
