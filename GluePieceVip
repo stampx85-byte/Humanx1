@@ -1,5 +1,5 @@
 local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
-local window = DrRayLibrary:Load("0.0.0.3)", "Default")
+local window = DrRayLibrary:Load("v0.0.0.3", "Default")
 
 -- [ Services ]
 local Player = game:GetService("Players").LocalPlayer
