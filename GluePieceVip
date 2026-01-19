@@ -1,5 +1,5 @@
 local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
-local window = DrRayLibrary:Load("Auto Item Hub (UNLIMITED EDITION)", "Default")
+local window = DrRayLibrary:Load("0.0.0.3)", "Default")
 
 -- [ Services ]
 local Player = game:GetService("Players").LocalPlayer
@@ -19,7 +19,7 @@ local Config = {
     NoobyHunter = false,      
     NoobGroupHunter = false,  
     ThugHunter = false,
-    SnakeHunter = false,
+    EvilThugHunter = false, 
     DuckHunter = false, 
     SwordMasterHunter = false, 
     CutieBossHunter = false,
@@ -40,59 +40,56 @@ local Config = {
     ToolName = "", 
     AttackRange = 100,
     AutoFruit = false, AutoMelee = false, AutoDefense = false, AutoStrength = false,
-    FarmHeight = 7 -- ความสูงที่ปรับไว้ล่าสุด
+    TargetHeight = 6 -- ปรับความสูงเป็น 6 ตามที่สั่ง
 }
 
--- [ ระบบสแกนและแจ้งเตือนบอส ]
+-- [ รายชื่อบอส ]
 local BossToCheck = {
     ["Sans"] = "sans", ["Chara"] = "chara", ["Duck Boss"] = "duck boss",
     ["Shinoa"] = "shinoa", ["Cutie Boss"] = "cutie boss",
     ["Sword Master"] = "sword master", ["Unknown Boss"] = "unknown boss",
     ["Kyo"] = "kyo"
 }
-local LastStatus = {}
 local PriorityTarget = nil
 
-task.spawn(function()
-    while task.wait(0.5) do
-        local foundAnyBoss = false
+-- [ ระบบแจ้งเตือนบอส ]
+local function Notify(title, text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 5
+    })
+end
+
+Workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("Model") then
+        local nameLower = string.lower(obj.Name)
         for displayName, internalName in pairs(BossToCheck) do
-            local bossModel = nil
-            for _, obj in ipairs(Workspace:GetDescendants()) do
-                if obj:IsA("Model") and string.lower(obj.Name) == internalName then
-                    local hum = obj:FindFirstChildOfClass("Humanoid")
-                    if hum and hum.Health > 0 and obj:FindFirstChild("HumanoidRootPart") then
-                        bossModel = obj
-                        break
-                    end
-                end
-            end
-
-            local isCurrentlyAlive = (bossModel ~= nil)
-            if isCurrentlyAlive and not LastStatus[displayName] then
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "Boss Alert!",
-                    Text = displayName .. " เกิดแล้ว!",
-                    Duration = 5
-                })
-            end
-            LastStatus[displayName] = isCurrentlyAlive
-
-            if isCurrentlyAlive and Config.AutoWarpToBoss then
-                local cfgName = displayName:gsub(" ", "") .. "Hunter"
-                if Config[cfgName] then
-                    PriorityTarget = {bossModel, bossModel.HumanoidRootPart}
-                    foundAnyBoss = true
+            if nameLower == internalName then
+                task.wait(0.1)
+                if obj:FindFirstChildOfClass("Humanoid") then
+                    Notify("📢 แจ้งเตือนบอส!", displayName .. " เกิดแล้ว!")
                 end
             end
         end
-        if not foundAnyBoss then PriorityTarget = nil end
     end
 end)
 
+Workspace.DescendantRemoving:Connect(function(obj)
+    if obj:IsA("Model") then
+        local nameLower = string.lower(obj.Name)
+        for displayName, internalName in pairs(BossToCheck) do
+            if nameLower == internalName then
+                Notify("💀 บอสตายแล้ว!", displayName .. " ถูกกำจัดแล้ว!")
+            end
+        end
+    end
+end)
+
+-- [ Logic พื้นฐาน ]
 local function GetCharacter() return Player.Character or Player.CharacterAdded:Wait() end
 
-local function FindMob(name)
+local function FindBoss(name)
     local targetName = string.lower(name)
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and string.lower(obj.Name) == targetName then
@@ -104,7 +101,22 @@ local function FindMob(name)
     return nil
 end
 
--- ฟังก์ชัน Fast Attack เดิม (เก็บไว้ทำงานคู่กัน)
+-- [ ระบบหาเป้าหมายบอส ]
+task.spawn(function()
+    while task.wait(0.1) do 
+        PriorityTarget = nil
+        if Config.AutoWarpToBoss then
+            for displayName, internalName in pairs(BossToCheck) do
+                local cfgName = displayName:gsub(" ", "") .. "Hunter"
+                if Config[cfgName] then
+                    local b, bh, hm = FindBoss(internalName)
+                    if b then PriorityTarget = {b, bh} break end
+                end
+            end
+        end
+    end
+end)
+
 local function DoFastAttack()
     pcall(function()
         local Char = GetCharacter()
@@ -124,100 +136,158 @@ local function DoFastAttack()
     end)
 end
 
--- [ UI Tabs ]
-local tabMob = DrRayLibrary.newTab("Mob Farm", "rbxassetid://4483345998")
-local tabBoss = DrRayLibrary.newTab("Boss Hunter", "rbxassetid://4483345998")
-local tabCombat = DrRayLibrary.newTab("Combat", "rbxassetid://4483345998")
-local tabStats = DrRayLibrary.newTab("Stats", "rbxassetid://4483345998")
+-- [ UI Setup ]
+local tabMain = DrRayLibrary.newTab("ฟาร์มอัตโนมัติ", "rbxassetid://4483345998")
+local tabBoss = DrRayLibrary.newTab("ล่าบอส", "rbxassetid://4483345998")
+local tabCombat = DrRayLibrary.newTab("ต่อสู้", "rbxassetid://4483345998")
+local tabStats = DrRayLibrary.newTab("สเตตัส", "rbxassetid://4483345998")
+local tabMisc = DrRayLibrary.newTab("อื่นๆ", "rbxassetid://4483345998")
 
--- [ Tab 1: Mob Farm ]
-tabMob.newToggle("Auto Light Sword", "วาร์ปไปทำของ (พิกัดบล็อก)", false, function(s) Config.AutoLightSword = s end)
-tabMob.newToggle("Bring Chara", "ดึง Chara มาจุดเดียว", false, function(s) Config.BringChara = s end)
-tabMob.newToggle("Slime Group", "ล่า Slime & King Slime", false, function(s) Config.SlimeGroupHunter = s end)
-tabMob.newToggle("Nooby Group", "ล่า Nooby & Cutie Noob", false, function(s) Config.NoobyHunter = s end)
-tabMob.newToggle("Noob Group", "ล่า Elite & King Noob", false, function(s) Config.NoobGroupHunter = s end)
-tabMob.newToggle("Thug", "ล่า Thug", false, function(s) Config.ThugHunter = s end)
-tabMob.newToggle("Evil Thug", "ล่า Evil Thug", false, function(s) Config.EvilThugHunter = s end)
-tabMob.newToggle("Snake", "ล่า Snake", false, function(s) Config.SnakeHunter = s end)
+tabMain.newToggle("ฟาร์ม Slime", "Slime & King Slime", false, function(s) Config.SlimeGroupHunter = s end)
+tabMain.newToggle("ฟาร์ม Nooby", "Nooby & Cutie Noob", false, function(s) Config.NoobyHunter = s end)
+tabMain.newToggle("ฟาร์ม Noob", "Elite & King Noob", false, function(s) Config.NoobGroupHunter = s end)
+tabMain.newToggle("ฟาร์ม Thug", "Thug ปกติ", false, function(s) Config.ThugHunter = s end)
+tabMain.newToggle("ฟาร์ม Evil Thug", "Evil Thug", false, function(s) Config.EvilThugHunter = s end)
 
--- [ Tab 2: Boss Hunter ]
-tabBoss.newToggle("Auto Warp To Boss", "ระบบล่าบอส", false, function(s) Config.AutoWarpToBoss = s end)
-tabBoss.newToggle("Kyo", "ล่า Kyo", false, function(s) Config.KyoHunter = s end)
-tabBoss.newToggle("Sans", "ล่า Sans", false, function(s) Config.SansHunter = s end)
-tabBoss.newToggle("Chara", "ล่า Chara", false, function(s) Config.CharaHunter = s end)
-tabBoss.newToggle("Unknown Boss", "ล่า Unknown Boss", false, function(s) Config.UnknownBossHunter = s end)
-tabBoss.newToggle("Duck Boss", "ล่า Duck Boss", false, function(s) Config.DuckHunter = s end)
-tabBoss.newToggle("Sword Master", "ล่า Sword Master", false, function(s) Config.SwordMasterHunter = s end)
-tabBoss.newToggle("Shinoa", "ล่า Shinoa", false, function(s) Config.ShinoaHunter = s end)
-tabBoss.newToggle("Cutie Boss", "ล่า Cutie Boss", false, function(s) Config.CutieBossHunter = s end)
+tabBoss.newToggle("เปิดระบบวาร์ปหาบอส", "ไปหาบอสทันทีที่เกิด", false, function(s) Config.AutoWarpToBoss = s end)
+tabBoss.newLabel("--- เลือกบอสที่ต้องการ ---")
+tabBoss.newToggle("ล่า Kyo", "", false, function(s) Config.KyoHunter = s end)
+tabBoss.newToggle("ล่า Sans", "", false, function(s) Config.SansHunter = s end)
+tabBoss.newToggle("ล่า Chara", "", false, function(s) Config.CharaHunter = s end)
+tabBoss.newToggle("ล่า Shinoa", "", false, function(s) Config.ShinoaHunter = s end)
+tabBoss.newToggle("ล่า Unknown Boss", "", false, function(s) Config.UnknownBossHunter = s end)
+tabBoss.newToggle("ล่า Duck Boss", "", false, function(s) Config.DuckHunter = s end)
+tabBoss.newToggle("ล่า Sword Master", "", false, function(s) Config.SwordMasterHunter = s end)
+tabBoss.newToggle("ล่า Cutie Boss", "", false, function(s) Config.CutieBossHunter = s end)
 
--- [ Tab 3: Combat (ปรับปรุงให้แรงโครตๆ) ]
+tabCombat.newToggle("ถืออาวุธอัตโนมัติ", "บังคับถือของในรายการ", false, function(s) Config.AutoEquip = s end)
 local ToolList = {"Cursed Scythe", "Epic Sword", "Youru", "True Yorou", "Elucidator", "Dual Sword", "Real Knife", "True Knife", "Saber", "Bisento", "Amethyst Scythe", "Lighting Sword", "Limitless", "Black leg", "OFA [Deku]", "Combat"}
-tabCombat.newToggle("Auto Equip", "ถือของอัตโนมัติ", false, function(s) Config.AutoEquip = s end)
-tabCombat.newDropdown("Select Tool", "เลือกอาวุธ", ToolList, function(selected) Config.ToolName = selected end)
-tabCombat.newToggle("UNLIMITED FAST ATTACK", "เปิดโหมดโจมตีไม่จำกัดความเร็ว", false, function(s) Config.FastAttack = s end)
-tabCombat.newSlider("Attack Range", "ระยะการโจมตี", 3000, 100, function(num) Config.AttackRange = num end)
+tabCombat.newDropdown("เลือกอาวุธ", "เลือกของที่ต้องการถือ", ToolList, function(selected) Config.ToolName = selected end)
+tabCombat.newToggle("โจมตีรวดเร็ว (Fast Attack)", "", false, function(s) Config.FastAttack = s end)
+tabCombat.newSlider("ระยะโจมตี", "", 3000, false, function(num) Config.AttackRange = num end)
 
--- [ Tab 4: Stats ]
-tabStats.newButton("Reset Stats (Money)", "รีเซ็ตสเตตัส (ใช้เงิน)", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Reset","Stats","Money") end)
-tabStats.newToggle("Auto Random Fruity", "สุ่มผลไม้อัตโนมัติ", false, function(s) Config.AutoRandom = s end)
-tabStats.newToggle("Auto Devil Fruit", "อัพผลไม้", false, function(s) Config.AutoFruit = s end)
-tabStats.newToggle("Auto Melee", "อัพหมัด", false, function(s) Config.AutoMelee = s end)
-tabStats.newToggle("Auto Defense", "อัพป้องกัน", false, function(s) Config.AutoDefense = s end)
-tabStats.newToggle("Auto Strength", "อัพดาบ/กำลัง", false, function(s) Config.AutoStrength = s end)
+tabStats.newButton("รีเซ็ตสเตตัส (เงิน)", "", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Reset","Stats","Money") end)
+tabStats.newToggle("อัพผลปีศาจ", "", false, function(s) Config.AutoFruit = s end)
+tabStats.newToggle("อัพหมัด", "", false, function(s) Config.AutoMelee = s end)
+tabStats.newToggle("อัพป้องกัน", "", false, function(s) Config.AutoDefense = s end)
+tabStats.newToggle("อัพดาบ/กำลัง", "", false, function(s) Config.AutoStrength = s end)
 
--- [ Main Farm Loop ]
+tabMisc.newToggle("ทำดาบแสงอัตโนมัติ", "", false, function(s) Config.AutoLightSword = s end)
+tabMisc.newToggle("ดูด Chara", "", false, function(s) Config.BringChara = s end)
+tabMisc.newToggle("สุ่มผลไม้อัตโนมัติ", "", false, function(s) Config.AutoRandom = s end)
+
+-- [ Loop หลัก ]
 task.spawn(function()
     while true do
         RunService.Heartbeat:Wait()
+        
+        -- Logic ดูด Chara
+        if Config.BringChara then
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("Model") and string.lower(obj.Name) == "chara" then
+                    local hum = obj:FindFirstChildOfClass("Humanoid")
+                    local hrp = obj:FindFirstChild("HumanoidRootPart")
+                    if hum and hum.Health > 0 and hrp then
+                        obj:PivotTo(Config.CharaPoint)
+                        hrp.Velocity = Vector3.new(0,0,0)
+                    end
+                end
+            end
+        end
+
         pcall(function()
             local Char = GetCharacter()
             local Hrp = Char.HumanoidRootPart
             local Hum = Char.Humanoid
             
-            -- วาร์ปฟาร์ม & ลอยสูง 7
-            local tObj, tHrp, tHum = nil, nil, nil
-            if Config.AutoWarpToBoss and PriorityTarget then tObj, tHrp, tHum = PriorityTarget[1], PriorityTarget[2], PriorityTarget[1]:FindFirstChildOfClass("Humanoid")
-            elseif Config.SlimeGroupHunter then tObj, tHrp, tHum = FindMob("slime") or FindMob("king slime")
-            elseif Config.NoobyHunter then tObj, tHrp, tHum = FindMob("nooby") or FindMob("cutie noob")
-            elseif Config.NoobGroupHunter then tObj, tHrp, tHum = FindMob("elite noob") or FindMob("king noob")
-            elseif Config.ThugHunter then tObj, tHrp, tHum = FindMob("thug")
-            elseif Config.EvilThugHunter then tObj, tHrp, tHum = FindMob("evil thug")
-            elseif Config.SnakeHunter then tObj, tHrp, tHum = FindMob("snake")
-            elseif Config.KyoHunter then tObj, tHrp, tHum = FindMob("kyo")
-            elseif Config.SansHunter then tObj, tHrp, tHum = FindMob("sans")
-            elseif Config.CharaHunter then tObj, tHrp, tHum = FindMob("chara")
-            elseif Config.UnknownBossHunter then tObj, tHrp, tHum = FindMob("unknown boss")
-            elseif Config.DuckHunter then tObj, tHrp, tHum = FindMob("duck boss")
-            elseif Config.SwordMasterHunter then tObj, tHrp, tHum = FindMob("sword master")
-            elseif Config.ShinoaHunter then tObj, tHrp, tHum = FindMob("shinoa")
-            elseif Config.CutieBossHunter then tObj, tHrp, tHum = FindMob("cutie boss")
+            -- บอส
+            local currentBossHrp = nil
+            if PriorityTarget then
+                local targetHrp = PriorityTarget[2]
+                local targetHum = PriorityTarget[1]:FindFirstChildOfClass("Humanoid")
+                if targetHum and targetHum.Health > 0 then currentBossHrp = targetHrp end
             end
 
-            if tHrp and tHum and tHum.Health > 0 then
+            -- มอส
+            local targetObj, targetHrp, targetHum = nil, nil, nil
+            if not currentBossHrp then
+                if Config.KyoHunter then targetObj, targetHrp, targetHum = FindBoss("kyo")
+                elseif Config.SlimeGroupHunter then
+                    local b, bh, hm = FindBoss("slime")
+                    if not b then b, bh, hm = FindBoss("king slime") end
+                    targetObj, targetHrp, targetHum = b, bh, hm
+                elseif Config.NoobyHunter then
+                    local b, bh, hm = FindBoss("nooby")
+                    if not b then b, bh, hm = FindBoss("cutie noob") end
+                    targetObj, targetHrp, targetHum = b, bh, hm
+                elseif Config.NoobGroupHunter then
+                    local b, bh, hm = FindBoss("elite noob")
+                    if not b then b, bh, hm = FindBoss("king noob") end
+                    targetObj, targetHrp, targetHum = b, bh, hm
+                elseif Config.ThugHunter then targetObj, targetHrp, targetHum = FindBoss("thug")
+                elseif Config.EvilThugHunter then targetObj, targetHrp, targetHum = FindBoss("evil thug")
+                elseif Config.CutieBossHunter then targetObj, targetHrp, targetHum = FindBoss("cutie boss")
+                elseif Config.SansHunter then targetObj, targetHrp, targetHum = FindBoss("sans")
+                elseif Config.CharaHunter then targetObj, targetHrp, targetHum = FindBoss("chara")
+                elseif Config.UnknownBossHunter then targetObj, targetHrp, targetHum = FindBoss("unknown boss")
+                elseif Config.DuckHunter then targetObj, targetHrp, targetHum = FindBoss("duck boss")
+                elseif Config.SwordMasterHunter then targetObj, targetHrp, targetHum = FindBoss("sword master")
+                elseif Config.ShinoaHunter then targetObj, targetHrp, targetHum = FindBoss("shinoa")
+                end
+            end
+
+            -- Action (ปรับความสูงเป็น +6)
+            if currentBossHrp then
                 Hum.PlatformStand = true
-                Hrp.CFrame = CFrame.new(tHrp.Position + Vector3.new(0, Config.FarmHeight, 0), tHrp.Position)
+                Hrp.CFrame = CFrame.new(currentBossHrp.Position + Vector3.new(0, Config.TargetHeight, 0), currentBossHrp.Position)
                 Hrp.Velocity = Vector3.new(0,0,0)
-                if Config.FastAttack then DoFastAttack() end -- เรียกใช้ Fast Attack เดิม
+                if Config.FastAttack then DoFastAttack() end
+            elseif targetHrp and targetHum and targetHum.Health > 0 then
+                Hum.PlatformStand = true
+                Hrp.CFrame = CFrame.new(targetHrp.Position + Vector3.new(0, Config.TargetHeight, 0), targetHrp.Position)
+                Hrp.Velocity = Vector3.new(0,0,0)
+                if Config.FastAttack then DoFastAttack() end
             else
                 Hum.PlatformStand = false
+                if Config.AutoLightSword then
+                    Hrp.CFrame = Config.LightSwordPos
+                    Hrp.Velocity = Vector3.new(0,0,0)
+                elseif Config.BringChara then
+                    Hrp.CFrame = Config.CharaPoint * CFrame.new(0, Config.TargetHeight, 0)
+                    Hrp.Velocity = Vector3.new(0,0,0)
+                    if Config.FastAttack then DoFastAttack() end
+                end
             end
         end)
     end
 end)
 
--- [ Services Loops: Auto Random, Auto Stats, Auto Equip ]
+-- [ ปรับปรุงระบบ Auto Equip ให้เสถียรขึ้น ]
 task.spawn(function()
     while task.wait(0.3) do
         if Config.AutoEquip and Config.ToolName ~= "" then
             pcall(function()
                 local Char = GetCharacter()
-                if not Char:FindFirstChild(Config.ToolName) then
-                    local Tool = Player.Backpack:FindFirstChild(Config.ToolName)
-                    if Tool then Char.Humanoid:EquipTool(Tool) end
+                local Backpack = Player.Backpack
+                local CurrentTool = Char:FindFirstChildOfClass("Tool")
+                
+                -- ถ้าไม่ได้ถือของ หรือของที่ถือไม่ใช่ตัวที่เลือก
+                if not CurrentTool or CurrentTool.Name ~= Config.ToolName then
+                    local TargetTool = Backpack:FindFirstChild(Config.ToolName)
+                    if TargetTool then
+                        Char.Humanoid:UnequipTools() -- วางของเก่า
+                        task.wait(0.1)
+                        Char.Humanoid:EquipTool(TargetTool) -- ถือของใหม่
+                    end
                 end
             end)
         end
+    end
+end)
+
+-- Stats Loop
+task.spawn(function()
+    while task.wait(0.3) do
         if Config.AutoRandom then RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Random Fruity","Money") end
         if Config.AutoFruit then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","DevilFruit","1") end
         if Config.AutoMelee then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","Melee","1") end
@@ -225,49 +295,3 @@ task.spawn(function()
         if Config.AutoStrength then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","Strength","1") end
     end
 end)
-
--------------------------------------------------------
--- [ ส่วนที่เพิ่ม: HYPER ATTACK UNLIMITED (ไม่จำกัดความเร็ว) ]
--------------------------------------------------------
-local function HyperAttack()
-    if not Config.FastAttack then return end
-    pcall(function()
-        local Char = Player.Character
-        if not Char then return end
-        local Combat = Char:FindFirstChild("Combat_Event", true) or Player.Backpack:FindFirstChild("Combat_Event", true)
-        local Weapon = Char:FindFirstChild("Weapon_Event", true) or Player.Backpack:FindFirstChild("Weapon_Event", true)
-        local Hitbox = require(RS:WaitForChild("Module"):WaitForChild("Hitbox"))
-        
-        local targets = Hitbox:Overlap({
-            MaxTarget = 100, 
-            Humanoid = Char.Humanoid, 
-            CF = Char.HumanoidRootPart.CFrame, 
-            Size = Vector3.new(Config.AttackRange, Config.AttackRange, Config.AttackRange)
-        })
-        
-        if #targets > 0 then
-            -- อัด Packet 100 ชุดต่อรอบ
-            for i = 1, 100 do 
-                if Combat then Combat:FireServer("Attack", targets) end
-                if Weapon then Weapon:FireServer("Slash", targets) end
-            end
-        end
-    end)
-end
-
--- สร้าง 10 Parallel Loops
-for i = 1, 10 do
-    task.spawn(function()
-        while true do
-            RunService.Stepped:Wait()
-            if Config.FastAttack then HyperAttack() end
-        end
-    end)
-end
-
--- ระบบ Recursive (สั่งงานซ้ำซ้อนระดับมิลลิวินาที)
-local function RecursiveLoop()
-    if Config.FastAttack then HyperAttack() end
-    task.defer(RecursiveLoop)
-end
-task.spawn(RecursiveLoop)
