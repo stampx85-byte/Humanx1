@@ -1,0 +1,88 @@
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("v0.0.0.1", "Default")
+local tab = DrRayLibrary.newTab("Main", "rbxassetid://4483345998")
+
+local player = game.Players.LocalPlayer
+local _G = getgenv()
+
+_G.FastAttack = false
+_G.AutoWarp = false
+local monsterNames = {"Enemy Axe", "Enemy Greatsword", "Enemy"}
+
+-- ฟังก์ชันค้นหามอนสเตอร์
+local function GetMonster()
+    for _, v in pairs(game.Workspace:GetDescendants()) do
+        if table.find(monsterNames, v.Name) then
+            local hum = v:FindFirstChildOfClass("Humanoid")
+            local rpart = v:FindFirstChild("HumanoidRootPart")
+            if hum and rpart and hum.Health > 0 then
+                return rpart
+            end
+        end
+    end
+    return nil
+end
+
+-- ลูปหลัก
+task.spawn(function()
+    while true do
+        task.wait(0.1) 
+        if _G.AutoWarp or _G.FastAttack then
+            pcall(function()
+                local char = player.Character
+                if not char then return end
+                
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                local root = char:FindFirstChild("HumanoidRootPart")
+
+                if hum and hum.Health > 0 then
+                    -- 1. ระบบวาร์ป
+                    if _G.AutoWarp and root then
+                        local targetPart = GetMonster()
+                        if targetPart then
+                            root.CFrame = targetPart.CFrame * CFrame.new(0, 7, 0)
+                        end
+                    end
+
+                    -- 2. ระบบตีเร็ว (ปรับปรุงการตัดอนิเมชั่นเพื่อไม่ให้บัคถือของ)
+                    if _G.FastAttack then
+                        local tool = char:FindFirstChildOfClass("Tool")
+                        if tool then
+                            tool:Activate()
+                            -- แก้ไข: ตัดเฉพาะอนิเมชั่นที่ชื่อมีคำว่า Attack หรือ Slash เพื่อให้ยังถืออาวุธได้ปกติ
+                            for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+                                if track.Animation.AnimationId:find("attack") or track.Animation.AnimationId:find("slash") or track.Name:lower():find("attack") then
+                                    track:Stop()
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+--- [ UI Control ] ---
+
+tab.newToggle("Fast Attack", "ตีรัว (แก้ไขบัคถือของ)", false, function(state)
+    _G.FastAttack = state
+end)
+
+tab.newToggle("Auto Warp", "วาร์ปไปตี", false, function(state)
+    _G.AutoWarp = state
+end)
+
+tab.newButton("Catch With Rods", "กดเพื่อตกปลา (1000 รอบ)", function()
+    local char = player.Character
+    if char then
+        for _, tool in ipairs(char:GetChildren()) do
+            if tool:IsA("Tool") and tool:FindFirstChild("RodEvent") then
+                local args = {[1] = { action = "Catch" }}
+                for i = 1, 1000 do
+                    tool.RodEvent:FireServer(unpack(args))
+                end
+            end
+        end
+    end
+end)
