@@ -6,9 +6,8 @@ local Player = game:GetService("Players").LocalPlayer
 local RS = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
-local TeleportService = game:GetService("TeleportService")
 
--- [ 1. ระบบป้องกันการหลุด Anti-AFK ]
+-- [ Anti-AFK ]
 Player.Idled:Connect(function()
     game:GetService("VirtualUser"):CaptureController()
     game:GetService("VirtualUser"):ClickButton2(Vector2.new())
@@ -28,7 +27,7 @@ local Config = {
     EvilThugHunter = false, 
     UnknownBossHunter = false,
     SansHunter = false,
-    KyoHunter = false, -- เพิ่มระบบล่า Kyo
+    KyoHunter = false,
     AutoLightSword = false,
     LightSwordPos = CFrame.new(554.939148, -29.1302795, -630.229553),
     -- [ ระบบดูดมอนสเตอร์ Chara ]
@@ -63,12 +62,12 @@ local function ManagePlatform(state)
     end
 end
 
--- [ ระบบเช็คบอส - เพิ่ม Kyo เข้าไป ]
+-- [ รายชื่อบอส ]
 local BossToCheck = {
     ["Sans"] = "sans", ["Chara"] = "chara", ["Duck Boss"] = "duck boss",
     ["Shinoa"] = "shinoa", ["Cutie Boss"] = "cutie boss",
     ["Sword Master"] = "sword master", ["Unknown Boss"] = "unknown boss",
-    ["Kyo"] = "kyo" -- เพิ่ม Kyo เข้าในรายการเช็ค
+    ["Kyo"] = "kyo"
 }
 local LastStatus = {}
 local PriorityTarget = nil
@@ -146,7 +145,7 @@ tabFarm.newToggle("Auto Light Sword", "วาร์ปไปยืนทำข�
 tabFarm.newToggle("Bring Chara", "ดึง Chara มาจุดเดียว", false, function(s) Config.BringChara = s end)
 
 tabFarm.newToggle("Auto Warp To Boss", "เปิด/ปิด วาร์ปไปหาบอสเมื่อเกิด", false, function(s) Config.AutoWarpToBoss = s end)
-tabFarm.newToggle("Kyo", "ล่า Kyo (วาร์ปฟาร์มอัตโนมัติ)", false, function(s) Config.KyoHunter = s end) -- เพิ่มปุ่มล่า Kyo
+tabFarm.newToggle("Kyo", "ล่า Kyo", false, function(s) Config.KyoHunter = s end)
 tabFarm.newToggle("Slime Group", "ล่า Slime & King Slime", false, function(s) Config.SlimeGroupHunter = s end)
 tabFarm.newToggle("Nooby Group", "ล่า Nooby & Cutie Noob", false, function(s) Config.NoobyHunter = s end)
 tabFarm.newToggle("Noob Group", "ล่า Elite & King Noob", false, function(s) Config.NoobGroupHunter = s end)
@@ -162,7 +161,8 @@ tabFarm.newToggle("Shinoa", "ล่า Shinoa", false, function(s) Config.Shinoa
 
 -- [ Combat Tab ]
 tabCombat.newToggle("Auto Equip", "ถือของอัตโนมัติ", false, function(s) Config.AutoEquip = s end)
-local ToolList = {"Epic Sword", "Youru", "True Yorou", "Elucidator", "Dual Sword", "Real Knife", "True Knife", "Saber", "Bisento", "Amethyst Scythe", "Lighting Sword", "Limitless", "Black leg", "OFA [Deku]", "Combat"}
+-- เพิ่ม Cursed Scythe ใน List
+local ToolList = {"Cursed Scythe", "Epic Sword", "Youru", "True Yorou", "Elucidator", "Dual Sword", "Real Knife", "True Knife", "Saber", "Bisento", "Amethyst Scythe", "Lighting Sword", "Limitless", "Black leg", "OFA [Deku]", "Combat"}
 tabCombat.newDropdown("Select Tool", "เลือกไอเทมที่จะถือ", ToolList, function(selected) Config.ToolName = selected end)
 tabCombat.newToggle("NO ANIMATION ATTACK", "ยืนนิ่งแต่ตีโครตรัว", false, function(s) Config.FastAttack = s end)
 tabCombat.newSlider("ULTRA Attack Range", "ระยะตี", 3000, false, function(num) Config.AttackRange = num end)
@@ -212,13 +212,13 @@ task.spawn(function()
                 if Config.FastAttack then DoFastAttack() end
             end
 
-            -- ระบบฟาร์มบอส (ปรับระยะเป็น 5 ทั้งหมด)
+            -- ฟาร์มบอส
             local targetObj, targetHrp, targetHum = nil, nil, nil
             if PriorityTarget then
                 targetObj, targetHrp = PriorityTarget[1], PriorityTarget[2]
                 targetHum = targetObj:FindFirstChildOfClass("Humanoid")
             else
-                if Config.KyoHunter then targetObj, targetHrp, targetHum = FindBoss("kyo") -- ฟาร์ม Kyo
+                if Config.KyoHunter then targetObj, targetHrp, targetHum = FindBoss("kyo")
                 elseif Config.SlimeGroupHunter then
                     local b, bh, hm = FindBoss("slime")
                     if not b then b, bh, hm = FindBoss("king slime") end
@@ -245,7 +245,6 @@ task.spawn(function()
 
             if targetObj and targetHum and targetHum.Health > 0 then
                 Hum.PlatformStand = true
-                -- วาร์ปไปบนหัวระยะ 5 หน่วย
                 Hrp.CFrame = CFrame.new(targetHrp.Position + Vector3.new(0, 5.0, 0), targetHrp.Position)
                 Hrp.Velocity = Vector3.new(0,0,0)
                 if Config.FastAttack then DoFastAttack() end
@@ -256,7 +255,7 @@ task.spawn(function()
     end
 end)
 
--- [ Auto Equip & Stats Loops ]
+-- [ Auto Equip ]
 task.spawn(function()
     while task.wait(0.2) do
         if Config.AutoEquip and Config.ToolName ~= "" then
@@ -264,13 +263,16 @@ task.spawn(function()
                 local Char = GetCharacter()
                 if not Char:FindFirstChild(Config.ToolName) then
                     local Tool = Player.Backpack:FindFirstChild(Config.ToolName)
-                    if Tool then Char.Humanoid:EquipTool(Tool) end
+                    if Tool then 
+                        Char.Humanoid:EquipTool(Tool) 
+                    end
                 end
             end)
         end
     end
 end)
 
+-- [ Auto Stats ]
 task.spawn(function()
     while task.wait(0.3) do
         if Config.AutoRandom then RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Random Fruity","Money") end
