@@ -1,0 +1,105 @@
+-- [[ Load DrRay UI Library ]] --
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("TurtleSpy Full Script", "Default")
+
+-- สร้าง Tab ใหม่
+local tab = DrRayLibrary.newTab("Main Functions", "rbxassetid://4483345998")
+
+-- ตัวแปรควบคุม
+local autoHoopEnabled = false
+local autoSellEnabled = false
+local attackEnabled = false
+
+-- พิกัดจุดขายเดิม
+local sellLocation = CFrame.new(67.619606, 2.01931691, -40.2597504)
+
+-- [[ 1. Toggle: วาร์ปเก็บ Hoop วนลูป ]]
+tab.newToggle("Auto Warp All Hoops", "วาร์ปหา Hoop ทุกอันจนครบแล้ววนใหม่", false, function(toggleState)
+    autoHoopEnabled = toggleState
+    if autoHoopEnabled then
+        task.spawn(function()
+            while autoHoopEnabled do
+                local allHoops = {}
+                for _, obj in ipairs(game.Workspace:GetDescendants()) do
+                    if obj.Name == "Hoop" and (obj:IsA("BasePart") or obj:IsA("Model")) then
+                        table.insert(allHoops, obj)
+                    end
+                end
+
+                if #allHoops > 0 then
+                    for _, hoop in ipairs(allHoops) do
+                        if not autoHoopEnabled then break end
+                        -- ถ้าเปิดโหมดขายอยู่ ให้หยุดวาร์ปหา Hoop ชั่วคราว
+                        if autoSellEnabled then repeat task.wait(0.5) until not autoSellEnabled or not autoHoopEnabled end
+                        
+                        pcall(function()
+                            local targetPos = hoop:IsA("Model") and hoop:GetModelCFrame() or hoop.CFrame
+                            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = targetPos
+                        end)
+                        task.wait(0.3) 
+                    end
+                else
+                    task.wait(1)
+                end
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+-- [[ 2. Toggle: วาร์ปไปจุดขาย (Auto Sell) ]]
+tab.newToggle("Auto Warp To Sell", "วาร์ปค้างไว้ที่จุดขาย", false, function(toggleState)
+    autoSellEnabled = toggleState
+    if autoSellEnabled then
+        task.spawn(function()
+            while autoSellEnabled do
+                pcall(function()
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = sellLocation
+                end)
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+-- [[ 3. Toggle: ออโต้คลิก (Fast Attack + No Anim) ]]
+tab.newToggle("Auto Click (Fast)", "ตีรัวและตัดอนิเมชั่นออก", false, function(toggleState)
+    attackEnabled = toggleState
+    
+    -- ลบอนิเมชั่น
+    task.spawn(function()
+        while attackEnabled do
+            pcall(function()
+                local hum = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+                        track:Stop()
+                    end
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+
+    -- ตีรัว (Auto Click)
+    task.spawn(function()
+        while attackEnabled do
+            pcall(function()
+                local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                if tool then
+                    tool:Activate()
+                end
+            end)
+            task.wait(0.01)
+        end
+    end)
+end)
+
+-- [[ปุ่ม Sync เวลา Server]]
+tab.newButton("Sync Server Time", "Fix getServerTimeRemote", function()
+    pcall(function()
+        game:GetService("ReplicatedStorage").rEvents.getServerTimeRemote:InvokeServer()
+    end)
+end)
+
+print("Full Script with Auto Sell & Click Loaded!")
