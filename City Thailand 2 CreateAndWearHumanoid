@@ -1,0 +1,885 @@
+-- โหลด Library DrRay UI
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("Outfit System", "Default")
+
+-- สร้าง Tab สำหรับเลือกชุด
+local tab = DrRayLibrary.newTab("Outfits", "rbxassetid://10734951151")
+
+---------------------------------------------------------
+-- ฟังก์ชันสำหรับจัดการการใส่ชุด (ครบ 8 ชุด - ใช้ BloxbizRemotes ทั้งหมด)
+---------------------------------------------------------
+
+-- ฟังก์ชันตรวจสอบ Remote
+local function checkRemote()
+    local rs = game:GetService("ReplicatedStorage")
+    local hasBloxbizRemotes = rs:FindFirstChild("BloxbizRemotes")
+    
+    if not hasBloxbizRemotes then
+        print("❌ ไม่พบ BloxbizRemotes")
+        DrRayLibrary:Notify("Error", "ไม่พบ BloxbizRemotes", 3)
+        return false
+    end
+    
+    local hasCatalogOnApplyOutfit = hasBloxbizRemotes:FindFirstChild("CatalogOnApplyOutfit")
+    local hasCatalogOnApplyToRealHumanoid = hasBloxbizRemotes:FindFirstChild("CatalogOnApplyToRealHumanoid")
+    
+    if not hasCatalogOnApplyOutfit then
+        print("❌ ไม่พบ CatalogOnApplyOutfit")
+        DrRayLibrary:Notify("Error", "ไม่พบ CatalogOnApplyOutfit", 3)
+        return false
+    end
+    
+    if not hasCatalogOnApplyToRealHumanoid then
+        print("❌ ไม่พบ CatalogOnApplyToRealHumanoid")
+        DrRayLibrary:Notify("Error", "ไม่พบ CatalogOnApplyToRealHumanoid", 3)
+        return false
+    end
+    
+    print("✓ พบ BloxbizRemotes และ RemoteEvents ที่ต้องการ")
+    return true
+end
+
+-- ฟังก์ชันตั้งค่าสีพื้นฐาน
+local function applyBodyColor(color)
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({
+            ["BodyColor"] = {
+                ["HeadColor"] = color,
+                ["TorsoColor"] = color,
+                ["LeftArmColor"] = color,
+                ["RightLegColor"] = color,
+                ["LeftLegColor"] = color,
+                ["RightArmColor"] = color
+            }
+        })
+    end)
+    
+    if success then
+        print("✓ ตั้งค่าสีสำเร็จ")
+        return true
+    else
+        print("✗ ตั้งค่าสีไม่สำเร็จ: " .. tostring(errorMsg))
+        return false
+    end
+end
+
+-- ชุด 1 - Basic White
+local function applyOutfit1()
+    print("กำลังใส่ชุด 1 (Basic White)...")
+    
+    if not checkRemote() then return false end
+    
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 0,
+            ["Accessories"] = {
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 4085923851, -- หน้า
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Face
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 16807152290, -- หมวก
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Hat
+                }
+            },
+            ["RightLegColor"] = Color3.fromRGB(246, 246, 246),
+            ["MoodAnimation"] = 10647852134,
+            ["LeftLegColor"] = Color3.fromRGB(246, 246, 246),
+            ["JumpAnimation"] = 0,
+            ["ProportionScale"] = 0.5,
+            ["BodyTypeScale"] = 0,
+            ["ClimbAnimation"] = 0,
+            ["LeftArmColor"] = Color3.fromRGB(246, 246, 246),
+            ["Face"] = 0,
+            ["Pants"] = 6095618719,
+            ["RightArmColor"] = Color3.fromRGB(246, 246, 246),
+            ["DepthScale"] = 0.8500000238418579,
+            ["WidthScale"] = 0.699999988079071,
+            ["SwimAnimation"] = 0,
+            ["RightArm"] = 32357584,
+            ["GraphicTShirt"] = 0,
+            ["Head"] = 17388507384,
+            ["Shirt"] = 3334218182,
+            ["RightLeg"] = 27493718,
+            ["RunAnimation"] = 0,
+            ["Torso"] = 27121265,
+            ["FallAnimation"] = 0,
+            ["TorsoColor"] = Color3.fromRGB(246, 246, 246),
+            ["IdleAnimation"] = 11600321661,
+            ["LeftArm"] = 32357619,
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 1.0499999523162842,
+            ["HeadColor"] = Color3.fromRGB(246, 246, 246),
+            ["LeftLeg"] = 27493683
+        })
+    end)
+    
+    if success then
+        print("✓ ใส่ชุด 1 สำเร็จ")
+        wait(0.3)
+        applyBodyColor(Color3.fromRGB(246, 246, 246))
+        return true
+    else
+        print("✗ ใส่ชุด 1 ไม่สำเร็จ: " .. tostring(errorMsg))
+        DrRayLibrary:Notify("Error", "ใส่ชุด 1 ไม่สำเร็จ", 3)
+        return false
+    end
+end
+
+-- ชุด 2 - Light Blue (แก้ไขใหม่ให้ครบ Body Parts)
+local function applyOutfit2()
+    print("กำลังใส่ชุด 2 (Light Blue)...")
+    
+    if not checkRemote() then return false end
+    
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 0,
+            ["Accessories"] = {
+                -- ใส่ Back Accessories จากโค้ดเดิม (แยกเป็นชิ้นๆ)
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 120204067923438,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 118799338103138,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 121360936156823,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 90404886687085,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 132416515427938,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 80629770394501,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 107852478332182,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 80628080423002,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 101379144205559,
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                }
+            },
+            ["RightLegColor"] = Color3.fromRGB(151, 186, 230),
+            ["MoodAnimation"] = 0,
+            ["LeftLegColor"] = Color3.fromRGB(151, 186, 230),
+            ["JumpAnimation"] = 0,
+            ["ProportionScale"] = 0,
+            ["BodyTypeScale"] = 0,
+            ["ClimbAnimation"] = 0,
+            ["LeftArmColor"] = Color3.fromRGB(151, 186, 230),
+            ["Face"] = 0,
+            ["Pants"] = 301811279,
+            ["RightArmColor"] = Color3.fromRGB(151, 186, 230),
+            ["DepthScale"] = 1,
+            ["WidthScale"] = 1,
+            ["SwimAnimation"] = 0,
+            ["RightArm"] = 32357584, -- เพิ่ม RightArm
+            ["GraphicTShirt"] = 0,
+            ["Head"] = 62084278, -- ใส่ค่า Head ที่เหมาะสม
+            ["Shirt"] = 144076358,
+            ["RightLeg"] = 27493718, -- เพิ่ม RightLeg
+            ["RunAnimation"] = 0,
+            ["Torso"] = 27121265, -- เพิ่ม Torso
+            ["FallAnimation"] = 0,
+            ["TorsoColor"] = Color3.fromRGB(151, 186, 230),
+            ["IdleAnimation"] = 0,
+            ["LeftArm"] = 32357619, -- เพิ่ม LeftArm
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 1,
+            ["HeadColor"] = Color3.fromRGB(151, 186, 230),
+            ["LeftLeg"] = 27493683 -- เพิ่ม LeftLeg
+        })
+    end)
+    
+    if success then
+        print("✓ ใส่ชุด 2 สำเร็จ")
+        wait(0.3)
+        applyBodyColor(Color3.fromRGB(151, 186, 230))
+        return true
+    else
+        print("✗ ใส่ชุด 2 ไม่สำเร็จ: " .. tostring(errorMsg))
+        
+        -- ลองแบบที่ 2 (แบบง่ายๆ)
+        print("⚠️ ลองใส่ชุด 2 แบบที่ 2...")
+        wait(0.5)
+        
+        local success2, error2 = pcall(function()
+            game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+                ["WalkAnimation"] = 0,
+                ["Accessories"] = {
+                    {
+                        ["Rotation"] = Vector3.new(0, 0, 0),
+                        ["AssetId"] = 120204067923438, -- ใส่แค่ 1 ชิ้นก่อน
+                        ["Position"] = Vector3.new(0, 0, 0),
+                        ["Scale"] = Vector3.new(1, 1, 1),
+                        ["IsLayered"] = false,
+                        ["AccessoryType"] = Enum.AccessoryType.Back
+                    }
+                },
+                ["RightLegColor"] = Color3.fromRGB(151, 186, 230),
+                ["MoodAnimation"] = 0,
+                ["LeftLegColor"] = Color3.fromRGB(151, 186, 230),
+                ["JumpAnimation"] = 0,
+                ["ProportionScale"] = 0,
+                ["BodyTypeScale"] = 0,
+                ["ClimbAnimation"] = 0,
+                ["LeftArmColor"] = Color3.fromRGB(151, 186, 230),
+                ["Face"] = 0,
+                ["Pants"] = 301811279,
+                ["RightArmColor"] = Color3.fromRGB(151, 186, 230),
+                ["DepthScale"] = 1,
+                ["WidthScale"] = 1,
+                ["SwimAnimation"] = 0,
+                ["RightArm"] = 32357584,
+                ["GraphicTShirt"] = 0,
+                ["Head"] = 62084278,
+                ["Shirt"] = 144076358,
+                ["RightLeg"] = 27493718,
+                ["RunAnimation"] = 0,
+                ["Torso"] = 27121265,
+                ["FallAnimation"] = 0,
+                ["TorsoColor"] = Color3.fromRGB(151, 186, 230),
+                ["IdleAnimation"] = 0,
+                ["LeftArm"] = 32357619,
+                ["HeadScale"] = 1,
+                ["HeightScale"] = 1,
+                ["HeadColor"] = Color3.fromRGB(151, 186, 230),
+                ["LeftLeg"] = 27493683
+            })
+        end)
+        
+        if success2 then
+            print("✓ ใส่ชุด 2 สำเร็จ (แบบง่าย)")
+            wait(0.3)
+            applyBodyColor(Color3.fromRGB(151, 186, 230))
+            return true
+        else
+            print("✗ ใส่ชุด 2 ไม่สำเร็จทั้งสองแบบ: " .. tostring(error2))
+            DrRayLibrary:Notify("Error", "ใส่ชุด 2 ไม่สำเร็จ", 3)
+            return false
+        end
+    end
+end
+
+-- ชุด 3 - Sport White
+local function applyOutfit3()
+    print("กำลังใส่ชุด 3 (Sport White)...")
+    
+    if not checkRemote() then return false end
+    
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 837010234,
+            ["Accessories"] = {
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 93429201961675, -- หน้า
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Face
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 77645930521012, -- ผม
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Hair
+                }
+            },
+            ["RightLegColor"] = Color3.fromRGB(248, 248, 248),
+            ["MoodAnimation"] = 10647852134,
+            ["LeftLegColor"] = Color3.fromRGB(248, 248, 248),
+            ["JumpAnimation"] = 837011171,
+            ["ProportionScale"] = 0,
+            ["BodyTypeScale"] = 0,
+            ["ClimbAnimation"] = 837013990,
+            ["LeftArmColor"] = Color3.fromRGB(248, 248, 248),
+            ["Face"] = 0,
+            ["Pants"] = 17514187921,
+            ["RightArmColor"] = Color3.fromRGB(248, 248, 248),
+            ["DepthScale"] = 1,
+            ["WidthScale"] = 1,
+            ["SwimAnimation"] = 837012509,
+            ["RightArm"] = 32357584,
+            ["GraphicTShirt"] = 0,
+            ["Head"] = 14629530741,
+            ["Shirt"] = 17514185862,
+            ["RightLeg"] = 27493718,
+            ["RunAnimation"] = 837009922,
+            ["Torso"] = 27121265,
+            ["FallAnimation"] = 837010685,
+            ["TorsoColor"] = Color3.fromRGB(248, 248, 248),
+            ["IdleAnimation"] = 837011741,
+            ["LeftArm"] = 32357619,
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 1,
+            ["HeadColor"] = Color3.fromRGB(248, 248, 248),
+            ["LeftLeg"] = 27493683
+        })
+    end)
+    
+    if success then
+        print("✓ ใส่ชุด 3 สำเร็จ")
+        wait(0.3)
+        applyBodyColor(Color3.fromRGB(248, 248, 248))
+        return true
+    else
+        print("✗ ใส่ชุด 3 ไม่สำเร็จ: " .. tostring(errorMsg))
+        DrRayLibrary:Notify("Error", "ใส่ชุด 3 ไม่สำเร็จ", 3)
+        return false
+    end
+end
+
+-- ชุด 4 - Purple Style
+local function applyOutfit4()
+    print("กำลังใส่ชุด 4 (Purple Style)...")
+    
+    if not checkRemote() then return false end
+    
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 0,
+            ["Accessories"] = {
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 92613186872762, -- ผม
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Hair
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 11116185502, -- คอ
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Neck
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 17592971261, -- หมวก
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Hat
+                }
+            },
+            ["RightLegColor"] = Color3.fromRGB(120, 0, 13),
+            ["MoodAnimation"] = 10647852134,
+            ["LeftLegColor"] = Color3.fromRGB(120, 0, 13),
+            ["JumpAnimation"] = 0,
+            ["ProportionScale"] = 0,
+            ["BodyTypeScale"] = 0,
+            ["ClimbAnimation"] = 0,
+            ["LeftArmColor"] = Color3.fromRGB(120, 0, 13),
+            ["Face"] = 0,
+            ["Pants"] = 10066507164,
+            ["RightArmColor"] = Color3.fromRGB(120, 0, 13),
+            ["DepthScale"] = 1,
+            ["WidthScale"] = 1,
+            ["SwimAnimation"] = 0,
+            ["RightArm"] = 32357584,
+            ["GraphicTShirt"] = 0,
+            ["Head"] = 14629530741,
+            ["Shirt"] = 14909007759,
+            ["RightLeg"] = 27493718,
+            ["RunAnimation"] = 0,
+            ["Torso"] = 2807147467,
+            ["FallAnimation"] = 0,
+            ["TorsoColor"] = Color3.fromRGB(120, 0, 13),
+            ["IdleAnimation"] = 0,
+            ["LeftArm"] = 32357619,
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 1,
+            ["HeadColor"] = Color3.fromRGB(120, 0, 13),
+            ["LeftLeg"] = 27493683
+        })
+    end)
+    
+    if success then
+        print("✓ ใส่ชุด 4 สำเร็จ")
+        wait(0.3)
+        applyBodyColor(Color3.fromRGB(120, 0, 13))
+        return true
+    else
+        print("✗ ใส่ชุด 4 ไม่สำเร็จ: " .. tostring(errorMsg))
+        DrRayLibrary:Notify("Error", "ใส่ชุด 4 ไม่สำเร็จ", 3)
+        return false
+    end
+end
+
+-- ชุด 5 - Dark Grey (จากโค้ดเดิม)
+local function applyOutfit5()
+    print("กำลังใส่ชุด 5 (Dark Grey)...")
+    
+    if not checkRemote() then return false end
+    
+    local success1, error1 = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 0,
+            ["Accessories"] = {
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 13700928975, -- หน้า
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Face
+                },
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 192557913, -- หลัง
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Back
+                }
+            },
+            ["RightLegColor"] = Color3.new(0.5, 0.5, 0.5), -- เทาเข้ม
+            ["MoodAnimation"] = 10647852134,
+            ["LeftLegColor"] = Color3.new(0.5, 0.5, 0.5),
+            ["JumpAnimation"] = 0,
+            ["ProportionScale"] = 0.5,
+            ["BodyTypeScale"] = 0,
+            ["ClimbAnimation"] = 0,
+            ["LeftArmColor"] = Color3.new(0.5, 0.5, 0.5),
+            ["Face"] = 7074814,
+            ["Pants"] = 14540498087,
+            ["RightArmColor"] = Color3.new(0.5, 0.5, 0.5),
+            ["DepthScale"] = 0.8500000238418579,
+            ["WidthScale"] = 0.699999988079071,
+            ["SwimAnimation"] = 0,
+            ["RightArm"] = 32357584,
+            ["GraphicTShirt"] = 0,
+            ["Head"] = 8330576,
+            ["Shirt"] = 14648309042,
+            ["RightLeg"] = 27493718,
+            ["RunAnimation"] = 0,
+            ["Torso"] = 27493604,
+            ["FallAnimation"] = 0,
+            ["TorsoColor"] = Color3.new(0.5, 0.5, 0.5),
+            ["IdleAnimation"] = 11600321661,
+            ["LeftArm"] = 32357619,
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 1.0499999523162842,
+            ["HeadColor"] = Color3.new(0.5, 0.5, 0.5),
+            ["LeftLeg"] = 27493683
+        })
+    end)
+    
+    if success1 then
+        print("✓ ใส่ชุดหลักสำเร็จ")
+        wait(0.3)
+        applyBodyColor(Color3.new(0.5, 0.5, 0.5))
+        return true
+    else
+        print("✗ ใส่ชุด 5 ไม่สำเร็จ: " .. tostring(error1))
+        DrRayLibrary:Notify("Error", "ใส่ชุด 5 ไม่สำเร็จ", 3)
+        return false
+    end
+end
+
+-- ชุด 6 - Black Red
+local function applyOutfit6()
+    print("กำลังใส่ชุด 6 (Black Red)...")
+    
+    if not checkRemote() then return false end
+    
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 11600331426,
+            ["Accessories"] = {
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 13446702865, -- หมวก
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Hat
+                }
+            },
+            ["RightLegColor"] = Color3.fromRGB(0, 0, 0),
+            ["MoodAnimation"] = 10647852134,
+            ["LeftLegColor"] = Color3.fromRGB(0, 0, 0),
+            ["JumpAnimation"] = 0,
+            ["ProportionScale"] = 0,
+            ["BodyTypeScale"] = 0,
+            ["ClimbAnimation"] = 0,
+            ["LeftArmColor"] = Color3.fromRGB(0, 0, 0),
+            ["Face"] = 0,
+            ["Pants"] = 4750575774,
+            ["RightArmColor"] = Color3.fromRGB(0, 0, 0),
+            ["DepthScale"] = 1,
+            ["WidthScale"] = 1,
+            ["SwimAnimation"] = 0,
+            ["RightArm"] = 32357584,
+            ["GraphicTShirt"] = 0,
+            ["Head"] = 14629530741,
+            ["Shirt"] = 5574405836,
+            ["RightLeg"] = 27493718,
+            ["RunAnimation"] = 0,
+            ["Torso"] = 27121265,
+            ["FallAnimation"] = 0,
+            ["TorsoColor"] = Color3.fromRGB(0, 0, 0),
+            ["IdleAnimation"] = 11600321661,
+            ["LeftArm"] = 32357619,
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 1,
+            ["HeadColor"] = Color3.fromRGB(228, 0, 181), -- สีพิเศษที่หัว
+            ["LeftLeg"] = 27493683
+        })
+    end)
+    
+    if success then
+        print("✓ ใส่ชุด 6 สำเร็จ")
+        wait(0.3)
+        -- ตั้งค่าสีตัวเป็นสีดำ แต่หัวเป็นสีพิเศษ
+        local success2 = pcall(function()
+            game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({
+                ["BodyColor"] = {
+                    ["HeadColor"] = Color3.fromRGB(228, 0, 181),
+                    ["TorsoColor"] = Color3.fromRGB(0, 0, 0),
+                    ["LeftArmColor"] = Color3.fromRGB(0, 0, 0),
+                    ["RightLegColor"] = Color3.fromRGB(0, 0, 0),
+                    ["LeftLegColor"] = Color3.fromRGB(0, 0, 0),
+                    ["RightArmColor"] = Color3.fromRGB(0, 0, 0)
+                }
+            })
+        end)
+        return true
+    else
+        print("✗ ใส่ชุด 6 ไม่สำเร็จ: " .. tostring(errorMsg))
+        DrRayLibrary:Notify("Error", "ใส่ชุด 6 ไม่สำเร็จ", 3)
+        return false
+    end
+end
+
+-- ชุด 7 - Beige Style
+local function applyOutfit7()
+    print("กำลังใส่ชุด 7 (Beige Style)...")
+    
+    if not checkRemote() then return false end
+    
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 0,
+            ["Accessories"] = {
+                {
+                    ["Rotation"] = Vector3.new(0, 0, 0),
+                    ["AssetId"] = 323476364, -- ผม
+                    ["Position"] = Vector3.new(0, 0, 0),
+                    ["Scale"] = Vector3.new(1, 1, 1),
+                    ["IsLayered"] = false,
+                    ["AccessoryType"] = Enum.AccessoryType.Hair
+                }
+            },
+            ["RightLegColor"] = Color3.fromRGB(234, 184, 146),
+            ["MoodAnimation"] = 14618207727,
+            ["LeftLegColor"] = Color3.fromRGB(234, 184, 146),
+            ["JumpAnimation"] = 0,
+            ["ProportionScale"] = 1,
+            ["BodyTypeScale"] = 1,
+            ["ClimbAnimation"] = 0,
+            ["LeftArmColor"] = Color3.fromRGB(234, 184, 146),
+            ["Face"] = 0,
+            ["Pants"] = 14764019035,
+            ["RightArmColor"] = Color3.fromRGB(234, 184, 146),
+            ["DepthScale"] = 1,
+            ["WidthScale"] = 0.8500000238418579,
+            ["SwimAnimation"] = 0,
+            ["RightArm"] = 32357584,
+            ["GraphicTShirt"] = 0,
+            ["Head"] = 18557883987,
+            ["Shirt"] = 14401847977,
+            ["RightLeg"] = 27493718,
+            ["RunAnimation"] = 0,
+            ["Torso"] = 27493604,
+            ["FallAnimation"] = 0,
+            ["TorsoColor"] = Color3.fromRGB(234, 184, 146),
+            ["IdleAnimation"] = 0,
+            ["LeftArm"] = 32357619,
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 0.800000011920929,
+            ["HeadColor"] = Color3.fromRGB(234, 184, 146),
+            ["LeftLeg"] = 27493683
+        })
+    end)
+    
+    if success then
+        print("✓ ใส่ชุด 7 สำเร็จ")
+        wait(0.3)
+        applyBodyColor(Color3.fromRGB(234, 184, 146))
+        return true
+    else
+        print("✗ ใส่ชุด 7 ไม่สำเร็จ: " .. tostring(errorMsg))
+        DrRayLibrary:Notify("Error", "ใส่ชุด 7 ไม่สำเร็จ", 3)
+        return false
+    end
+end
+
+-- ชุด 8 - Test Outfit (จากโค้ดเดิม)
+local function applyOutfit8()
+    print("กำลังใส่ชุดทดสอบ...")
+    
+    if not checkRemote() then return false end
+    
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 0,
+            ["Accessories"] = {{
+                ["Rotation"] = Vector3.new(0, 0, 0),
+                ["AssetId"] = 1309911,
+                ["Position"] = Vector3.new(0, 0, 0),
+                ["Scale"] = Vector3.new(1, 1, 1),
+                ["IsLayered"] = false,
+                ["AccessoryType"] = Enum.AccessoryType.Hat
+            }},
+            ["RightLegColor"] = Color3.new(0.741176, 0.737255, 0.741176),
+            ["MoodAnimation"] = 0,
+            ["LeftLegColor"] = Color3.new(0.741176, 0.737255, 0.741176),
+            ["JumpAnimation"] = 0,
+            ["ProportionScale"] = 1,
+            ["BodyTypeScale"] = 0.30000001192092896,
+            ["ClimbAnimation"] = 0,
+            ["LeftArmColor"] = Color3.new(0.741176, 0.737255, 0.741176),
+            ["Face"] = 16179646,
+            ["Pants"] = 6913613757,
+            ["RightArmColor"] = Color3.new(0.741176, 0.737255, 0.741176),
+            ["DepthScale"] = 1,
+            ["WidthScale"] = 1,
+            ["SwimAnimation"] = 0,
+            ["RightArm"] = 0,
+            ["GraphicTShirt"] = 1583999,
+            ["Head"] = 0,
+            ["Shirt"] = 9683332649,
+            ["RightLeg"] = 0,
+            ["RunAnimation"] = 0,
+            ["Torso"] = 0,
+            ["FallAnimation"] = 0,
+            ["TorsoColor"] = Color3.new(0.741176, 0.737255, 0.741176),
+            ["IdleAnimation"] = 0,
+            ["LeftArm"] = 0,
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 1,
+            ["HeadColor"] = Color3.new(0.741176, 0.737255, 0.741176),
+            ["LeftLeg"] = 0
+        })
+    end)
+    
+    if success then
+        print("✓ ใส่ชุดทดสอบสำเร็จ")
+        wait(0.3)
+        applyBodyColor(Color3.new(0.741176, 0.737255, 0.741176))
+        return true
+    else
+        print("✗ ใส่ชุดทดสอบไม่สำเร็จ: " .. tostring(errorMsg))
+        DrRayLibrary:Notify("Error", "ใส่ชุดทดสอบไม่สำเร็จ", 3)
+        return false
+    end
+end
+
+-- ฟังก์ชันรีเซ็ตตัวละคร
+local function resetChar()
+    local player = game.Players.LocalPlayer
+    if player.Character then
+        player.Character:BreakJoints()
+        print("✓ รีเซ็ตตัวละครแล้ว")
+        DrRayLibrary:Notify("Success", "รีเซ็ตตัวละครแล้ว", 2)
+    end
+end
+
+---------------------------------------------------------
+-- สร้างปุ่มใน UI (ครบ 8 ชุด)
+---------------------------------------------------------
+
+tab.newLabel("ชุดทั้งหมด 8 ชุด", "ใช้ BloxbizRemotes ทั้งหมด")
+
+tab.newButton("Outfit 1 - Basic White", "ชุดขาวเรียบๆ", function()
+    applyOutfit1()
+end)
+
+tab.newButton("Outfit 2 - Light Blue", "ชุดฟ้าอ่อน (แก้ไขแล้ว)", function()
+    applyOutfit2()
+end)
+
+tab.newButton("Outfit 3 - Sport White", "ชุดกีฬาขาว", function()
+    applyOutfit3()
+end)
+
+tab.newButton("Outfit 4 - Purple Style", "ชุดสไตล์ม่วง", function()
+    applyOutfit4()
+end)
+
+tab.newButton("Outfit 5 - Dark Grey", "ชุดเทาเข้ม", function()
+    applyOutfit5()
+end)
+
+tab.newButton("Outfit 6 - Black Red", "ชุดดำแดง", function()
+    applyOutfit6()
+end)
+
+tab.newButton("Outfit 7 - Beige Style", "ชุดสีกากี", function()
+    applyOutfit7()
+end)
+
+tab.newButton("Outfit 8 - Test Outfit", "ชุดทดสอบ", function()
+    applyOutfit8()
+end)
+
+tab.newButton("Reset Character", "รีเซ็ตตัวละคร", function()
+    resetChar()
+end)
+
+-- Tab สำหรับเครื่องมือตรวจสอบ
+local toolTab = DrRayLibrary.newTab("Tools", "rbxassetid://10734951151")
+
+toolTab.newButton("Check BloxbizRemotes", "ตรวจสอบ RemoteEvents", function()
+    local rs = game:GetService("ReplicatedStorage")
+    local hasBloxbizRemotes = rs:FindFirstChild("BloxbizRemotes")
+    
+    if hasBloxbizRemotes then
+        print("=== BloxbizRemotes ===")
+        for _, child in ipairs(hasBloxbizRemotes:GetChildren()) do
+            print("✓ " .. child.Name .. " (" .. child.ClassName .. ")")
+        end
+        print("======================")
+        DrRayLibrary:Notify("Success", "พบ BloxbizRemotes", 3)
+    else
+        print("❌ ไม่พบ BloxbizRemotes")
+        DrRayLibrary:Notify("Error", "ไม่พบ BloxbizRemotes", 3)
+    end
+end)
+
+toolTab.newButton("Test Connection", "ทดสอบการเชื่อมต่อ", function()
+    if checkRemote() then
+        DrRayLibrary:Notify("Success", "การเชื่อมต่อปกติ", 3)
+    else
+        DrRayLibrary:Notify("Error", "การเชื่อมต่อมีปัญหา", 3)
+    end
+end)
+
+-- ระบบคำสั่งแชท
+local function setupChatCommands()
+    game.Players.LocalPlayer.Chatted:Connect(function(message)
+        local msg = string.lower(message)
+        
+        if msg == "!outfit1" then
+            applyOutfit1()
+        elseif msg == "!outfit2" then
+            applyOutfit2()
+        elseif msg == "!outfit3" then
+            applyOutfit3()
+        elseif msg == "!outfit4" then
+            applyOutfit4()
+        elseif msg == "!outfit5" then
+            applyOutfit5()
+        elseif msg == "!outfit6" then
+            applyOutfit6()
+        elseif msg == "!outfit7" then
+            applyOutfit7()
+        elseif msg == "!outfit8" then
+            applyOutfit8()
+        elseif msg == "!reset" then
+            resetChar()
+        elseif msg == "!help" then
+            print("========================================")
+            print("🎮 Outfit System Help:")
+            print("!outfit1-8 - ใส่ชุด 1-8")
+            print("!reset     - รีเซ็ตตัวละคร")
+            print("!help      - แสดงคำสั่งทั้งหมด")
+            print("========================================")
+        end
+    end)
+end
+
+-- เริ่มต้นระบบ
+setupChatCommands()
+
+-- ตรวจสอบการเชื่อมต่อเริ่มต้น
+spawn(function()
+    wait(1)
+    if checkRemote() then
+        DrRayLibrary:Notify("Success", "Outfit System โหลดสำเร็จ!", 3)
+        print("\n========================================")
+        print("🎮 Outfit System โหลดสำเร็จ!")
+        print("✅ มีชุดให้เลือก 8 ชุด")
+        print("✅ ใช้ BloxbizRemotes ทั้งหมด")
+        print("✅ ชุดที่ 2 แก้ไขให้มี Body Parts ครบแล้ว")
+        print("========================================")
+    else
+        DrRayLibrary:Notify("Warning", "ตรวจพบปัญหา Remote", 5)
+        print("\n⚠️  ตรวจพบปัญหา: ไม่พบ BloxbizRemotes หรือ RemoteEvents")
+    end
+end)
+
+-- แสดงคำแนะนำ
+print("\n📋 คำแนะนำการใช้งาน:")
+print("1. ไปที่แท็บ 'Outfits' เพื่อเลือกชุด")
+print("2. หรือพิมพ์ !outfit1-8 ในแชท")
+print("3. ทดสอบด้วยชุด 5 และ 8 ก่อน (ใช้งานได้แน่นอน)")
+print("4. ชุด 2 ตอนนี้มี Body Parts ครบแล้ว (แก้ไขแล้ว)")
+print("5. ถ้าชุดไหนไม่ทำงาน ลองกด 'Reset' แล้วลองใหม่")
+print("6. ไปที่แท็บ 'Tools' เพื่อตรวจสอบการเชื่อมต่อ")
+print("========================================")
