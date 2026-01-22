@@ -1,0 +1,81 @@
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("SUPER SPEED HUB", "Default")
+
+-- [ Services ]
+local Player = game:GetService("Players").LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- [ Global Variables ]
+_G.AutoWarp = false
+_G.UltraClick = false
+local WarpSpeed = 0 
+local ClickMulti = 20 -- ยิงกี่ครั้งต่อ 1 เฟรม (ปรับเพิ่มความรัวได้ที่นี่)
+
+-- [ พิกัด 4 จุด ]
+local Locations = {
+    CFrame.new(573.389893, -0.064812474, 8910.90039, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    CFrame.new(1472.58948, -0.0647365674, 10665.1279, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    CFrame.new(572.912415, 413.835144, 11796.5283, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    CFrame.new(458.516846, -0.0648326427, 8457.61914, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+}
+
+-- [ UI Tabs ]
+local tabTP = DrRayLibrary.newTab("Teleport", "rbxassetid://4483345998")
+local tabFarm = DrRayLibrary.newTab("Fast Farm", "rbxassetid://4483345998")
+
+-- Warp UI
+tabTP.newToggle("Auto Warp Loop", "วาร์ปวน 4 จุดรัวๆ", false, function(state)
+    _G.AutoWarp = state
+end)
+
+tabTP.newSlider("Warp Delay", "ความเร็วการวาร์ป", 10, 0, function(val)
+    WarpSpeed = val / 10
+end)
+
+-- Click UI
+tabFarm.newToggle("Ultra Fast Click", "คลิกแบบรัวถล่มทลาย", false, function(state)
+    _G.UltraClick = state
+end)
+
+tabFarm.newSlider("Click Power", "ความรัว (แนะนำ 10-50)", 100, 20, function(val)
+    ClickMulti = val
+end)
+
+-- [ Loop วาร์ป ]
+task.spawn(function()
+    while true do
+        if _G.AutoWarp then
+            for i = 1, #Locations do
+                if not _G.AutoWarp then break end
+                pcall(function()
+                    Player.Character:PivotTo(Locations[i])
+                end)
+                if WarpSpeed > 0 then task.wait(WarpSpeed) else RunService.Heartbeat:Wait() end
+            end
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- [ Loop คลิกรัว (ยิง Remote IncreaseSpeed) ]
+task.spawn(function()
+    while true do
+        if _G.UltraClick then
+            pcall(function()
+                -- ยิงรัวๆ ตามจำนวน ClickMulti ใน 1 เฟรม
+                for i = 1, ClickMulti do
+                    RS.IncreaseSpeed:FireServer()
+                end
+            end)
+        end
+        -- รันตามความเร็วเฟรมเรตของเกม (รัวที่สุดเท่าที่เครื่องจะไหว)
+        RunService.Heartbeat:Wait()
+    end
+end)
+
+-- [ Anti-AFK ]
+Player.Idled:Connect(function()
+    game:GetService("VirtualUser"):CaptureController()
+    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+end)
