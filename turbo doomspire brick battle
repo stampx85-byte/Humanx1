@@ -1,0 +1,176 @@
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("GOD MODE V4 - SUPREME", "Default")
+
+-- [ Services ]
+local Player = game:GetService("Players").LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+-- [ Global Config ]
+local Config = {
+    KillAura = false,
+    AuraRange = 500,
+    InstantSword = false, 
+    InstantTrowel = false, 
+    InstantBomb = false, 
+    InstantRocket = false, 
+    InstantSlingshot = false, 
+    InstantSuperball = false, 
+    InstantPaintball = false, 
+    AntiFall = false,
+    FollowPlayer = false,
+    TargetName = "",
+    LockTarget = false
+}
+
+-- [ Helper Functions ]
+local function GetCharacter()
+    return Player.Character or Player.CharacterAdded:Wait()
+end
+
+local function SetAntiFall(state)
+    Config.AntiFall = state
+    local char = GetCharacter()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    if state then
+        if not hrp:FindFirstChild("AntiFallV") then
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "AntiFallV"
+            bv.Velocity = Vector3.new(0, 0, 0)
+            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bv.Parent = hrp
+        end
+    else
+        if hrp:FindFirstChild("AntiFallV") then hrp.AntiFallV:Destroy() end
+    end
+end
+
+-- [ UI Tabs ]
+local tabGod = DrRayLibrary.newTab("โหมดโหดสัส/KillAura", "rbxassetid://4483345998")
+local tabWarp = DrRayLibrary.newTab("ระบบวาร์ป/ทีม", "rbxassetid://4483345998")
+local tabFast = DrRayLibrary.newTab("ยิงรัวนรกแตก", "rbxassetid://4483345998")
+
+-- [[ Tab: โหมดโหดสัส & Kill Aura ]]
+tabGod.newToggle("KILL AURA (ทั่วแมพ)", "เปิดแล้วคนทั้งแมพจะโดนฟัน", false, function(s) Config.KillAura = s end)
+tabGod.newSlider("Aura Range", "ระยะการฆ่า", 5000, false, function(v) Config.AuraRange = v end)
+tabGod.newToggle("ลอยตัว + กันกระเด็น", "วาร์ปแล้วนิ่ง + ไม่กระเด็น", false, function(s) SetAntiFall(s) end)
+
+-- [[ Tab: ระบบวาร์ป & ทีม ]]
+tabWarp.newButton("Warp Blue", "ไปฐานน้ำเงิน", function() GetCharacter().HumanoidRootPart.CFrame = CFrame.new(6.35, 49.15, 131.30) end)
+tabWarp.newButton("Warp Red", "ไปฐานแดง", function() GetCharacter().HumanoidRootPart.CFrame = CFrame.new(-130.32, 46.69, -4.03) end)
+tabWarp.newButton("Warp Yellow", "ไปฐานเหลือง", function() GetCharacter().HumanoidRootPart.CFrame = CFrame.new(129.51, 69.90, 8.98) end)
+tabWarp.newButton("Warp Green", "ไปฐานเขียว", function() GetCharacter().HumanoidRootPart.CFrame = CFrame.new(-2.89, 30.27, -123.54) end)
+
+--- [[ ระบบจัดการรายชื่อแบบล้างบัค (Destroy & Re-create) ]] ---
+local currentDropdown = nil
+
+local function CreatePlayerDropdown()
+    -- ลบอันเก่าทิ้งถ้ามี (เพื่อล้างชื่อคนที่ออก)
+    if currentDropdown then
+        currentDropdown:Destroy() 
+    end
+
+    local p_list = {}
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= Player then table.insert(p_list, v.Name) end
+    end
+
+    -- สร้างใหม่พร้อมรายชื่อปัจจุบัน
+    currentDropdown = tabWarp.newDropdown("เลือกผู้เล่น", "คนออกจะหายไป คนเข้าจะเพิ่มมา", p_list, function(selected)
+        Config.TargetName = selected
+    end)
+end
+
+-- ปุ่มกดรีเฟรช (Manual)
+tabWarp.newButton("🔄 อัปเดตรายชื่อ (ล้างคนออก/เพิ่มคนเข้า)", "กดเพื่อรีเซ็ตรายชื่อผู้เล่นใหม่ทั้งหมด", function()
+    CreatePlayerDropdown()
+end)
+
+-- เรียกครั้งแรกตอนรันสคริปต์
+CreatePlayerDropdown()
+
+tabWarp.newToggle("LOCK TARGET (ยิงใส่เป้าหมาย)", "กระสุนจะพุ่งใส่เป้าหมายที่เลือก", false, function(s) Config.LockTarget = s end)
+
+tabWarp.newButton("Warp To Player", "วาร์ปไปหาครั้งเดียว", function()
+    local target = game.Players:FindFirstChild(Config.TargetName)
+    if target and target.Character then GetCharacter().HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame end
+end)
+tabWarp.newToggle("Follow Player", "วาร์ปติดตัวตลอดเวลา", false, function(s) Config.FollowPlayer = s end)
+
+-- [[ Tab: ยิงรัวนรกแตก ]]
+tabFast.newToggle("ดาบรัว (Ultra Sword)", "ฟันนรกแตก", false, function(s) Config.InstantSword = s end)
+tabFast.newToggle("จรวดรัว (Mega Rocket)", "ยิงกระจาย", false, function(s) Config.InstantRocket = s end)
+tabFast.newToggle("ปืนสีทองรัว (Paintball Gold)", "ใช้รีโมทใหม่ล่าสุด", false, function(s) Config.InstantPaintball = s end)
+tabFast.newToggle("หนังสติ๊กรัว", "ไวจัด", false, function(s) Config.InstantSlingshot = s end)
+tabFast.newToggle("บอลรัว", "เด้งรัวๆ", false, function(s) Config.InstantSuperball = s end)
+tabFast.newToggle("ระเบิดรัว", "วางรัวๆ", false, function(s) Config.InstantBomb = s end)
+
+-- [[ Main Loop ]]
+RunService.Heartbeat:Connect(function()
+    local char = Player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+
+    local target = game.Players:FindFirstChild(Config.TargetName)
+    local targetHRP = (target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")) or nil
+
+    if Config.FollowPlayer and targetHRP then
+        hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, 2)
+    end
+
+    if Config.KillAura then
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= Player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (hrp.Position - v.Character.HumanoidRootPart.Position).Magnitude
+                if dist <= Config.AuraRange then
+                    RS.BBWeapons_Remotes.Sword.Activate:FireServer()
+                end
+            end
+        end
+    end
+
+    local shootPos = hrp.CFrame * CFrame.new(0, 0, -10)
+    if Config.LockTarget and targetHRP then shootPos = targetHRP.CFrame end
+    
+    if Config.InstantSword then RS.BBWeapons_Remotes.Sword.Activate:FireServer() end
+    
+    if Config.InstantPaintball and char:FindFirstChild("PaintballGun") then
+        RS.BBWeapons_Remotes.PaintballGun.Activate:InvokeServer({
+            ["LaunchCFrame"] = shootPos, ["Player"] = Player, ["BrickColor"] = BrickColor.new("Gold"),
+            ["UniqueIdentifier"] = "Paint_" .. tick(), ["Tool"] = char.PaintballGun, ["MousePosition"] = shootPos.p
+        })
+    end
+
+    if Config.InstantRocket and char:FindFirstChild("RocketLauncher") then
+        RS.BBWeapons_Remotes.RocketLauncher.Activate:InvokeServer({["LaunchCFrame"] = shootPos, ["Player"] = Player, ["UniqueIdentifier"] = tick(), ["Tool"] = char.RocketLauncher, ["MousePosition"] = shootPos.p})
+    end
+
+    if Config.InstantSlingshot and char:FindFirstChild("Slingshot") then
+        RS.BBWeapons_Remotes.Slingshot.Activate:InvokeServer({["LaunchCFrame"] = shootPos, ["Player"] = Player, ["UniqueIdentifier"] = tick(), ["Tool"] = char.Slingshot, ["MousePosition"] = shootPos.p})
+    end
+
+    if Config.InstantSuperball and char:FindFirstChild("Superball") then
+        RS.BBWeapons_Remotes.Superball.Activate:InvokeServer({["LaunchCFrame"] = shootPos, ["Player"] = Player, ["UniqueIdentifier"] = tick(), ["Tool"] = char.Superball, ["MousePosition"] = shootPos.p})
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.01)
+        if Config.InstantBomb then
+            local char = Player.Character
+            local b = char and char:FindFirstChild("Timebomb")
+            if b then
+                RS.BBWeapons_Remotes.Timebomb.Activate:InvokeServer({
+                    ["Player"] = Player, ["Color"] = true, ["UpdateInterval"] = 0, ["Tool"] = b, ["SpawnCFrame"] = char.HumanoidRootPart.CFrame
+                })
+            end
+        end
+    end
+end)
+
+Player.CharacterAdded:Connect(function()
+    task.wait(1)
+    if Config.AntiFall then SetAntiFall(true) end
+end)
