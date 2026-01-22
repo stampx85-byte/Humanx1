@@ -6,7 +6,7 @@ local window = DrRayLibrary:Load("Outfit System", "Default")
 local tab = DrRayLibrary.newTab("Outfits", "rbxassetid://10734951151")
 
 ---------------------------------------------------------
--- ฟังก์ชันสำหรับจัดการการใส่ชุด (ครบ 8 ชุด - ใช้ BloxbizRemotes ทั้งหมด)
+-- ฟังก์ชันสำหรับจัดการการใส่ชุด (ครบ 9 ชุด - ใช้ BloxbizRemotes ทั้งหมด)
 ---------------------------------------------------------
 
 -- ฟังก์ชันตรวจสอบ Remote
@@ -740,6 +740,176 @@ local function applyOutfit8()
     end
 end
 
+-- ชุด 9 - New Outfit (จากข้อมูลที่ให้มา)
+local function applyOutfit9()
+    print("กำลังใส่ชุด 9 (New Outfit)...")
+    
+    if not checkRemote() then return false end
+    
+    -- สร้างสีดำจาก RGB table
+    local blackColor = Color3.new(0, 0, 0)
+    
+    -- ลองใช้ CatalogOnApplyOutfit ก่อน (รูปแบบเดิม)
+    local success, errorMsg = pcall(function()
+        game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyOutfit:FireServer({
+            ["WalkAnimation"] = 0,
+            ["Accessories"] = {}, -- ไม่มี Accessories จากข้อมูล
+            ["RightLegColor"] = blackColor,
+            ["MoodAnimation"] = 14618207727,
+            ["LeftLegColor"] = blackColor,
+            ["JumpAnimation"] = 0,
+            ["ProportionScale"] = 0,
+            ["BodyTypeScale"] = 0,
+            ["ClimbAnimation"] = 0,
+            ["LeftArmColor"] = blackColor,
+            ["Face"] = 0,
+            ["Pants"] = 5522503408,
+            ["RightArmColor"] = blackColor,
+            ["DepthScale"] = 1,
+            ["WidthScale"] = 1,
+            ["SwimAnimation"] = 0,
+            ["RightArm"] = 119704376442704, -- ID จากข้อมูล (ใช้เป็นตัวเลขยาว)
+            ["GraphicTShirt"] = 0,
+            ["Head"] = 128942338645640, -- ID จากข้อมูล
+            ["Shirt"] = 5615812376,
+            ["RightLeg"] = 109359075586339, -- ID จากข้อมูล
+            ["RunAnimation"] = 0,
+            ["Torso"] = 98036003766201, -- ID จากข้อมูล
+            ["FallAnimation"] = 0,
+            ["TorsoColor"] = blackColor,
+            ["IdleAnimation"] = 0,
+            ["LeftArm"] = 121478956898610, -- ID จากข้อมูล
+            ["HeadScale"] = 1,
+            ["HeightScale"] = 1,
+            ["HeadColor"] = blackColor,
+            ["LeftLeg"] = 88231402762703 -- ID จากข้อมูล
+        })
+    end)
+    
+    if success then
+        print("✓ ใส่ชุด 9 สำเร็จ")
+        wait(0.3)
+        applyBodyColor(blackColor)
+        return true
+    else
+        print("✗ ใส่ชุด 9 ไม่สำเร็จ: " .. tostring(errorMsg))
+        
+        -- ลองแบบที่ 2: ใช้ RemoteEvent อื่นที่อาจจะทำงานได้
+        print("⚠️ ลองใส่ชุด 9 แบบที่ 2...")
+        wait(0.5)
+        
+        -- ลองแปลงข้อมูลเป็นรูปแบบที่แตกต่าง
+        local success2, error2 = pcall(function()
+            -- เนื่องจากข้อมูลมีรูปแบบต่างกันมาก ลองใช้ RemoteEvent อื่น
+            -- บางทีเกมอาจมี RemoteEvent ที่ชื่อ CreateAndWearHumanoidDescription
+            local rs = game:GetService("ReplicatedStorage")
+            local bloxbizRemotes = rs:FindFirstChild("BloxbizRemotes")
+            
+            if bloxbizRemotes then
+                -- หา RemoteEvent ที่ชื่อ CreateAndWearHumanoidDescription
+                local createRemote = bloxbizRemotes:FindFirstChild("CreateAndWearHumanoidDescription")
+                
+                if createRemote then
+                    print("✓ พบ CreateAndWearHumanoidDescription RemoteEvent")
+                    -- ส่งข้อมูลตามรูปแบบที่ให้มา
+                    createRemote:FireServer({
+                        ["Properties"] = {
+                            ["WalkAnimation"] = 0,
+                            ["MoodAnimation"] = 14618207727,
+                            ["Face"] = 0,
+                            ["ProportionScale"] = 0,
+                            ["ClimbAnimation"] = 0,
+                            ["Shirt"] = 5615812376,
+                            ["FaceAccessory"] = "",
+                            ["RightArmColor"] = {["b"] = 0,["IsRGBTable"] = true,["g"] = 0,["r"] = 0},
+                            ["HairAccessory"] = "",
+                            ["RightArm"] = 119704376442704,
+                            ["Head"] = 128942338645640,
+                            ["FallAnimation"] = 0,
+                            ["TorsoColor"] = {["b"] = 0,["IsRGBTable"] = true,["g"] = 0,["r"] = 0},
+                            ["DepthScale"] = 1,
+                            ["LeftArm"] = 121478956898610,
+                            ["HeightScale"] = 1,
+                            ["LeftLeg"] = 88231402762703,
+                            ["RightLegColor"] = {["b"] = 0,["IsRGBTable"] = true,["g"] = 0,["r"] = 0},
+                            ["LeftLegColor"] = {["b"] = 0,["IsRGBTable"] = true,["g"] = 0,["r"] = 0},
+                            ["WidthScale"] = 1,
+                            ["BodyTypeScale"] = 0,
+                            ["RunAnimation"] = 0,
+                            ["LeftArmColor"] = {["b"] = 0,["IsRGBTable"] = true,["g"] = 0,["r"] = 0},
+                            ["Pants"] = 5522503408,
+                            ["WaistAccessory"] = "",
+                            ["LayeredAccessories"] = {},
+                            ["AccessoryRefinements"] = {},
+                            ["ShouldersAccessory"] = "",
+                            ["NeckAccessory"] = "",
+                            ["HatAccessory"] = "",
+                            ["FrontAccessory"] = "",
+                            ["SwimAnimation"] = 0,
+                            ["HeadColor"] = {["b"] = 0,["IsRGBTable"] = true,["g"] = 0,["r"] = 0},
+                            ["BackAccessory"] = "",
+                            ["IdleAnimation"] = 0,
+                            ["Torso"] = 98036003766201,
+                            ["HeadScale"] = 1,
+                            ["JumpAnimation"] = 0,
+                            ["GraphicTShirt"] = 0,
+                            ["RightLeg"] = 109359075586339
+                        },
+                        ["Action"] = "CreateAndWearHumanoidDescription",
+                        ["RigType"] = Enum.HumanoidRigType.R15
+                    })
+                else
+                    -- ถ้าไม่พบ RemoteEvent นั้น ลองใช้ CatalogOnApplyToRealHumanoid
+                    print("⚠️ ไม่พบ CreateAndWearHumanoidDescription, ลองใช้ CatalogOnApplyToRealHumanoid")
+                    game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({
+                        ["WalkAnimation"] = 0,
+                        ["MoodAnimation"] = 14618207727,
+                        ["Face"] = 0,
+                        ["ProportionScale"] = 0,
+                        ["ClimbAnimation"] = 0,
+                        ["Shirt"] = 5615812376,
+                        ["RightArmColor"] = blackColor,
+                        ["RightArm"] = 119704376442704,
+                        ["Head"] = 128942338645640,
+                        ["FallAnimation"] = 0,
+                        ["TorsoColor"] = blackColor,
+                        ["DepthScale"] = 1,
+                        ["LeftArm"] = 121478956898610,
+                        ["HeightScale"] = 1,
+                        ["LeftLeg"] = 88231402762703,
+                        ["RightLegColor"] = blackColor,
+                        ["LeftLegColor"] = blackColor,
+                        ["WidthScale"] = 1,
+                        ["BodyTypeScale"] = 0,
+                        ["RunAnimation"] = 0,
+                        ["LeftArmColor"] = blackColor,
+                        ["Pants"] = 5522503408,
+                        ["SwimAnimation"] = 0,
+                        ["HeadColor"] = blackColor,
+                        ["IdleAnimation"] = 0,
+                        ["Torso"] = 98036003766201,
+                        ["HeadScale"] = 1,
+                        ["JumpAnimation"] = 0,
+                        ["GraphicTShirt"] = 0,
+                        ["RightLeg"] = 109359075586339
+                    })
+                end
+            else
+                error("ไม่พบ BloxbizRemotes")
+            end
+        end)
+        
+        if success2 then
+            print("✓ ใส่ชุด 9 สำเร็จ (แบบที่ 2)")
+            return true
+        else
+            print("✗ ใส่ชุด 9 ไม่สำเร็จทั้งสองแบบ: " .. tostring(error2))
+            DrRayLibrary:Notify("Error", "ใส่ชุด 9 ไม่สำเร็จ", 3)
+            return false
+        end
+    end
+end
+
 -- ฟังก์ชันรีเซ็ตตัวละคร
 local function resetChar()
     local player = game.Players.LocalPlayer
@@ -751,10 +921,10 @@ local function resetChar()
 end
 
 ---------------------------------------------------------
--- สร้างปุ่มใน UI (ครบ 8 ชุด)
+-- สร้างปุ่มใน UI (ครบ 9 ชุด)
 ---------------------------------------------------------
 
-tab.newLabel("ชุดทั้งหมด 8 ชุด", "ใช้ BloxbizRemotes ทั้งหมด")
+tab.newLabel("ชุดทั้งหมด 9 ชุด", "ใช้ BloxbizRemotes ทั้งหมด")
 
 tab.newButton("Outfit 1 - Basic White", "ชุดขาวเรียบๆ", function()
     applyOutfit1()
@@ -786,6 +956,10 @@ end)
 
 tab.newButton("Outfit 8 - Test Outfit", "ชุดทดสอบ", function()
     applyOutfit8()
+end)
+
+tab.newButton("Outfit 9 - New Outfit", "ชุดใหม่ (R15)", function()
+    applyOutfit9()
 end)
 
 tab.newButton("Reset Character", "รีเซ็ตตัวละคร", function()
@@ -841,12 +1015,14 @@ local function setupChatCommands()
             applyOutfit7()
         elseif msg == "!outfit8" then
             applyOutfit8()
+        elseif msg == "!outfit9" then
+            applyOutfit9()
         elseif msg == "!reset" then
             resetChar()
         elseif msg == "!help" then
             print("========================================")
             print("🎮 Outfit System Help:")
-            print("!outfit1-8 - ใส่ชุด 1-8")
+            print("!outfit1-9 - ใส่ชุด 1-9")
             print("!reset     - รีเซ็ตตัวละคร")
             print("!help      - แสดงคำสั่งทั้งหมด")
             print("========================================")
@@ -864,9 +1040,10 @@ spawn(function()
         DrRayLibrary:Notify("Success", "Outfit System โหลดสำเร็จ!", 3)
         print("\n========================================")
         print("🎮 Outfit System โหลดสำเร็จ!")
-        print("✅ มีชุดให้เลือก 8 ชุด")
+        print("✅ มีชุดให้เลือก 9 ชุด")
         print("✅ ใช้ BloxbizRemotes ทั้งหมด")
         print("✅ ชุดที่ 2 แก้ไขให้มี Body Parts ครบแล้ว")
+        print("✅ เพิ่มชุดที่ 9 (New Outfit - R15)")
         print("========================================")
     else
         DrRayLibrary:Notify("Warning", "ตรวจพบปัญหา Remote", 5)
@@ -877,9 +1054,10 @@ end)
 -- แสดงคำแนะนำ
 print("\n📋 คำแนะนำการใช้งาน:")
 print("1. ไปที่แท็บ 'Outfits' เพื่อเลือกชุด")
-print("2. หรือพิมพ์ !outfit1-8 ในแชท")
+print("2. หรือพิมพ์ !outfit1-9 ในแชท")
 print("3. ทดสอบด้วยชุด 5 และ 8 ก่อน (ใช้งานได้แน่นอน)")
 print("4. ชุด 2 ตอนนี้มี Body Parts ครบแล้ว (แก้ไขแล้ว)")
-print("5. ถ้าชุดไหนไม่ทำงาน ลองกด 'Reset' แล้วลองใหม่")
-print("6. ไปที่แท็บ 'Tools' เพื่อตรวจสอบการเชื่อมต่อ")
+print("5. ชุด 9 เป็นชุดใหม่ (R15 Rig Type)")
+print("6. ถ้าชุดไหนไม่ทำงาน ลองกด 'Reset' แล้วลองใหม่")
+print("7. ไปที่แท็บ 'Tools' เพื่อตรวจสอบการเชื่อมต่อ")
 print("========================================")
