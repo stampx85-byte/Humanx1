@@ -1,0 +1,77 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Elite Farm Hub | Custom Edition",
+   LoadingTitle = "Starting System...",
+   LoadingSubtitle = "by Script Word⚔",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   KeySystem = false
+})
+
+local Tab = Window:CreateTab("Auto Farm", 4483362458)
+
+local autoFarm = false
+local autoUpgrade = false
+
+-- ฟังก์ชันหยุดอนิเมชั่น
+local function stopAnims()
+    local char = game.Players.LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            for _, v in pairs(hum:GetPlayingAnimationTracks()) do
+                v:Stop()
+            end
+        end
+    end
+end
+
+Tab:CreateToggle({
+   Name = "Auto Swing & Collect (ตีรัว+เก็บเหรียญ)",
+   CurrentValue = false,
+   Flag = "FarmToggle",
+   Callback = function(Value)
+      autoFarm = Value
+      task.spawn(function()
+         while autoFarm do
+            -- ส่ง Remote คลิกถังน้ำ
+            game:GetService("ReplicatedStorage").Remotes.TapButtonClick:FireServer(workspace.Plots.Plot)
+            
+            -- ส่ง Remote เก็บเหรียญ
+            game:GetService("ReplicatedStorage").Remotes.CollectCoin:FireServer("Coin", 750.4285714285714)
+            
+            -- ส่ง Remote ตี
+            game:GetService("ReplicatedStorage").Remotes.AxeSwing:FireServer()
+            
+            -- สั่งหยุดอนิเมชั่นให้ตัวนิ่ง
+            stopAnims()
+            
+            task.wait(0.01) -- ความเร็วรั่วๆ
+         end
+      end)
+   end,
+})
+
+Tab:CreateToggle({
+   Name = "Auto Upgrade (ออโต้อีพเกรต)",
+   CurrentValue = false,
+   Flag = "UpgradeToggle",
+   Callback = function(Value)
+      autoUpgrade = Value
+      task.spawn(function()
+         while autoUpgrade do
+            game:GetService("ReplicatedStorage").Remotes.TapLevelUp:InvokeServer(game:GetService("Players").LocalPlayer.PlayerGui.LevelUp)
+            task.wait(0.5)
+         end
+      end)
+   end,
+})
+
+Rayfield:Notify({
+   Title = "Success",
+   Content = "สคริปต์พร้อมใช้งานแล้ว (ไม่มีวาร์ป)",
+   Duration = 5,
+   Image = 4483362458,
+})
