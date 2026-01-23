@@ -1,5 +1,5 @@
 local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
-local window = DrRayLibrary:Load("Menu V3", "Default")
+local window = DrRayLibrary:Load("Menu V4 (Fix Holding)", "Default")
 local tab = DrRayLibrary.newTab("Main", "rbxassetid://4483345998")
 
 local player = game.Players.LocalPlayer
@@ -7,54 +7,111 @@ local _G = getgenv()
 
 _G.FastAttack = false
 _G.AutoWarp = false
-local monsterNames = {"Enemy Axe", "Enemy Greatsword", "Enemy"}
+_G.NeedsPathing = true 
+_G.WeaponSize = 10 
 
--- ฟังก์ชันค้นหามอนสเตอร์
-local function GetMonster()
+local monsterNames = {"Enemy Axe", "Enemy Greatsword", "Enemy"}
+local spawnPos = CFrame.new(-4.04957008, 17.6710529, 139.705078)
+local walkToPos = Vector3.new(-2.61390543, 17.6538887, 146.964645)
+
+-- ฟังก์ชันหามอนสเตอร์
+local function GetTarget()
     for _, v in pairs(game.Workspace:GetDescendants()) do
         if table.find(monsterNames, v.Name) then
             local hum = v:FindFirstChildOfClass("Humanoid")
-            local rpart = v:FindFirstChild("HumanoidRootPart")
-            if hum and rpart and hum.Health > 0 then
-                return rpart
+            if hum and hum.Health > 0 and v:FindFirstChild("HumanoidRootPart") then
+                return v
             end
         end
     end
     return nil
 end
 
--- ลูปหลัก
+-- ระบบเช็คการตาย (Heartbeat Check)
 task.spawn(function()
     while true do
-        task.wait(0.1) 
-        if _G.AutoWarp or _G.FastAttack then
+        task.wait(1)
+        if _G.AutoWarp then
+            local char = player.Character
+            if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then
+                _G.NeedsPathing = true
+            end
+        end
+    end
+end)
+
+-- ลูปการตี + ปรับขนาด (แก้ไขให้ถือของได้)
+task.spawn(function()
+    while true do
+        task.wait()
+        if _G.FastAttack then
             pcall(function()
                 local char = player.Character
-                if not char then return end
-                
+                local tool = char:FindFirstChildOfClass("Tool") -- เช็คเฉพาะของที่ถือในมือ
                 local hum = char:FindFirstChildOfClass("Humanoid")
-                local root = char:FindFirstChild("HumanoidRootPart")
-
-                if hum and hum.Health > 0 then
-                    -- 1. ระบบวาร์ป
-                    if _G.AutoWarp and root then
-                        local targetPart = GetMonster()
-                        if targetPart then
-                            root.CFrame = targetPart.CFrame * CFrame.new(0, 7, 0)
+                
+                if tool and hum and hum.Health > 0 then
+                    -- หยุดอนิเมชั่น
+                    for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+                        track:Stop(0)
+                    end
+                    
+                    -- ตีรัว
+                    tool:Activate()
+                    
+                    -- ปรับขนาดเฉพาะตอนถือ (Handle)
+                    local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("Part") or tool:FindFirstChildOfClass("MeshPart")
+                    if handle then
+                        if handle.Size ~= Vector3.new(_G.WeaponSize, _G.WeaponSize, _G.WeaponSize) then
+                            handle.Size = Vector3.new(_G.WeaponSize, _G.WeaponSize, _G.WeaponSize)
+                        end
+                        handle.CanCollide = false
+                        handle.Massless = true
+                        handle.Transparency = 0
+                        
+                        -- ระบบดาเมจจริง
+                        local target = GetTarget()
+                        if target then
+                            firetouchinterest(target.HumanoidRootPart, handle, 0)
+                            firetouchinterest(target.HumanoidRootPart, handle, 1)
                         end
                     end
+                end
+            end)
+        end
+    end
+end)
 
-                    -- 2. ระบบตีเร็ว (ปรับปรุงการตัดอนิเมชั่นเพื่อไม่ให้บัคถือของ)
-                    if _G.FastAttack then
-                        local tool = char:FindFirstChildOfClass("Tool")
-                        if tool then
-                            tool:Activate()
-                            -- แก้ไข: ตัดเฉพาะอนิเมชั่นที่ชื่อมีคำว่า Attack หรือ Slash เพื่อให้ยังถืออาวุธได้ปกติ
-                            for _, track in pairs(hum:GetPlayingAnimationTracks()) do
-                                if track.Animation.AnimationId:find("attack") or track.Animation.AnimationId:find("slash") or track.Name:lower():find("attack") then
-                                    track:Stop()
-                                end
-                            end
+-- ลูปการวาร์ปวนลูป
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if _G.AutoWarp then
+            pcall(function()
+                local char = player.Character
+                local root = char:FindFirstChild("HumanoidRootPart")
+                local hum = char:FindFirstChildOfClass("Humanoid")
+
+                if root and hum and hum.Health > 0 then
+                    if _G.NeedsPathing then
+                        root.CFrame = spawnPos
+                        task.wait(0.5)
+                        hum:MoveTo(walkToPos)
+                        
+                        local t = 0
+                        while (root.Position - walkToPos).Magnitude > 5 and t < 8 do
+                            task.wait(0.1)
+                            t = t + 0.1
+                        end
+                        
+                        task.wait(5)
+                        _G.NeedsPathing = false
+                    end
+
+                    if not _G.NeedsPathing then
+                        local target = GetTarget()
+                        if target then
+                            root.CFrame = target.HumanoidRootPart.CFrame * CFrame.new(0, 7, 0)
                         end
                     end
                 end
@@ -65,24 +122,26 @@ end)
 
 --- [ UI Control ] ---
 
-tab.newToggle("Fast Attack", "ตีรัว (แก้ไขบัคถือของ)", false, function(state)
+tab.newToggle("Fast Attack", "ตีรัว + ถือของได้ปกติ", false, function(state)
     _G.FastAttack = state
 end)
 
-tab.newToggle("Auto Warp", "วาร์ปไปตี", false, function(state)
-    _G.AutoWarp = state
+tab.newInput("Weapon Size", "ใส่ขนาดดาว (Max 1,000,000)", function(value)
+    local num = tonumber(value)
+    if num then _G.WeaponSize = math.min(num, 1000000) end
 end)
 
-tab.newButton("Catch With Rods", "กดเพื่อตกปลา (1000 รอบ)", function()
+tab.newToggle("Auto Farm (วนลูป)", "เริ่มระบบฟาร์ม", false, function(state)
+    _G.AutoWarp = state
+    _G.NeedsPathing = true
+end)
+
+tab.newButton("Catch Fishing", "ตกปลา 1000 รอบ", function()
     local char = player.Character
-    if char then
-        for _, tool in ipairs(char:GetChildren()) do
-            if tool:IsA("Tool") and tool:FindFirstChild("RodEvent") then
-                local args = {[1] = { action = "Catch" }}
-                for i = 1, 1000 do
-                    tool.RodEvent:FireServer(unpack(args))
-                end
-            end
+    local tool = char and char:FindFirstChildOfClass("Tool")
+    if tool and tool:FindFirstChild("RodEvent") then
+        for i = 1, 1000 do
+            tool.RodEvent:FireServer({ action = "Catch" })
         end
     end
 end)
