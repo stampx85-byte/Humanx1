@@ -2,6 +2,12 @@
 local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
 local window = DrRayLibrary:Load("Outfit System", "Default")
 
+-- ตัวแปรสำหรับเก็บสถานะและอ้างอิง
+local animationEnabled = false
+local animationConnection = nil
+local idleTrack, walkTrack, move1Track
+local animateScript
+
 -- สร้าง Tab สำหรับเลือกชุด
 local tab = DrRayLibrary.newTab("Outfits", "rbxassetid://10734951151")
 
@@ -921,7 +927,217 @@ local function resetChar()
 end
 
 ---------------------------------------------------------
--- สร้างปุ่มใน UI (ครบ 9 ชุด)
+-- Animation System (เปิด/ปิดได้ - ไม่มี UI ของตัวเอง)
+---------------------------------------------------------
+
+-- Animation IDs
+local IdleAnimId  = "rbxassetid://91348372558295"
+local WalkAnimId  = "rbxassetid://134010853417610"
+local Move1AnimId = "rbxassetid://129469072457859"
+
+-- Settings
+local KEY_MOVESET1 = Enum.KeyCode.Z
+local Move1Cooldown = 3
+local MOVE1_START_TIME      = 6   -- seconds
+local MOVE1_FIRST_DURATION  = 2   -- first press
+local MOVE1_SECOND_DURATION = 6   -- second press
+
+-- Animation state variables
+local customMovementEnabled = false
+local move1Ready = true
+local move1Toggled = false
+local isUsingMove = false
+
+-- Function to start animation system
+local function startAnimationSystem()
+    if animationEnabled then return end
+    
+    animationEnabled = true
+    print("🚀 เริ่มระบบอนิเมชั่น...")
+    
+    local function setupCharacter(char)
+        local humanoid = char:WaitForChild("Humanoid")
+        animateScript = char:FindFirstChild("Animate")
+
+        task.wait(0.2)
+        if animateScript then 
+            animateScript.Disabled = true 
+        end
+
+        -- Create animations
+        local idle = Instance.new("Animation")
+        idle.AnimationId = IdleAnimId
+        idleTrack = humanoid:LoadAnimation(idle)
+        idleTrack.Looped = true
+        idleTrack.Priority = Enum.AnimationPriority.Movement
+
+        local walk = Instance.new("Animation")
+        walk.AnimationId = WalkAnimId
+        walkTrack = humanoid:LoadAnimation(walk)
+        walkTrack.Looped = true
+        walkTrack.Priority = Enum.AnimationPriority.Movement
+
+        local move1 = Instance.new("Animation")
+        move1.AnimationId = Move1AnimId
+        move1Track = humanoid:LoadAnimation(move1)
+        move1Track.Priority = Enum.AnimationPriority.Action
+
+        -- Reset animation states
+        customMovementEnabled = true
+        move1Ready = true
+        move1Toggled = false
+        isUsingMove = false
+
+        -- Function to enable custom movement
+        local function enableCustomMovement()
+            customMovementEnabled = true
+            idleTrack:Play()
+            if animateScript then 
+                animateScript.Disabled = true 
+            end
+        end
+
+        -- Function to disable custom movement
+        local function disableCustomMovement()
+            customMovementEnabled = false
+            idleTrack:Stop()
+            walkTrack:Stop()
+            if animateScript then 
+                animateScript.Disabled = false 
+            end
+        end
+
+        -- Function to play move1
+        local function playMove1()
+            if not move1Ready or isUsingMove then return end
+            
+            isUsingMove = true
+            move1Ready = false
+
+            task.delay(Move1Cooldown, function()
+                move1Ready = true
+            end)
+
+            move1Track:Stop()
+            move1Track:Play()
+            game:GetService("RunService").Heartbeat:Wait()
+
+            if not move1Toggled then
+                -- FIRST PRESS
+                move1Track.TimePosition = MOVE1_START_TIME
+                disableCustomMovement()
+                move1Toggled = true
+
+                task.delay(MOVE1_FIRST_DURATION, function()
+                    if move1Track.IsPlaying then 
+                        move1Track:Stop() 
+                    end
+                    isUsingMove = false
+                end)
+            else
+                -- SECOND PRESS
+                move1Track.TimePosition = 0
+                task.delay(0.05, function()
+                    enableCustomMovement()
+                    move1Toggled = false
+                end)
+
+                task.delay(MOVE1_SECOND_DURATION, function()
+                    if move1Track.IsPlaying then 
+                        move1Track:Stop() 
+                    end
+                    isUsingMove = false
+                end)
+            end
+        end
+
+        -- Start with custom movement
+        enableCustomMovement()
+
+        -- Connect running event
+        animationConnection = humanoid.Running:Connect(function(speed)
+            if not customMovementEnabled then return end
+            if speed > 1 then
+                if not walkTrack.IsPlaying then
+                    idleTrack:Stop()
+                    walkTrack:Play()
+                end
+            else
+                if not idleTrack.IsPlaying then
+                    walkTrack:Stop()
+                    idleTrack:Play()
+                end
+            end
+        end)
+
+        -- Connect keyboard input
+        game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
+            if not animationEnabled or gp then return end
+            if input.KeyCode == KEY_MOVESET1 then
+                playMove1()
+            end
+        end)
+    end
+
+    -- Initialize for current character
+    local player = game.Players.LocalPlayer
+    if player.Character then 
+        setupCharacter(player.Character) 
+    end
+    
+    -- Connect for new characters
+    player.CharacterAdded:Connect(function(char)
+        if animationEnabled then
+            setupCharacter(char)
+        end
+    end)
+    
+    DrRayLibrary:Notify("Success", "เปิดระบบอนิเมชั่นแล้ว (กด Z เพื่อใช้สกิล)", 2)
+end
+
+-- Function to stop animation system
+local function stopAnimationSystem()
+    if not animationEnabled then return end
+    
+    animationEnabled = false
+    print("🛑 หยุดระบบอนิเมชั่น...")
+    
+    -- Stop all tracks
+    if idleTrack then 
+        idleTrack:Stop() 
+    end
+    if walkTrack then 
+        walkTrack:Stop() 
+    end
+    if move1Track then 
+        move1Track:Stop() 
+    end
+    
+    -- Re-enable default animate script
+    if animateScript then
+        animateScript.Disabled = false
+    end
+    
+    -- Disconnect connections
+    if animationConnection then
+        animationConnection:Disconnect()
+        animationConnection = nil
+    end
+    
+    DrRayLibrary:Notify("Success", "ปิดระบบอนิเมชั่นแล้ว", 2)
+end
+
+-- Function to toggle animation system
+local function toggleAnimationSystem()
+    if animationEnabled then
+        stopAnimationSystem()
+    else
+        startAnimationSystem()
+    end
+end
+
+---------------------------------------------------------
+-- สร้างปุ่มใน UI
 ---------------------------------------------------------
 
 tab.newLabel("ชุดทั้งหมด 9 ชุด", "ใช้ BloxbizRemotes ทั้งหมด")
@@ -964,6 +1180,13 @@ end)
 
 tab.newButton("Reset Character", "รีเซ็ตตัวละคร", function()
     resetChar()
+end)
+
+-- เพิ่มปุ่มสำหรับ Animation ในแท็บ Outfits เลย
+tab.newLabel("", "") -- ว่างบรรทัด
+tab.newLabel("Animation System", "เปิด/ปิดอนิเมชั่นพิเศษ")
+tab.newButton("Toggle Animation (Z)", "เปิด/ปิดระบบอนิเมชั่น", function()
+    toggleAnimationSystem()
 end)
 
 -- Tab สำหรับเครื่องมือตรวจสอบ
@@ -1019,11 +1242,14 @@ local function setupChatCommands()
             applyOutfit9()
         elseif msg == "!reset" then
             resetChar()
+        elseif msg == "!anim" or msg == "!animation" then
+            toggleAnimationSystem()
         elseif msg == "!help" then
             print("========================================")
             print("🎮 Outfit System Help:")
             print("!outfit1-9 - ใส่ชุด 1-9")
             print("!reset     - รีเซ็ตตัวละคร")
+            print("!anim      - เปิด/ปิดอนิเมชั่น (กด Z ใช้สกิล)")
             print("!help      - แสดงคำสั่งทั้งหมด")
             print("========================================")
         end
@@ -1042,8 +1268,9 @@ spawn(function()
         print("🎮 Outfit System โหลดสำเร็จ!")
         print("✅ มีชุดให้เลือก 9 ชุด")
         print("✅ ใช้ BloxbizRemotes ทั้งหมด")
-        print("✅ ชุดที่ 2 แก้ไขให้มี Body Parts ครบแล้ว")
-        print("✅ เพิ่มชุดที่ 9 (New Outfit - R15)")
+        print("✅ มีระบบ Animation (เปิด/ปิดได้)")
+        print("✅ กดปุ่ม 'Toggle Animation (Z)' เพื่อใช้งาน")
+        print("✅ เมื่อเปิดแล้ว กด Z เพื่อใช้สกิลพิเศษ")
         print("========================================")
     else
         DrRayLibrary:Notify("Warning", "ตรวจพบปัญหา Remote", 5)
@@ -1054,10 +1281,11 @@ end)
 -- แสดงคำแนะนำ
 print("\n📋 คำแนะนำการใช้งาน:")
 print("1. ไปที่แท็บ 'Outfits' เพื่อเลือกชุด")
-print("2. หรือพิมพ์ !outfit1-9 ในแชท")
-print("3. ทดสอบด้วยชุด 5 และ 8 ก่อน (ใช้งานได้แน่นอน)")
-print("4. ชุด 2 ตอนนี้มี Body Parts ครบแล้ว (แก้ไขแล้ว)")
-print("5. ชุด 9 เป็นชุดใหม่ (R15 Rig Type)")
-print("6. ถ้าชุดไหนไม่ทำงาน ลองกด 'Reset' แล้วลองใหม่")
-print("7. ไปที่แท็บ 'Tools' เพื่อตรวจสอบการเชื่อมต่อ")
+print("2. กดปุ่ม 'Toggle Animation (Z)' เพื่อเปิด/ปิดระบบอนิเมชั่น")
+print("3. เมื่อเปิดอนิเมชั่น: กด Z เพื่อใช้สกิลพิเศษ")
+print("4. หรือพิมพ์ !outfit1-9 ในแชท")
+print("5. พิมพ์ !anim ในแชทเพื่อเปิด/ปิดอนิเมชั่น")
+print("6. ทดสอบด้วยชุด 5 และ 8 ก่อน (ใช้งานได้แน่นอน)")
+print("7. ถ้าชุดไหนไม่ทำงาน ลองกด 'Reset' แล้วลองใหม่")
+print("8. ไปที่แท็บ 'Tools' เพื่อตรวจสอบการเชื่อมต่อ")
 print("========================================")
