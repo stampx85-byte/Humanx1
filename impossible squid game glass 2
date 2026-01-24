@@ -1,0 +1,47 @@
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("AUTO MONEY SPAMMER", "Default")
+
+-- [ Services ]
+local RS = game:GetService("ReplicatedStorage")
+
+-- [ Config ]
+local Config = {
+    AutoSpam = false,
+    Delay = 0.5 -- ปรับความเร็วรอบ (ยิ่งน้อยยิ่งเร็ว)
+}
+
+-- [ ระบบ Auto Spam Logic ]
+task.spawn(function()
+    while true do
+        if Config.AutoSpam then
+            -- ส่ง Remote 100 ครั้งพร้อมกันในเสี้ยววินาที
+            for i = 1, 100 do
+                task.spawn(function()
+                    pcall(function()
+                        RS.Remotes.ClaimReward:FireServer()
+                    end)
+                end)
+            end
+        end
+        task.wait(Config.Delay) -- รอเวลาในรอบถัดไป
+    end
+end)
+
+--- UI SETUP ---
+local tab = DrRayLibrary.newTab("Main Farm", "rbxassetid://4483345998")
+
+tab.newToggle("Enable Auto x100", "เปิดดูดเงิน 100 ครั้งต่อรอบอัตโนมัติ", false, function(state)
+    Config.AutoSpam = state
+    if state then
+        print("💰 Auto Spammer: ON")
+    else
+        print("🛑 Auto Spammer: OFF")
+    end
+end)
+
+tab.newSlider("Loop Speed", "ความเร็วรอบ (วินาที)", 20, true, 5, function(v)
+    -- ปรับค่า Delay (หารด้วย 10 เพื่อให้ได้ทศนิยม)
+    Config.Delay = v / 10
+end)
+
+print("🚀 Auto Spam x100 Loaded!")
