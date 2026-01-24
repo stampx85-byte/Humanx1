@@ -1,0 +1,55 @@
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("TRIPLE WARP LOCKER", "Default")
+
+-- [ Services ]
+local Player = game:GetService("Players").LocalPlayer
+
+-- [ Config ]
+local Config = {
+    AutoTP = false,
+    Delay = 0.1, -- ความเร็วในการสลับจุด (ปรับได้)
+    Locations = {
+        CFrame.new(2.11108589, 3.14999819, -894.264893),   -- จุดที่ 1
+        CFrame.new(12.6919117, 3.14999771, -909.917358),  -- จุดที่ 2
+        CFrame.new(-11.9985313, 3.14999723, -907.327576)  -- จุดที่ 3
+    }
+}
+
+-- [ ระบบ Auto Warp วน 3 จุด ]
+task.spawn(function()
+    while true do
+        if Config.AutoTP then
+            for _, pos in ipairs(Config.Locations) do
+                if not Config.AutoTP then break end -- เช็คว่าปิดหรือยัง
+                pcall(function()
+                    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                        Player.Character.HumanoidRootPart.CFrame = pos
+                        Player.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+                    end
+                end)
+                task.wait(Config.Delay) -- ดีเลย์ระหว่างการสลับจุด
+            end
+        else
+            task.wait(0.5) -- พักสคริปต์เมื่อไม่ได้เปิดใช้งาน
+        end
+    end
+end)
+
+--- [ UI Setup ] ---
+local tab = DrRayLibrary.newTab("Teleport", "rbxassetid://4483345998")
+
+tab.newToggle("Auto Warp 3 Points", "วาร์ปสลับ 3 พิกัดรัวๆ", false, function(state)
+    Config.AutoTP = state
+    if state then
+        warn("📍 เริ่มการวาร์ปวน 3 จุด!")
+    else
+        warn("🛑 หยุดวาร์ป")
+    end
+end)
+
+tab.newSlider("Warp Speed", "ความเร็วการสลับจุด", 10, true, 1, function(v)
+    -- ปรับความเร็ว (ยิ่งน้อยยิ่งเร็ว)
+    Config.Delay = v / 10
+end)
+
+print("✅ Triple Warp Script Loaded!")
