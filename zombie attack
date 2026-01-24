@@ -1,0 +1,125 @@
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("M1 Garand - ULTIMATE SPEED", "Default")
+
+-- [ Services ]
+local Player = game:GetService("Players").LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+-- [ Global Config ]
+local Config = {
+    GunAura = false,
+    AutoTP = false,
+    TPHeight = 8,
+    ToolName = "M1 Garand",
+    AutoEquip = false,
+    ExcludedNames = {"Dummy", "Training Dummy", "Target"} -- รายชื่อที่ไม่ให้วาร์ปไปหา
+}
+
+-- [ รายชื่อปืนทั้งหมด ]
+local GunList = {
+    "M1 Garand", "Scope Rifle", "Platinum Gun", "Retribution Ray", "Annihilator", 
+    "Railgun", "Space Gun", "Ailen Rifle", "Biohazard", "Golden Pistol", 
+    "Beam Launcher", "Hex Spitter", "Rainbow Blaster", "Tri Laser", 
+    "Gatling Laser", "Techno Rifle", "Minigun", "Fiery Cannon", "Toix", 
+    "Machine Gun", "Blaster", "Cobra", "Tactical Shotgun", "Sniper", 
+    "M16", "Type 100", "Trench Shotgun", "Uzi", "Revoler"
+}
+
+-- [ ฟังก์ชันหาเป้าหมาย - ตัด Dummy ออก ]
+local function GetClosestMonster()
+    local target = nil
+    local distance = math.huge
+    
+    for _, v in pairs(Workspace:GetDescendants()) do
+        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
+            -- เช็คว่าไม่ใช่คน, ไม่ใช่ตัวเอง, เลือด > 0 และ "ชื่อไม่ตรงกับรายการยกเว้น"
+            local isDummy = false
+            for _, name in pairs(Config.ExcludedNames) do
+                if v.Name:find(name) then isDummy = true break end
+            end
+
+            if not game.Players:GetPlayerFromCharacter(v) and v ~= Player.Character and v.Humanoid.Health > 0 and not isDummy then
+                local mag = (Player.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude
+                if mag < distance then
+                    distance = mag
+                    target = v
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- [ ระบบ Auto TP แบบ Super Fast ]
+-- ใช้ Heartbeat เพื่อให้ตำแหน่งอัปเดตทุกเฟรมเรตของเกม (เร็วกว่า task.wait)
+RunService.Heartbeat:Connect(function()
+    if Config.AutoTP then
+        pcall(function()
+            local monster = GetClosestMonster()
+            if monster then
+                -- วาร์ปแบบ Smooth และรวดเร็ว
+                Player.Character.HumanoidRootPart.CFrame = monster.HumanoidRootPart.CFrame * CFrame.new(0, Config.TPHeight, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+                -- ปิดแรงโน้มถ่วงชั่วคราวเพื่อไม่ให้ตัวละครตกลงมา
+                Player.Character.HumanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+            end
+        end)
+    end
+end)
+
+-- [ ระบบ Auto Shoot ]
+task.spawn(function()
+    while task.wait(0.01) do -- ปรับให้เร็วขึ้นสุดๆ
+        if Config.GunAura then
+            pcall(function()
+                local target = GetClosestMonster()
+                local gunRemote = RS:FindFirstChild("Gun") 
+                
+                if target and gunRemote then
+                    local targetPart = target:FindFirstChild("Head") or target.HumanoidRootPart
+                    local args = {
+                        [1] = {
+                            ["Normal"] = Vector3.new(0, 1, 0),
+                            ["Direction"] = (targetPart.Position - Player.Character.Head.Position).Unit,
+                            ["Name"] = Config.ToolName,
+                            ["Hit"] = targetPart,
+                            ["Origin"] = Player.Character.Head.Position,
+                            ["Pos"] = targetPart.Position
+                        }
+                    }
+                    gunRemote:FireServer(unpack(args))
+                end
+            end)
+        end
+    end
+end)
+
+-- [ UI Setup ]
+local tab = DrRayLibrary.newTab("Combat & Farm", "rbxassetid://4483345998")
+
+tab.newToggle("Enable Gun Aura", "ยิงมอนสเตอร์รอบตัว", false, function(s) Config.GunAura = s end)
+tab.newToggle("Super Fast TP", "วาร์ปติดตัวมอนสเตอร์ (Fast)", false, function(s) Config.AutoTP = s end)
+tab.newToggle("Auto Equip Gun", "ถือปืนอัตโนมัติ", false, function(s) Config.AutoEquip = s end)
+
+tab.newDropdown("Select Weapon", "รายชื่อปืนทั้งหมด", GunList, function(v) 
+    Config.ToolName = v 
+end)
+
+tab.newSlider("TP Height", "ระยะความสูงจากมอน", 50, true, 8, function(v) 
+    Config.TPHeight = v 
+end)
+
+-- [ Loop ถือปืน ]
+task.spawn(function()
+    while task.wait(0.3) do
+        if Config.AutoEquip and Config.ToolName ~= "" then
+            local backpackTool = Player.Backpack:FindFirstChild(Config.ToolName)
+            if backpackTool and not Player.Character:FindFirstChild(Config.ToolName) then
+                Player.Character.Humanoid:EquipTool(backpackTool)
+            end
+        end
+    end
+end)
+
+print("🚀 Script Updated: Faster Warp & No Dummy Target!")
