@@ -1,0 +1,99 @@
+-- โหลด Library DrRay UI
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("Multi-Hub System", "Default")
+
+---------------------------------------------------------
+-- [ TAB 1: MAIN SYSTEM ]
+---------------------------------------------------------
+local mainTab = DrRayLibrary.newTab("Main", "rbxassetid://10734951151")
+
+mainTab.newLabel("Gun System & Auto Swap")
+
+-- ตัวแปรควบคุมระบบสลับปืน
+local autoSwapEnabled = false
+
+-- ปุ่มเปิด/ปิดระบบสลับปืนยิงรัว
+mainTab.newToggle("Fast Gun Swap & Fire", "สลับปืนทุกกระบอกแล้วยิงวนลูป", false, function(state)
+    autoSwapEnabled = state
+    
+    if autoSwapEnabled then
+        task.spawn(function()
+            while autoSwapEnabled do
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if not character or not character:FindFirstChild("Humanoid") then task.wait() continue end
+                
+                -- ดึงรายชื่อปืนทั้งหมด (ในตัว + ในกระเป๋า)
+                local tools = {}
+                for _, item in ipairs(player.Backpack:GetChildren()) do
+                    if item:IsA("Tool") then table.insert(tools, item) end
+                end
+                for _, item in ipairs(character:GetChildren()) do
+                    if item:IsA("Tool") then table.insert(tools, item) end
+                end
+
+                -- เริ่ม Loop สลับยิง
+                for _, tool in ipairs(tools) do
+                    if not autoSwapEnabled then break end
+                    
+                    local remote = tool:FindFirstChild("shot") -- เช็ค Remote ยิง
+                    if remote then
+                        -- 1. สลับปืนทันที
+                        character.Humanoid:EquipTool(tool)
+                        
+                        -- 2. ยิงไปข้างหน้า (ใช้ LookVector ของหน้าตัวละคร)
+                        local firePos = character.HumanoidRootPart.CFrame.LookVector * 1000
+                        remote:FireServer(firePos)
+                        
+                        -- 3. ยิงเบิ้ล 2 ครั้งต่อการสลับ (ถ้าต้องการความแรงเพิ่ม)
+                        -- remote:FireServer(firePos)
+                        
+                        -- ความเร็วในการสลับ (0.01 คือเร็วมากจนมองแทบไม่ทัน)
+                        task.wait(0.01) 
+                    end
+                end
+                task.wait() -- ป้องกันสคริปต์ค้าง
+            end
+        end)
+    end
+end)
+
+mainTab.newLabel("Click Detector & Gun Storage")
+
+-- ปุ่ม ClickDetector ที่ใกล้ที่สุด (ของเดิม)
+mainTab.newButton("Fire Closest ClickDetector", "ค้นหาและกดปุ่มที่ใกล้ที่สุด", function()
+    local targetPos = Vector3.new(-76.84, 162.67, 231.24)
+    local closestClick = nil
+    local shortestDistance = math.huge
+    for _, v in ipairs(game.Workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") then
+            local part = v.Parent
+            if part and part:IsA("BasePart") then
+                local distance = (part.Position - targetPos).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestClick = v
+                end
+            end
+        end
+    end
+    if closestClick then
+        fireclickdetector(closestClick)
+        DrRayLibrary:Notify("Success", "Fired ClickDetector!", 2)
+    end
+end)
+
+-- ระบบ Gun (Save/Get) (ของเดิม)
+mainTab.newButton("Auto Save & Get Gun", "บันทึกและดึงปืน (10 ครั้ง)", function()
+    local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+    for i = 1, 10 do toolStorage:FireServer(unpack({"Save", "Gun"})) end
+    task.wait(0.1)
+    for i = 1, 10 do toolStorage:FireServer(unpack({"Get", "Gun"})) end
+    DrRayLibrary:Notify("Success", "Executed Gun Storage", 2)
+end)
+
+---------------------------------------------------------
+-- [ TAB 2-4: OUTFITS, ANIMATIONS, TOOLS ]
+---------------------------------------------------------
+-- (โค้ดส่วน Outfit, Animation และ Tools เดิมของคุณให้ใส่ต่อท้ายตรงนี้ได้เลย)
+-- ...
