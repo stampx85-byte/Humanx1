@@ -1,6 +1,6 @@
 -- โหลด Library DrRay UI
 local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
-local window = DrRayLibrary:Load("Multi-Hub System (Rainbow Full)", "Default")
+local window = DrRayLibrary:Load("Multi-Hub System (Rainbow Edition)", "Default")
 
 ---------------------------------------------------------
 -- [ SETTINGS & VARIABLES ]
@@ -8,16 +8,19 @@ local window = DrRayLibrary:Load("Multi-Hub System (Rainbow Full)", "Default")
 local RunService = game:GetService("RunService")
 local autoSwapEnabled = false
 local shootForwardEnabled = false 
-local targetSearchName = ""
+local lockOnEnabled = true
 local autoClaimEnabled = true 
+local tpAboveHeadEnabled = false
+local orbitSpinEnabled = false 
+local spinLockEnabled = false
 local autoBuyLoop = false
 local autoSellEnabled = false 
+local targetSearchName = ""
 
 -- Rainbow Settings
 local rainbowNameEnabled = false
 local rainbowBoomboxEnabled = false
-local rainbowBodyEnabled = false -- ตัวแปรใหม่สำหรับตัวรุ้ง
-local customNameTag = "Script Word [TH]"
+local customNameTag = "Script Word [TH]" -- ชื่อเริ่มต้น
 
 ---------------------------------------------------------
 -- [ FUNCTION: UTILS ]
@@ -58,11 +61,11 @@ local function safeUltraShoot(targetPos)
 end
 
 ---------------------------------------------------------
--- [ TAB: COMBAT ]
+-- [ TAB 1: COMBAT ]
 ---------------------------------------------------------
 local mainTab = DrRayLibrary.newTab("Combat", "rbxassetid://10734951151")
 
-mainTab.newToggle("Warp & Orbit Spin", "หมุนวนรอบเป้าหมาย", false, function(state)
+mainTab.newToggle("Warp & Orbit Spin", "วาร์ปไปหมุนวนรอบเป้าหมาย (กันโดนยิง)", false, function(state)
     orbitSpinEnabled = state
     local angle = 0
     if orbitSpinEnabled then
@@ -77,6 +80,7 @@ mainTab.newToggle("Warp & Orbit Spin", "หมุนวนรอบเป้า�
                             if pChar and pChar:FindFirstChild("HumanoidRootPart") then
                                 angle = angle + (5 * dt)
                                 local offset = Vector3.new(math.cos(angle) * 7, 3, math.sin(angle) * 7)
+                                pChar.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
                                 pChar.HumanoidRootPart.CFrame = CFrame.new(root.Position + offset, root.Position)
                                 safeUltraShoot(root.Position)
                             end
@@ -89,82 +93,151 @@ mainTab.newToggle("Warp & Orbit Spin", "หมุนวนรอบเป้า�
     end
 end)
 
-mainTab.newInput("Target Name", "ใส่ชื่อเป้าหมาย", function(t) targetSearchName = t end)
+mainTab.newToggle("Shoot Forward Only", "ยิงรัวไปข้างหน้าตรงๆ", false, function(state)
+    shootForwardEnabled = state
+    task.spawn(function()
+        while shootForwardEnabled do
+            local char = game.Players.LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local forwardPos = char.HumanoidRootPart.Position + (char.HumanoidRootPart.CFrame.LookVector * 500)
+                safeUltraShoot(forwardPos)
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+mainTab.newToggle("Ultra Fast Swap", "ยิงรัวแบบล็อคเป้าคนใกล้", false, function(state)
+    autoSwapEnabled = state
+    task.spawn(function()
+        while autoSwapEnabled do
+            local char = game.Players.LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local target = getClosestPlayer(1000)
+                if target then safeUltraShoot(target.Character.HumanoidRootPart.Position) end
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+mainTab.newLabel("Warp System")
+mainTab.newInput("Target Name", "ใส่ชื่อคนที่จะตาม", function(t) targetSearchName = t end)
+
+mainTab.newToggle("Warp & Kill (Above)", "วาร์ปยิงบนหัวนิ่งๆ", false, function(state)
+    tpAboveHeadEnabled = state
+    task.spawn(function()
+        local p = game.Players.LocalPlayer
+        while tpAboveHeadEnabled do
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                        p.Character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame * CFrame.new(0, 7, 0)
+                        p.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                        safeUltraShoot(v.Character.HumanoidRootPart.Position)
+                        break 
+                    end
+                end
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
 
 ---------------------------------------------------------
--- [ TAB: VISUALS (เพิ่มตัวรุ้งที่นี่) ]
+-- [ TAB 2: VISUALS (NEW!) ]
 ---------------------------------------------------------
 local visualTab = DrRayLibrary.newTab("Visuals", "rbxassetid://10734951151")
 
--- ส่วนของตัวรุ้ง (Rainbow Body)
-visualTab.newToggle("Rainbow Body", "เปลี่ยนสีตัวละครแบบรุ้ง Smooth", false, function(state)
-    rainbowBodyEnabled = state
-    if rainbowBodyEnabled then
-        task.spawn(function()
-            local hue = 0
-            while rainbowBodyEnabled do
-                hue = hue + (1/200) -- ปรับความเร็วตรงนี้
-                if hue > 1 then hue = 0 end
-                local rainbowColor = Color3.fromHSV(hue, 1, 1)
-                
-                -- ส่ง Event เปลี่ยนสีตัว
-                game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({
-                    ["BodyColor"] = rainbowColor
-                })
-                task.wait(0.1) -- หน่วงเวลาเพื่อไม่ให้เซิร์ฟเวอร์เตะ
-            end
-        end)
-    end
+visualTab.newInput("Custom Name", "เปลี่ยนคำในชื่อรุ้ง", function(t)
+    customNameTag = t
 end)
 
-visualTab.newInput("Custom Name", "เปลี่ยนชื่อรุ้ง", function(t) customNameTag = t end)
-
-visualTab.newToggle("Rainbow Name", "เปิดชื่อสีรุ้ง", false, function(state)
+visualTab.newToggle("Rainbow Name", "เปิดชื่อสีรุ้งแบบ Smooth", false, function(state)
     rainbowNameEnabled = state
     if rainbowNameEnabled then
         task.spawn(function()
             local hue = 0
             while rainbowNameEnabled do
-                hue = hue + (1/300)
+                hue = hue + (1/400) -- ความเร็วการเปลี่ยนสี
                 if hue > 1 then hue = 0 end
-                game:GetService("ReplicatedStorage").NameTagRemoteEvent:FireServer(customNameTag, Color3.fromHSV(hue, 1, 1), 38)
-                task.wait(0.1)
+                local color = Color3.fromHSV(hue, 1, 1)
+                game:GetService("ReplicatedStorage").NameTagRemoteEvent:FireServer(customNameTag, color, 38)
+                task.wait(0.05) -- ปรับความถี่การส่ง Event
             end
         end)
     end
 end)
 
-visualTab.newToggle("Rainbow Boombox", "วิทยุ 12 สี", false, function(state)
+visualTab.newToggle("Rainbow Boombox", "วิทยุสีรุ้ง 12 สี", false, function(state)
     rainbowBoomboxEnabled = state
     if rainbowBoomboxEnabled then
         task.spawn(function()
-            local colors = {"Really red", "Deep orange", "New Yeller", "Lime green", "Electric blue", "Really blue", "Hot pink", "Institutional white", "Black", "Magenta", "Cyan", "Alder"}
+            -- รายชื่อสี 12 สี (BrickColor)
+            local colors = {
+                "Really red", "Deep orange", "New Yeller", "Lime green", 
+                "Electric blue", "Really blue", "Hot pink", "Institutional white",
+                "Black", "Magenta", "Cyan", "Alder"
+            }
             local index = 1
             while rainbowBoomboxEnabled do
-                workspace.DRadio_Script.Color:FireServer(BrickColor.new(colors[index]))
-                index = (index % #colors) + 1
-                task.wait(0.3)
+                local selectedColor = BrickColor.new(colors[index])
+                workspace.DRadio_Script.Color:FireServer(selectedColor)
+                
+                index = index + 1
+                if index > #colors then index = 1 end
+                task.wait(0.3) -- ความเร็วในการสลับสี
             end
         end)
     end
 end)
 
 ---------------------------------------------------------
--- [ TAB: OTHERS ]
+-- [ TAB 3: AUTO FARM ]
 ---------------------------------------------------------
 local farmTab = DrRayLibrary.newTab("Auto Farm", "rbxassetid://10734951151")
-farmTab.newToggle("Auto Sell", "ขายของอัตโนมัติ", false, function(state)
+farmTab.newToggle("Auto Sell (ปั๊มเงิน)", "ปั๊มเงินอัตโนมัติ (House)", false, function(state)
     autoSellEnabled = state
     if autoSellEnabled then
         task.spawn(function()
-            while autoSellEnabled do 
-                game:GetService("ReplicatedStorage").House:FireServer("Sell") 
-                task.wait(0.01) 
-            end
+            local HouseEvent = game:GetService("ReplicatedStorage"):WaitForChild("House")
+            while autoSellEnabled do HouseEvent:FireServer("Sell") task.wait(0.01) end
         end)
     end
 end)
 
+---------------------------------------------------------
+-- [ TAB 4: ANTI-JAIL & SHOP ]
+---------------------------------------------------------
 local antiTab = DrRayLibrary.newTab("Anti-Jail", "rbxassetid://10734951151")
-antiTab.newToggle("Auto Claim Items", "ดึงของคืน", true, function(state) autoClaimEnabled = state end)
+antiTab.newToggle("Auto Claim Items", "ดึงของคืนอัตโนมัติ", true, function(state) autoClaimEnabled = state end)
 task.spawn(function() while task.wait(0.5) do if autoClaimEnabled then game:GetService("ReplicatedStorage").GetItemBack:FireServer() end end end)
+
+local shopTab = DrRayLibrary.newTab("Auto Shop", "rbxassetid://10734951151")
+local function autoBuyGun()
+    local targetPos = Vector3.new(-76.84, 162.67, 231.24)
+    local closestClick = nil
+    for _, v in ipairs(game.Workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") then
+            local part = v.Parent
+            if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then closestClick = v end
+        end
+    end
+    if closestClick then fireclickdetector(closestClick) return true end
+    return false
+end
+
+shopTab.newToggle("Auto Buy Loop (30 Pcs)", "ซื้อปืน 30 อันเข้าตัว", false, function(state)
+    autoBuyLoop = state
+    if autoBuyLoop then
+        task.spawn(function()
+            local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+            while autoBuyLoop do
+                for i = 1, 30 do if not autoBuyLoop then break end if autoBuyGun() then task.wait(0.1) toolStorage:FireServer("Save", "Gun") end end
+                task.wait(0.5)
+                for i = 1, 30 do if not autoBuyLoop then break end toolStorage:FireServer("Get", "Gun") task.wait(0.05) end
+                task.wait(2)
+            end
+        end)
+    end
+end)
