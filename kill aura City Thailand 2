@@ -1,99 +1,233 @@
 -- โหลด Library DrRay UI
 local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
-local window = DrRayLibrary:Load("Multi-Hub System", "Default")
+local window = DrRayLibrary:Load("Multi-Hub System (Orbit Smooth Fix)", "Default")
 
 ---------------------------------------------------------
--- [ TAB 1: MAIN SYSTEM ]
+-- [ SETTINGS & VARIABLES ] - เหมือนเดิมทุกอย่าง
 ---------------------------------------------------------
-local mainTab = DrRayLibrary.newTab("Main", "rbxassetid://10734951151")
-
-mainTab.newLabel("Gun System & Auto Swap")
-
--- ตัวแปรควบคุมระบบสลับปืน
+local RunService = game:GetService("RunService")
 local autoSwapEnabled = false
+local shootForwardEnabled = false 
+local lockOnEnabled = true
+local autoClaimEnabled = true 
+local tpAboveHeadEnabled = false
+local orbitSpinEnabled = false 
+local spinLockEnabled = false
+local autoBuyLoop = false
+local autoSellEnabled = false 
+local targetSearchName = ""
 
--- ปุ่มเปิด/ปิดระบบสลับปืนยิงรัว
-mainTab.newToggle("Fast Gun Swap & Fire", "สลับปืนทุกกระบอกแล้วยิงวนลูป", false, function(state)
-    autoSwapEnabled = state
+-- [ Moveset Settings ] - เหมือนเดิมทุกอย่าง
+local IdleAnimId = "rbxassetid://91348372558295"
+local WalkAnimId = "rbxassetid://134010853417610"
+local Move1AnimId = "rbxassetid://129469072457859"
+local Move1Cooldown = 3
+local MOVE1_START_TIME = 6
+local MOVE1_FIRST_DURATION = 2
+local MOVE1_SECOND_DURATION = 6
+
+---------------------------------------------------------
+-- [ FUNCTION: UTILS ] - เหมือนเดิมทุกอย่าง
+---------------------------------------------------------
+local function getClosestPlayer(range)
+    local closestPlayer = nil
+    local shortestDistance = range
+    local localPlayer = game.Players.LocalPlayer
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.Humanoid.Health > 0 then
+            local distance = (localPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closestPlayer = player
+            end
+        end
+    end
+    return closestPlayer
+end
+
+local function safeUltraShoot(targetPos)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    local tools = {}
+    for _, item in ipairs(player.Backpack:GetChildren()) do if item:IsA("Tool") then table.insert(tools, item) end end
+    for _, item in ipairs(character:GetChildren()) do if item:IsA("Tool") then table.insert(tools, item) end end
+    for i, tool in ipairs(tools) do
+        local remote = tool:FindFirstChild("shot") or tool:FindFirstChild("RemoteEvent")
+        if remote then
+            task.spawn(function()
+                character.Humanoid:EquipTool(tool)
+                remote:FireServer(targetPos)
+            end)
+            if i % 3 == 0 then task.wait(0.001) end
+        end
+    end
+end
+
+---------------------------------------------------------
+-- [ TAB 1: COMBAT ]
+---------------------------------------------------------
+local mainTab = DrRayLibrary.newTab("Combat", "rbxassetid://10734951151")
+
+-- แก้ไขเฉพาะจุดนี้ให้หมุน Smooth ขึ้น (ใช้ Heartbeat แทนลูปปกติ)
+mainTab.newToggle("Warp & Orbit Spin", "วาร์ปไปหมุนวนรอบเป้าหมาย (กันโดนยิง)", false, function(state)
+    orbitSpinEnabled = state
+    local angle = 0
     
-    if autoSwapEnabled then
+    if orbitSpinEnabled then
         task.spawn(function()
-            while autoSwapEnabled do
-                local player = game.Players.LocalPlayer
-                local character = player.Character
-                if not character or not character:FindFirstChild("Humanoid") then task.wait() continue end
-                
-                -- ดึงรายชื่อปืนทั้งหมด (ในตัว + ในกระเป๋า)
-                local tools = {}
-                for _, item in ipairs(player.Backpack:GetChildren()) do
-                    if item:IsA("Tool") then table.insert(tools, item) end
-                end
-                for _, item in ipairs(character:GetChildren()) do
-                    if item:IsA("Tool") then table.insert(tools, item) end
-                end
-
-                -- เริ่ม Loop สลับยิง
-                for _, tool in ipairs(tools) do
-                    if not autoSwapEnabled then break end
-                    
-                    local remote = tool:FindFirstChild("shot") -- เช็ค Remote ยิง
-                    if remote then
-                        -- 1. สลับปืนทันที
-                        character.Humanoid:EquipTool(tool)
-                        
-                        -- 2. ยิงไปข้างหน้า (ใช้ LookVector ของหน้าตัวละคร)
-                        local firePos = character.HumanoidRootPart.CFrame.LookVector * 1000
-                        remote:FireServer(firePos)
-                        
-                        -- 3. ยิงเบิ้ล 2 ครั้งต่อการสลับ (ถ้าต้องการความแรงเพิ่ม)
-                        -- remote:FireServer(firePos)
-                        
-                        -- ความเร็วในการสลับ (0.01 คือเร็วมากจนมองแทบไม่ทัน)
-                        task.wait(0.01) 
+            while orbitSpinEnabled do
+                -- ใช้ Heartbeat เพื่อความลื่นไหลระดับเดียวกับเฟรมเรตเกม
+                local dt = RunService.Heartbeat:Wait() 
+                if targetSearchName ~= "" then
+                    for _, v in ipairs(game.Players:GetPlayers()) do
+                        if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                            local root = v.Character.HumanoidRootPart
+                            local pChar = game.Players.LocalPlayer.Character
+                            
+                            if pChar and pChar:FindFirstChild("HumanoidRootPart") then
+                                angle = angle + (5 * dt) -- 5 คือความเร็วหมุน ปรับเพิ่ม/ลดได้
+                                local offset = Vector3.new(math.cos(angle) * 7, 3, math.sin(angle) * 7)
+                                
+                                pChar.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                                pChar.HumanoidRootPart.CFrame = CFrame.new(root.Position + offset, root.Position)
+                                
+                                safeUltraShoot(root.Position)
+                            end
+                            break
+                        end
                     end
                 end
-                task.wait() -- ป้องกันสคริปต์ค้าง
             end
         end)
     end
 end)
 
-mainTab.newLabel("Click Detector & Gun Storage")
+mainTab.newToggle("Shoot Forward Only", "ยิงรัวไปข้างหน้าตรงๆ", false, function(state)
+    shootForwardEnabled = state
+    task.spawn(function()
+        while shootForwardEnabled do
+            local char = game.Players.LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local forwardPos = char.HumanoidRootPart.Position + (char.HumanoidRootPart.CFrame.LookVector * 500)
+                safeUltraShoot(forwardPos)
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
 
--- ปุ่ม ClickDetector ที่ใกล้ที่สุด (ของเดิม)
-mainTab.newButton("Fire Closest ClickDetector", "ค้นหาและกดปุ่มที่ใกล้ที่สุด", function()
+mainTab.newToggle("Ultra Fast Swap", "ยิงรัวแบบล็อคเป้าคนใกล้", false, function(state)
+    autoSwapEnabled = state
+    task.spawn(function()
+        while autoSwapEnabled do
+            local char = game.Players.LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local target = getClosestPlayer(1000)
+                if target then safeUltraShoot(target.Character.HumanoidRootPart.Position) end
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+mainTab.newLabel("Warp System (Input Target Name First)")
+mainTab.newInput("Target Name", "ใส่ชื่อคนที่จะตาม", function(t) targetSearchName = t end)
+
+mainTab.newToggle("Warp & Kill (Above)", "วาร์ปยิงบนหัวนิ่งๆ", false, function(state)
+    tpAboveHeadEnabled = state
+    task.spawn(function()
+        local p = game.Players.LocalPlayer
+        while tpAboveHeadEnabled do
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                        p.Character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame * CFrame.new(0, 7, 0)
+                        p.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                        safeUltraShoot(v.Character.HumanoidRootPart.Position)
+                        break 
+                    end
+                end
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 2: AUTO FARM ] - เหมือนเดิมทุกอย่าง
+---------------------------------------------------------
+local farmTab = DrRayLibrary.newTab("Auto Farm", "rbxassetid://10734951151")
+farmTab.newToggle("Auto Sell (ปั๊มเงิน)", "ปั๊มเงินอัตโนมัติ (House)", false, function(state)
+    autoSellEnabled = state
+    if autoSellEnabled then
+        task.spawn(function()
+            local HouseEvent = game:GetService("ReplicatedStorage"):WaitForChild("House")
+            while autoSellEnabled do HouseEvent:FireServer("Sell") task.wait(0.01) end
+        end)
+    end
+end)
+
+---------------------------------------------------------
+-- [ TAB 3: MOVESET ] - เหมือนเดิมทุกอย่าง
+---------------------------------------------------------
+local movesetTab = DrRayLibrary.newTab("Moveset", "rbxassetid://10734951151")
+movesetTab.newToggle("Custom Movement", "เปิดใช้ Anim ใหม่", false, function(state)
+    local char = game.Players.LocalPlayer.Character
+    if not char then return end
+    local humanoid = char:WaitForChild("Humanoid")
+    local animate = char:FindFirstChild("Animate")
+    local customMovementEnabled = state
+    if customMovementEnabled then
+        if animate then animate.Disabled = true end
+        local idleTrack = humanoid:LoadAnimation(Instance.new("Animation", {AnimationId = IdleAnimId}))
+        local walkTrack = humanoid:LoadAnimation(Instance.new("Animation", {AnimationId = WalkAnimId}))
+        task.spawn(function()
+            while customMovementEnabled do
+                if humanoid.MoveDirection.Magnitude > 0 then
+                    if not walkTrack.IsPlaying then idleTrack:Stop() walkTrack:Play() end
+                else
+                    if not idleTrack.IsPlaying then walkTrack:Stop() idleTrack:Play() end
+                end
+                task.wait(0.1)
+            end
+            idleTrack:Stop() walkTrack:Stop() if animate then animate.Disabled = false end
+        end)
+    else if animate then animate.Disabled = false end end
+end)
+
+---------------------------------------------------------
+-- [ TAB 4: ANTI-JAIL & SHOP ] - เหมือนเดิมทุกอย่าง
+---------------------------------------------------------
+local antiTab = DrRayLibrary.newTab("Anti-Jail", "rbxassetid://10734951151")
+antiTab.newToggle("Auto Claim Items", "ดึงของคืนอัตโนมัติ", true, function(state) autoClaimEnabled = state end)
+task.spawn(function() while task.wait(0.5) do if autoClaimEnabled then game:GetService("ReplicatedStorage").GetItemBack:FireServer() end end end)
+
+local shopTab = DrRayLibrary.newTab("Auto Shop", "rbxassetid://10734951151")
+local function autoBuyGun()
     local targetPos = Vector3.new(-76.84, 162.67, 231.24)
     local closestClick = nil
-    local shortestDistance = math.huge
     for _, v in ipairs(game.Workspace:GetDescendants()) do
         if v:IsA("ClickDetector") then
             local part = v.Parent
-            if part and part:IsA("BasePart") then
-                local distance = (part.Position - targetPos).Magnitude
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    closestClick = v
-                end
-            end
+            if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then closestClick = v end
         end
     end
-    if closestClick then
-        fireclickdetector(closestClick)
-        DrRayLibrary:Notify("Success", "Fired ClickDetector!", 2)
+    if closestClick then fireclickdetector(closestClick) return true end
+    return false
+end
+
+shopTab.newToggle("Auto Buy Loop (30 Pcs)", "ซื้อปืน 30 อันเข้าตัว", false, function(state)
+    autoBuyLoop = state
+    if autoBuyLoop then
+        task.spawn(function()
+            local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+            while autoBuyLoop do
+                for i = 1, 30 do if not autoBuyLoop then break end if autoBuyGun() then task.wait(0.1) toolStorage:FireServer("Save", "Gun") end end
+                task.wait(0.5)
+                for i = 1, 30 do if not autoBuyLoop then break end toolStorage:FireServer("Get", "Gun") task.wait(0.05) end
+                task.wait(2)
+            end
+        end)
     end
 end)
-
--- ระบบ Gun (Save/Get) (ของเดิม)
-mainTab.newButton("Auto Save & Get Gun", "บันทึกและดึงปืน (10 ครั้ง)", function()
-    local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
-    for i = 1, 10 do toolStorage:FireServer(unpack({"Save", "Gun"})) end
-    task.wait(0.1)
-    for i = 1, 10 do toolStorage:FireServer(unpack({"Get", "Gun"})) end
-    DrRayLibrary:Notify("Success", "Executed Gun Storage", 2)
-end)
-
----------------------------------------------------------
--- [ TAB 2-4: OUTFITS, ANIMATIONS, TOOLS ]
----------------------------------------------------------
--- (โค้ดส่วน Outfit, Animation และ Tools เดิมของคุณให้ใส่ต่อท้ายตรงนี้ได้เลย)
--- ...
