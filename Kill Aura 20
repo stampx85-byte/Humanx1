@@ -1,7 +1,7 @@
 local plr = game.Players.LocalPlayer
 
 -- [ ส่วนที่เพิ่ม: ตรวจสอบ VIP ]
-local allowedNames = {"ffsww_1007", "A_ASPD","HACKER_18050"}
+local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050"} -- เพิ่มชื่อเรียบร้อยแล้ว
 local isVIP = false
 
 for _, name in ipairs(allowedNames) do
@@ -20,7 +20,7 @@ if isVIP then
 else
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Access Denied",
-        Text = "ผู้ใช่ยังไม่มีvip",
+        Text = "ผู้ใช้ยังไม่มี VIP",
         Duration = 10
     })
     return -- หยุดการทำงานทั้งหมดหากไม่ใช่คนที่มีชื่อข้างต้น
