@@ -282,34 +282,27 @@ visualTab.newInput("Custom Name", "เปลี่ยนคำในชื่อ
     customNameTag = t
 end)
 
--- [ อัปเดตส่วนเลื่อนชื่อสลับทิศทาง ]
-visualTab.newToggle("Rainbow Bounce Scroll", "เลื่อนชื่อซ้ายไปขวา-ขวาไปซ้าย", false, function(state)
+visualTab.newToggle("Rainbow Scroll Name", "เปิดชื่อสีรุ้งแบบเลื่อนวน (LED)", false, function(state)
     rainbowNameEnabled = state
     if rainbowNameEnabled then
         task.spawn(function()
             local hue = 0
             local scrollPos = 1
-            local direction = 1 -- 1 คือไปขวา, -1 คือไปซ้าย
             while rainbowNameEnabled do
                 hue = hue + (1/400)
                 if hue > 1 then hue = 0 end
                 local color = Color3.fromHSV(hue, 1, 1)
                 
-                local fullText = "          " .. customNameTag .. "          "
-                local displayPart = string.sub(fullText, scrollPos, scrollPos + 15)
+                -- ระบบเลื่อนชื่อ (Scrolling Logic)
+                local fullText = customNameTag .. "          " -- เพิ่มช่องว่างท้ายชื่อ
+                local displayPart = string.sub(fullText, scrollPos, scrollPos + 15) -- ตัดส่วนที่จะแสดง
                 
                 game:GetService("ReplicatedStorage").NameTagRemoteEvent:FireServer(displayPart, color, 38)
                 
-                scrollPos = scrollPos + direction
+                scrollPos = scrollPos + 1
+                if scrollPos > string.len(fullText) - 5 then scrollPos = 1 end
                 
-                -- ตรวจสอบเพื่อเปลี่ยนทิศทาง
-                if scrollPos > (string.len(fullText) - 15) then
-                    direction = -1
-                elseif scrollPos < 1 then
-                    direction = 1
-                end
-                
-                task.wait(0.12)
+                task.wait(0.15) -- ปรับความเร็วการเลื่อนตรงนี้
             end
         end)
     end
@@ -465,7 +458,7 @@ end)
 ---------------------------------------------------------
 local miscTab = DrRayLibrary.newTab("Misc", "rbxassetid://10734951151")
 
--- ปุ่ม Speed (เหมือนเดิม)
+-- เพิ่มปุ่ม Speed (ไม่ลบของเก่า)
 local speedEnabled = false
 miscTab.newToggle("Super Speed (80)", "เปิดเพื่อวิ่งไว", false, function(state)
     speedEnabled = state
@@ -480,7 +473,7 @@ miscTab.newToggle("Super Speed (80)", "เปิดเพื่อวิ่ง�
     end)
 end)
 
--- ปุ่ม Jump (เหมือนเดิม)
+-- เพิ่มปุ่ม Jump (ไม่ลบของเก่า)
 local jumpEnabled = false
 miscTab.newToggle("Super Jump (100)", "เปิดเพื่อกระโดดสูง", false, function(state)
     jumpEnabled = state
@@ -496,7 +489,7 @@ miscTab.newToggle("Super Jump (100)", "เปิดเพื่อกระโ�
     end)
 end)
 
--- ฟังก์ชันนอนเดิม
+-- ฟังก์ชันนอนเดิมของคุณ
 miscTab.newButton("Auto Lie & Return", "วาร์ปไปนอน 3 วิแล้ววาร์ปกลับ", function()
     local char = plr.Character
     local hum = char and char:FindFirstChildOfClass("Humanoid")
