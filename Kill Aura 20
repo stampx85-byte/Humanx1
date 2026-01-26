@@ -1,7 +1,7 @@
 local plr = game.Players.LocalPlayer
 
 -- [ ส่วนที่เพิ่ม: ตรวจสอบ VIP ]
-local allowedNames = {"ffsww_1007", "A_ASPD"}
+local allowedNames = {"ffsww_1007", "A_ASPD","HACKER_18050"}
 local isVIP = false
 
 for _, name in ipairs(allowedNames) do
