@@ -1,4 +1,4 @@
--- [[ Humanx1 Loader - Safe Script Switcher ]]
+-- [[ Humanx1 Loader - Safe Script Switcher (Chat Protected) ]]
 
 local Player = game.Players.LocalPlayer
 local MyName = Player.Name
@@ -11,36 +11,43 @@ _G.VIP_LIST = _G.VIP_LIST or {
     ["TV_BTS1"] = true
 }
 
--- [!] ฟังก์ชันลบเฉพาะสคริปต์ฟรี (ไม่ลบระบบเกม)
-local function RemoveFreeScriptOnly()
-    warn("🧹 Removing Free Script Content...")
+-- [!] ฟังก์ชันล้างเฉพาะสคริปต์ฟรี แบบไม่ยุ่งกับระบบเกม
+local function SafeRemoveFreeScript()
+    warn("🧹 Cleaning up Free Script while protecting Chat...")
 
-    -- 1. สั่งหยุดการทำงาน (Logic)
+    -- 1. หยุด Logic การทำงาน
     _G.Running = false
     _G.Aura = false
 
-    -- 2. ลบเฉพาะ UI ที่สคริปต์สร้างขึ้น
-    -- เราจะไม่ใช้ :ClearAllChildren() หรือลบสุ่มสี่สุ่มห้า
+    -- 2. ลบเฉพาะ UI ที่ไม่ใช่ของระบบ Roblox
     local coreGui = game:GetService("CoreGui")
     for _, v in pairs(coreGui:GetChildren()) do
-        -- เช็คว่าไม่ใช่ UI ของระบบ Roblox (เช่น แชท, เมนูหลัก, รายชื่อผู้เล่น)
-        if v:IsA("ScreenGui") and 
-           v.Name ~= "RobloxGui" and 
-           v.Name ~= "ChatGui" and 
-           v.Name ~= "BubbleChat" and
-           not v.Name:match("Roblox") then
+        if v:IsA("ScreenGui") then
+            -- รายชื่อ UI ห้ามลบ (ระบบเกม)
+            local isSystemGui = (
+                v.Name == "RobloxGui" or 
+                v.Name == "ChatGui" or 
+                v.Name == "BubbleChat" or 
+                v.Name == "ExperienceChat-Client" or -- ระบบแชทใหม่
+                v.Name == "PlayerList" or
+                v:FindFirstChild("RobloxGui") or
+                v.Name:match("Roblox")
+            )
             
-            v:Destroy() -- ลบเฉพาะ UI สคริปต์
+            -- ถ้าไม่ใช่ระบบเกม ให้ลบทิ้งทันที (ซึ่งก็คือ UI สคริปต์)
+            if not isSystemGui then
+                v:Destroy()
+            end
         end
     end
     
-    task.wait(0.3)
+    task.wait(0.5)
 end
 
 -- 3. ระบบรัน VIP
 local function UpgradeToVIP()
-    RemoveFreeScriptOnly() -- ลบตัวฟรีออกก่อนแบบปลอดภัย
-    print("💎 [SYSTEM] VIP Activated: Running Kill Aura 20")
+    SafeRemoveFreeScript() -- ล้างเฉพาะตัวสคริปต์ฟรี
+    print("💎 [SUCCESS] VIP Activated: Running Kill Aura 20")
     task.defer(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
     end)
@@ -69,12 +76,19 @@ local function ListenChat(speaker, msg)
     end
 end
 
-for _, p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(msg) ListenChat(p, msg) end) end
-game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(msg) ListenChat(p, msg) end) end)
+-- เชื่อมต่อแชท
+for _, p in pairs(game.Players:GetPlayers()) do 
+    p.Chatted:Connect(function(msg) ListenChat(p, msg) end) 
+end
+game.Players.PlayerAdded:Connect(function(p) 
+    p.Chatted:Connect(function(msg) ListenChat(p, msg) end) 
+end)
 
--- 5. เริ่มทำงาน
+-- 5. เริ่มทำงานครั้งแรก
 if _G.VIP_LIST[MyName] then
+    print("💎 ยินดีต้อนรับ VIP: " .. MyName)
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
 else
+    print("🆓 รันตัวฟรีสำหรับ: " .. MyName)
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
 end
