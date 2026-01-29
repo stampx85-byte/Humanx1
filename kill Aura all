@@ -1,9 +1,8 @@
--- [[ Humanx1 Loader - Script Killing System ]]
+-- [[ Humanx1 Loader - Safe Script Switcher ]]
 
 local Player = game.Players.LocalPlayer
 local MyName = Player.Name
 
--- 1. รายชื่อ VIP
 _G.VIP_LIST = _G.VIP_LIST or {
     ["A_ASPD"] = true,
     ["ffsww_1007"] = true,
@@ -12,45 +11,42 @@ _G.VIP_LIST = _G.VIP_LIST or {
     ["TV_BTS1"] = true
 }
 
--- [!] ฟังก์ชันสำคัญ: หยุดทุกอย่างที่ตัวฟรีอาจจะทำงานอยู่
-local function KillFreeScript()
-    warn("⛔ กำลังยุติการทำงานสคริปต์ตัวฟรี...")
+-- [!] ฟังก์ชันลบเฉพาะสคริปต์ฟรี (ไม่ลบระบบเกม)
+local function RemoveFreeScriptOnly()
+    warn("🧹 Removing Free Script Content...")
 
-    -- 1. หยุด Loop ทั้งหมดที่สคริปต์ส่วนใหญ่ใช้
+    -- 1. สั่งหยุดการทำงาน (Logic)
     _G.Running = false
     _G.Aura = false
-    _G.AutoFarm = false
-    _G.Enabled = false
+
+    -- 2. ลบเฉพาะ UI ที่สคริปต์สร้างขึ้น
+    -- เราจะไม่ใช้ :ClearAllChildren() หรือลบสุ่มสี่สุ่มห้า
+    local coreGui = game:GetService("CoreGui")
+    for _, v in pairs(coreGui:GetChildren()) do
+        -- เช็คว่าไม่ใช่ UI ของระบบ Roblox (เช่น แชท, เมนูหลัก, รายชื่อผู้เล่น)
+        if v:IsA("ScreenGui") and 
+           v.Name ~= "RobloxGui" and 
+           v.Name ~= "ChatGui" and 
+           v.Name ~= "BubbleChat" and
+           not v.Name:match("Roblox") then
+            
+            v:Destroy() -- ลบเฉพาะ UI สคริปต์
+        end
+    end
     
-    -- 2. เคลียร์ Connection (พวกระบบตรวจจับการกดปุ่มหรือการตี)
-    -- เราจะใช้การเคลียร์ค่าใน _G ที่สคริปต์ตัวฟรีอาจจะใช้เชื่อมโยงไว้
-    for i, v in pairs(_G) do
-        if i ~= "VIP_LIST" then
-            -- พยายามล้างค่าอื่นๆ ทิ้งเพื่อชะงักการทำงาน
-            -- (ยกเว้นลิสต์ VIP ของเรา)
-        end
-    end
-
-    -- 3. ลบ UI ของตัวฟรี (ต้องลบเพื่อให้ตัวใหม่ขึ้นได้)
-    for _, v in pairs(game.CoreGui:GetChildren()) do
-        if v:IsA("ScreenGui") and not v.Name:match("Roblox") then
-            v:Destroy()
-        end
-    end
-
-    task.wait(0.5) -- ให้เวลาสคริปต์เดิม "หยุด" การทำงาน
+    task.wait(0.3)
 end
 
--- 2. ระบบรันสคริปต์ VIP
+-- 3. ระบบรัน VIP
 local function UpgradeToVIP()
-    KillFreeScript() -- ลบตัวฟรีทิ้งก่อน
-    print("💎 อัปเกรดสำเร็จ! กำลังรัน Kill Aura 20...")
+    RemoveFreeScriptOnly() -- ลบตัวฟรีออกก่อนแบบปลอดภัย
+    print("💎 [SYSTEM] VIP Activated: Running Kill Aura 20")
     task.defer(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
     end)
 end
 
--- 3. ระบบเช็คแชทและ Partial Name
+-- 4. ระบบเช็คแชท
 local function findByPartialName(name)
     name = name:lower()
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -61,29 +57,24 @@ end
 local function ListenChat(speaker, msg)
     local args = msg:split(" ")
     if args[1]:lower() == "!givevip" and args[2] then
-        -- เช็คว่าคนพิมพ์คือคนที่มีสิทธิ์กิ๊ฟ (อยู่ในลิสต์ VIP)
         if _G.VIP_LIST[speaker.Name] then
             local target = findByPartialName(args[2])
             if target == Player then
-                -- ถ้าเราคือคนได้รับกิ๊ฟ
                 if not _G.VIP_LIST[Player.Name] then
                     _G.VIP_LIST[Player.Name] = true
-                    UpgradeToVIP() -- สั่งลบสคริปต์ฟรีและรัน VIP
+                    UpgradeToVIP()
                 end
             end
         end
     end
 end
 
--- เชื่อมต่อระบบแชท
 for _, p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(msg) ListenChat(p, msg) end) end
 game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(msg) ListenChat(p, msg) end) end)
 
--- 4. รันครั้งแรก (กดรันขึ้นเลย)
+-- 5. เริ่มทำงาน
 if _G.VIP_LIST[MyName] then
-    print("💎 ยินดีต้อนรับ VIP: " .. MyName)
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
 else
-    print("🆓 รันตัวฟรีสำหรับ: " .. MyName)
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
 end
