@@ -1,38 +1,42 @@
--- [[ Humanx1 Ultimate Loader - Auto VIP/Free (Updated List) ]]
+-- [[ Humanx1 Ultimate Loader - Real-time VIP Upgrade ]]
 
 local Player = game.Players.LocalPlayer
 local MyName = Player.Name
 
--- 1. รายชื่อผู้ได้รับสิทธิ์ VIP และ Admin (นำ Winwie001 ออกแล้ว)
-_G.VIP_LIST = {
+-- 1. รายชื่อ VIP กลาง (ใช้ _G เพื่อให้ทุกส่วนเข้าถึงได้)
+_G.VIP_LIST = _G.VIP_LIST or {
     ["A_ASPD"] = true,
     ["ffsww_1007"] = true,
     ["HACKER_18050"] = true,
     ["evils915"] = true,
-    -- ["Winwie001"] = true, -- ถูกลบออกแล้ว
     ["TV_BTS1"] = true
 }
 
--- 2. ฟังก์ชันสำหรับล้างสคริปต์เก่าและรันตัว VIP
-local function ForceSwitchToVIP()
-    warn("💎 [SYSTEM] Upgrading to VIP Status...")
+_G.CurrentStatus = _G.CurrentStatus or "None"
+
+-- 2. ฟังก์ชันล้างสคริปต์และรันตัว VIP
+local function UpgradeToVIP()
+    if _G.CurrentStatus == "VIP" then return end -- ป้องกันการรันซ้ำ
+    _G.CurrentStatus = "VIP"
     
-    -- ลบ GUI เก่าออกทั้งหมด
+    warn("💎 [SYSTEM] VIP DETECTED! Upgrading now...")
+    
+    -- ล้าง GUI เก่า (ตัวฟรี)
     for _, v in pairs(game.CoreGui:GetChildren()) do
         if v:IsA("ScreenGui") and v.Name ~= "RobloxGui" then
             v:Destroy()
         end
     end
     
-    -- หยุดการทำงานเดิม
-    _G.Running = false 
-    task.wait(0.3)
+    -- หยุด Loop เก่า
+    _G.Running = false
+    task.wait(0.5)
     
     -- รันตัว VIP (Kill Aura 20)
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
 end
 
--- 3. ฟังก์ชันค้นหาชื่อผู้เล่นแบบย่อ (Partial Name)
+-- 3. ฟังก์ชันค้นหาชื่อผู้เล่นแบบย่อ
 local function findByPartialName(name)
     name = name:lower()
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -43,31 +47,62 @@ local function findByPartialName(name)
     return nil
 end
 
--- 4. ระบบคำสั่งแชท (สำหรับ VIP ทุกคน)
+-- 4. ระบบคำสั่งแชท (ต้องเป็นคนในลิสต์ VIP เท่านั้นที่สั่งได้)
 Player.Chatted:Connect(function(msg)
-    if not _G.VIP_LIST[Player.Name] then return end 
+    if not _G.VIP_LIST[MyName] then return end -- ถ้าเราไม่ใช่ VIP เราสั่งคนอื่นไม่ได้
     
     local args = msg:split(" ")
     if args[1]:lower() == "!givevip" and args[2] then
         local target = findByPartialName(args[2])
         if target then
-            if not _G.VIP_LIST[target.Name] then
-                _G.VIP_LIST[target.Name] = true
-                print("✅ [VIP SYSTEM] ให้ VIP แก่: " .. target.Name)
-                
-                if target == Player then
-                    ForceSwitchToVIP()
-                end
-            end
+            -- ประกาศบอกแชทในเครื่องเรา (เพื่อยืนยัน)
+            print("✅ คุณได้มอบ VIP ให้: " .. target.Name)
+            -- บันทึกว่าคนนี้เป็น VIP (ในระดับ Global ของเซิร์ฟเวอร์ที่รันอยู่)
+            -- *หมายเหตุ: การส่งค่าข้ามเครื่องใน Roblox ปกติต้องใช้ RemoteEvent แต่ในสคริปต์ Executor 
+            -- เราจะใช้วิธีให้คนรันตัวฟรี 'แอบอ่านแชท' แทนครับ*
         end
     end
 end)
 
--- 5. [ระบบเริ่มทำงาน]
+-- 5. **ทีเด็ด** ระบบตัวฟรี "แอบอ่านแชท" เพื่ออัปเกรดตัวเอง
+-- ถ้ามีใครพิมพ์ !givevip [ชื่อเรา] ระบบจะสั่งอัปเกรดทันที
+game.Players.PlayerAdded:Connect(function(newPlayer)
+    newPlayer.Chatted:Connect(function(msg)
+        local args = msg:split(" ")
+        if args[1]:lower() == "!givevip" and args[2] then
+            -- เช็คว่าคนพิมพ์เป็น VIP ไหม
+            if _G.VIP_LIST[newPlayer.Name] then
+                local target = findByPartialName(args[2])
+                if target == Player then
+                    _G.VIP_LIST[Player.Name] = true
+                    UpgradeToVIP()
+                end
+            end
+        end
+    end)
+end)
+
+-- เช็คคนที่มีอยู่แล้วในเซิร์ฟด้วย
+for _, p in pairs(game.Players:GetPlayers()) do
+    p.Chatted:Connect(function(msg)
+        local args = msg:split(" ")
+        if args[1]:lower() == "!givevip" and args[2] then
+            if _G.VIP_LIST[p.Name] then
+                local target = findByPartialName(args[2])
+                if target == Player then
+                    _G.VIP_LIST[Player.Name] = true
+                    UpgradeToVIP()
+                end
+            end
+        end
+    end)
+end
+
+-- 6. รันครั้งแรกตอนกด Execute
 if _G.VIP_LIST[MyName] then
-    print("💎 ยินดีต้อนรับ VIP: " .. MyName)
+    _G.CurrentStatus = "VIP"
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
 else
-    print("🆓 รันตัวฟรีสำหรับ: " .. MyName)
+    _G.CurrentStatus = "Free"
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
 end
