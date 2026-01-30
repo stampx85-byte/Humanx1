@@ -1,12 +1,11 @@
 -- [[ Script Word [TH] - Neon Edition (Enhanced Background Effect) ]]
 
 local Player = game.Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 local MyName = Player.Name
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
--- [Logics] ระบบสิทธิ์การใช้งาน (แก้ไข kaitanx_12 เป็นตัวเล็กทั้งหมดและอยู่ในลิสต์แล้ว)
+-- [Logics] ระบบสิทธิ์การใช้งาน
 _G.VIP_LIST = _G.VIP_LIST or {
     ["ffsww_1007"] = true, 
     ["A_ASPD"] = true, 
@@ -15,11 +14,15 @@ _G.VIP_LIST = _G.VIP_LIST or {
     ["TV_BTS1"] = true, 
     ["Winwie001"] = true,
     ["zx71828"] = true, 
-    ["kaitanx_12"] = true -- เพิ่มตรงนี้เรียบร้อยครับ
+    ["kaitanx_12"] = true
 }
 local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
 local GIFTED_LIST = {} 
 local HAS_COMMAND_POWER = {} 
+
+-- [Config] ลิงก์สคริปต์แยกตามระดับ
+local VIP_SCRIPT_URL = "https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20Aura%20all"
+local FREE_SCRIPT_URL = "https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"
 
 -- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
 local function PlayUISound(id)
@@ -52,70 +55,37 @@ local function AddBackgroundEffect(frame)
     end)
 end
 
--- [Start Logic] ลำดับการแสดงผล
+-- [Start Logic] ลำดับการแสดงผล Welcome
 local function ShowWelcome()
     local WelcomeGui = Instance.new("ScreenGui", game.CoreGui)
-    
     local function CreateNotify(text, pos)
         local label = Instance.new("TextLabel", WelcomeGui)
-        label.Size = UDim2.new(0, 250, 0, 40)
-        label.Position = pos
-        label.BackgroundTransparency = 1
-        label.Text = text
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.Font = Enum.Font.FredokaOne
-        label.TextSize = 14
-        label.TextTransparency = 1
+        label.Size = UDim2.new(0, 250, 0, 40); label.Position = pos
+        label.BackgroundTransparency = 1; label.Text = text
+        label.TextColor3 = Color3.new(1, 1, 1); label.Font = Enum.Font.FredokaOne
+        label.TextSize = 14; label.TextTransparency = 1
         local WS = Instance.new("UIStroke", label)
         WS.Thickness = 2; WS.Color = Color3.fromRGB(255, 0, 0); WS.Transparency = 1
         return label, WS
     end
-
-    local function PlaySound(id)
-        local s = Instance.new("Sound", game.Workspace)
-        s.SoundId = "rbxassetid://"..tostring(id)
-        s.Volume = 2
-        s:Play()
-        game:GetService("Debris"):AddItem(s, 5)
-    end
-
     task.wait(5)
-    PlaySound(108729338139883)
     local L1, S1 = CreateNotify("Welcome to Script Word", UDim2.new(0.5, -125, 0.1, 0))
     TweenService:Create(L1, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
     TweenService:Create(S1, TweenInfo.new(0.8), {Transparency = 0}):Play()
     task.wait(2.5)
-    
-    PlaySound(104447039817401)
     local L2, S2 = CreateNotify("By Owner Human", UDim2.new(0.5, -125, 0.15, 0))
     TweenService:Create(L2, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
     TweenService:Create(S2, TweenInfo.new(0.8), {Transparency = 0}):Play()
-    task.wait(1.5)
-
-    PlaySound(114665895100803)
-    local L3, S3 = CreateNotify("Monster Kill", UDim2.new(0.5, -125, 0.2, 0))
-    L3.TextColor3 = Color3.fromRGB(255, 50, 50)
-    TweenService:Create(L3, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-    TweenService:Create(S3, TweenInfo.new(0.5), {Transparency = 0}):Play()
-    
     task.wait(3)
-    TweenService:Create(L1, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S1, TweenInfo.new(1), {Transparency = 1}):Play()
-    TweenService:Create(L2, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S2, TweenInfo.new(1), {Transparency = 1}):Play()
-    TweenService:Create(L3, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S3, TweenInfo.new(1), {Transparency = 1}):Play()
-    
-    task.wait(1)
     WelcomeGui:Destroy()
 end
-
 task.spawn(ShowWelcome)
 
 if not Player:FindFirstChild("ScriptWord_Active") then
     Instance.new("StringValue", Player).Name = "ScriptWord_Active"
 end
 
+-- [UI Helper] ทำให้ลากได้
 local function MakeDraggable(frame)
     local dragging, dragInput, dragStart, startPos
     frame.InputBegan:Connect(function(input)
@@ -149,51 +119,14 @@ local function ApplyNeonEffect(frame, color)
     end)
 end
 
-local function CustomKick()
-    local Sound = Instance.new("Sound", game.Workspace)
-    local sId = KickSoundInp.Text
-    if not sId:find("rbxassetid://") then sId = "rbxassetid://"..sId end
-    Sound.SoundId = sId; Sound.Volume = 5; Sound:Play()
-    local ScreenGuiK = Instance.new("ScreenGui", game.CoreGui)
-    ScreenGuiK.IgnoreGuiInset = true
-    local TextLabel = Instance.new("TextLabel", ScreenGuiK)
-    TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0); TextLabel.Size = UDim2.new(1, 0, 1, 0)
-    TextLabel.Text = KickTextInp.Text; TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-    TextLabel.TextScaled = true; TextLabel.ZIndex = 999999
-    task.wait(3.5)
-    Player:Kick("\n\n[ Humanx1 System ]\n"..KickTextInp.Text.."\n")
-    ScreenGuiK:Destroy()
-end
-
 -- [[ UI SYSTEM ]]
 local MainGui = Instance.new("ScreenGui", game.CoreGui)
 MainGui.Name = "ScriptWordTH_Extreme"
 
 local AdminPanel = Instance.new("Frame", MainGui)
 AdminPanel.Size = UDim2.new(0, 260, 0, 320); AdminPanel.Position = UDim2.new(0.5, -130, 0.5, -160)
-AdminPanel.BackgroundColor3 = Color3.fromRGB(15, 5, 5); AdminPanel.BackgroundTransparency = 0.1; AdminPanel.Visible = false
+AdminPanel.BackgroundColor3 = Color3.fromRGB(15, 5, 5); AdminPanel.Visible = false
 ApplyNeonEffect(AdminPanel, Color3.fromRGB(255, 0, 0)); MakeDraggable(AdminPanel); AddBackgroundEffect(AdminPanel)
-
-local AdminTitle = Instance.new("TextLabel", AdminPanel)
-AdminTitle.Size = UDim2.new(1, 0, 0, 35); AdminTitle.Text = "Commands Script Word [TH]"
-AdminTitle.TextColor3 = Color3.fromRGB(255, 50, 50); AdminTitle.BackgroundTransparency = 1
-AdminTitle.Font = Enum.Font.FredokaOne; AdminTitle.TextSize = 14
-
-local HelpList = Instance.new("TextLabel", AdminPanel)
-HelpList.Size = UDim2.new(0.9, 0, 0, 60); HelpList.Position = UDim2.new(0.05, 0, 0.12, 0)
-HelpList.BackgroundTransparency = 1; HelpList.TextColor3 = Color3.fromRGB(200, 200, 200)
-HelpList.Text = "!kill [name] | !kick [name] | !tp [name]\n!freeze [name] | !unfreeze [name]\n!givevip [name] | !killall | !kickall"
-HelpList.Font = Enum.Font.SourceSansBold; HelpList.TextSize = 12
-
-KickTextInp = Instance.new("TextBox", AdminPanel)
-KickTextInp.Size = UDim2.new(0.9, 0, 0, 32); KickTextInp.Position = UDim2.new(0.05, 0, 0.35, 0)
-KickTextInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickTextInp.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", KickTextInp); KickTextInp.Text = "โดนกูเตะไงไอ้ควาย"
-
-KickSoundInp = Instance.new("TextBox", AdminPanel)
-KickSoundInp.Size = UDim2.new(0.9, 0, 0, 32); KickSoundInp.Position = UDim2.new(0.05, 0, 0.50, 0)
-KickSoundInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickSoundInp.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", KickSoundInp); KickSoundInp.Text = "rbxassetid://137337370812885"
 
 local CmdBar = Instance.new("TextBox", AdminPanel)
 CmdBar.Size = UDim2.new(0.9, 0, 0, 40); CmdBar.Position = UDim2.new(0.05, 0, 0.82, 0)
@@ -202,13 +135,8 @@ CmdBar.PlaceholderText = "> ENTER COMMAND..."; Instance.new("UICorner", CmdBar)
 
 local Board = Instance.new("Frame", MainGui)
 Board.Size = UDim2.new(0, 210, 0, 260); Board.Position = UDim2.new(0.85, 0, 0.3, 0)
-Board.BackgroundColor3 = Color3.fromRGB(10, 10, 10); Board.BackgroundTransparency = 0.15
-ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0)); MakeDraggable(Board); AddBackgroundEffect(Board)
-
-local BoardTitle = Instance.new("TextLabel", Board)
-BoardTitle.Size = UDim2.new(1, 0, 0, 40); BoardTitle.Text = "Script Word [TH]"
-BoardTitle.TextColor3 = Color3.fromRGB(255, 215, 0); BoardTitle.BackgroundTransparency = 1
-BoardTitle.Font = Enum.Font.FredokaOne; BoardTitle.TextSize = 15
+Board.BackgroundColor3 = Color3.fromRGB(10, 10, 10); ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0))
+MakeDraggable(Board); AddBackgroundEffect(Board)
 
 local Scroll = Instance.new("ScrollingFrame", Board)
 Scroll.Size = UDim2.new(1, -10, 1, -55); Scroll.Position = UDim2.new(0, 5, 0, 45)
@@ -219,9 +147,6 @@ local function CreateBtn(txt, pos, color)
     b.Size = UDim2.new(0, 48, 0, 48); b.Position = pos; b.Text = txt
     b.BackgroundColor3 = color; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.FredokaOne
     b.TextSize = 20; Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
-    local bs = Instance.new("UIStroke", b); bs.Thickness = 2; bs.Color = Color3.new(1,1,1)
-    b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 55, 0, 55), BackgroundColor3 = Color3.new(1,1,1), TextColor3 = color}):Play() end)
-    b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 48, 0, 48), BackgroundColor3 = color, TextColor3 = Color3.new(1,1,1)}):Play() end)
     b.MouseButton1Click:Connect(function() PlayUISound(452267918) end)
     MakeDraggable(b); return b
 end
@@ -236,13 +161,10 @@ local function UpdateBoard()
     for _, v in pairs(Scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
     Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 4)
     for _, p in pairs(game.Players:GetPlayers()) do
-        local isRunning = p:FindFirstChild("ScriptWord_Active")
-        if isRunning or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] or HAS_COMMAND_POWER[p.Name] then
+        if p:FindFirstChild("ScriptWord_Active") or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] then
             local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100)
             if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
-            elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0)
-            elseif HAS_COMMAND_POWER[p.Name] then tag, color = "[CMD]", Color3.fromRGB(255,0,255)
-            elseif GIFTED_LIST[p.Name] then tag, color = "[GFT]", Color3.fromRGB(0,255,255) end
+            elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0) end
             local l = Instance.new("TextLabel", Scroll)
             l.Size = UDim2.new(1, -5, 0, 22); l.Text = " " .. tag .. " " .. p.Name
             l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.FredokaOne; l.TextSize = 12
@@ -250,9 +172,9 @@ local function UpdateBoard()
         end
     end
 end
-
 task.spawn(function() while task.wait(3) do UpdateBoard() end end)
 
+-- [Chat Command System]
 local function ListenChat(speaker, msg)
     local args = msg:split(" ")
     local cmd = args[1]:lower()
@@ -262,47 +184,32 @@ local function ListenChat(speaker, msg)
     end
     local target = args[2] and findTarget(args[2])
 
-    local hasPower = ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
-
-    if hasPower then
-        if speaker ~= Player then PlayUISound(203785501) end
-        if cmd == "!killall" then 
-            if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-        elseif cmd == "!kickall" then 
-            CustomKick() 
-        end
-
-        if target == Player then
-            if cmd == "!kick" then CustomKick()
-            elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-            elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
-            elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
-            elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
+    if (ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]) and target == Player then
+        if cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+        elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
         end
     end
 
+    -- สั่งให้รันสคริปต์ VIP ผ่าน Chat
     if (_G.VIP_LIST[speaker.Name] or ADMIN_COMMANDER[speaker.Name]) and cmd == "!givevip" and target == Player then
         GIFTED_LIST[Player.Name] = speaker.Name; UpdateBoard()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
-    end
-
-    if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then 
-        HAS_COMMAND_POWER[Player.Name] = true
-        AdminPanel.Visible = true
-        MinAdminBtn.Visible = true
-        UpdateBoard()
+        loadstring(game:HttpGet(VIP_SCRIPT_URL))()
     end
 end
 
-CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
-game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
+CmdBar.FocusLost:Connect(function(e) if e then ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
+game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end) end)
 for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
-game.Players.PlayerRemoving:Connect(UpdateBoard)
 
+-- [[ EXECUTION LOGIC ]]
+-- ตรวจสอบสิทธิ์แล้วรันสคริปต์ที่ถูกต้อง
 if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
     if ADMIN_COMMANDER[MyName] then AdminPanel.Visible = true end
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
+    print("Running VIP Script...")
+    loadstring(game:HttpGet(VIP_SCRIPT_URL))()
 else
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
+    print("Running Free Script...")
+    loadstring(game:HttpGet(FREE_SCRIPT_URL))()
 end
+
 UpdateBoard()
