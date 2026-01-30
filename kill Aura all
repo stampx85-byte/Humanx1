@@ -3,6 +3,7 @@
 local Player = game.Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local MyName = Player.Name
+local KickSoundID = "rbxassetid://137337370812885" -- ID เพลงที่คุณให้มา
 
 -- รายชื่อ Admin/VIP หลัก
 _G.VIP_LIST = _G.VIP_LIST or {
@@ -23,8 +24,15 @@ local function ShowNotify(text)
     })
 end
 
--- ฟังก์ชันดีดออก (ด่า "โดนกูเตะไงไอ้ควาย" แบบเต็มจอ)
+-- ฟังก์ชันดีดออก (พร้อมเล่นเสียงด่า)
 local function CustomKick()
+    -- เล่นเสียง
+    local Sound = Instance.new("Sound", game.Workspace)
+    Sound.SoundId = KickSoundID
+    Sound.Volume = 5 -- ปรับระดับเสียง (สูงสุดประมาณ 10)
+    Sound:Play()
+
+    -- แสดง UI เต็มจอ
     local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
     ScreenGui.IgnoreGuiInset = true
     local TextLabel = Instance.new("TextLabel", ScreenGui)
@@ -32,12 +40,12 @@ local function CustomKick()
     TextLabel.BackgroundTransparency = 0.05
     TextLabel.Size = UDim2.new(1, 0, 1, 0)
     TextLabel.Font = Enum.Font.FredokaOne
-    TextLabel.Text = "โดนกูเตะไงไอ้ควาย" -- คำด่าเดียวกันหมดตามสั่ง 555
+    TextLabel.Text = "โดนกูเตะไงไอ้ควาย"
     TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
     TextLabel.TextScaled = true
     TextLabel.ZIndex = 999999
 
-    task.wait(2.5) -- ให้มันอ่านความกวนตีนก่อนเด้ง
+    task.wait(3.5) -- เพิ่มเวลาหน่อยเพื่อให้เสียงเล่นไปสักพักก่อนหลุด
     Player:Kick("\n\n[ Humanx1 System ]\nโดนกูเตะไงไอ้ควาย\n(error555)\n\n")
 end
 
@@ -58,7 +66,7 @@ local function ListenChat(speaker, msg)
     if _G.VIP_LIST[speaker.Name] then
         local target = args[2] and findByPartialName(args[2])
 
-        -- === คำสั่งเสริมที่เพิ่มเข้าไป ===
+        -- === คำสั่งเสริม ===
         if speaker.Name == MyName then
             if command == "!view" and target then
                 Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
@@ -71,13 +79,13 @@ local function ListenChat(speaker, msg)
             end
         end
 
-        -- 1. หมวดเตะ (ด่าเหมือนกันหมด)
+        -- 1. หมวดเตะ
         if command == "!kick" and target == Player then
             CustomKick()
         elseif command == "!kickall" then
             CustomKick()
 
-        -- 2. หมวดสังหาร (Reset ตัวละคร เลือด 0)
+        -- 2. หมวดสังหาร
         elseif command == "!kill" and target == Player then
             if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
                 Player.Character:FindFirstChildOfClass("Humanoid").Health = 0
@@ -109,7 +117,7 @@ local function ListenChat(speaker, msg)
                 Player.Character:FindFirstChildOfClass("Humanoid").Jump = true
             end
 
-        -- 5. มอบ VIP (เช็คกันกิ๊ฟซ้ำ)
+        -- 5. มอบ VIP
         elseif command == "!givevip" and target == Player then
             if _G.VIP_LIST[Player.Name] then
                 if speaker.Name == MyName then ShowNotify("คนนี้ have vip อยู่เเล้ว") end
