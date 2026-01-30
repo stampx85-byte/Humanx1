@@ -6,11 +6,11 @@ local MyName = Player.Name
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
--- [Logics] ระบบสิทธิ์การใช้งาน
+-- [Logics] ระบบสิทธิ์การใช้งาน (เพิ่ม Kaitanx_12 เรียบร้อย)
 _G.VIP_LIST = _G.VIP_LIST or {
     ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
     ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true,
-    ["zx71828"] = true
+    ["zx71828"] = true, ["Kaitanx_12"] = true
 }
 local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
 local GIFTED_LIST = {} 
@@ -296,12 +296,10 @@ game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) Liste
 for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
 game.Players.PlayerRemoving:Connect(UpdateBoard)
 
--- [[ ส่วนที่แก้ไขเพื่อให้คนทั่วไปรันได้ ]]
 if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
     if ADMIN_COMMANDER[MyName] then AdminPanel.Visible = true end
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
 else
-    -- สำหรับคนธรรมดา (Non-VIP) ให้โหลดฟังก์ชันนี้แทน และไม่ต้องเช็คเงื่อนไขหยุดรัน
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
 end
 UpdateBoard()
