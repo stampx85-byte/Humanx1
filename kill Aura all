@@ -6,15 +6,20 @@ local MyName = Player.Name
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
--- [Logics] ระบบสิทธิ์การใช้งาน (เพิ่ม Kaitanx_12 เรียบร้อย)
+-- [Logics] ระบบสิทธิ์การใช้งาน (แก้ไข kaitanx_12 เป็นตัวเล็กทั้งหมดและอยู่ในลิสต์แล้ว)
 _G.VIP_LIST = _G.VIP_LIST or {
-    ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
-    ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true,
-    ["zx71828"] = true, ["Kaitanx_12"] = true
+    ["ffsww_1007"] = true, 
+    ["A_ASPD"] = true, 
+    ["HACKER_18050"] = true,
+    ["evils915"] = true, 
+    ["TV_BTS1"] = true, 
+    ["Winwie001"] = true,
+    ["zx71828"] = true, 
+    ["kaitanx_12"] = true -- เพิ่มตรงนี้เรียบร้อยครับ
 }
 local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
 local GIFTED_LIST = {} 
-local HAS_COMMAND_POWER = {} -- เก็บรายชื่อคนที่ได้รับสิทธิ์จาก !cmd
+local HAS_COMMAND_POWER = {} 
 
 -- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
 local function PlayUISound(id)
@@ -257,7 +262,6 @@ local function ListenChat(speaker, msg)
     end
     local target = args[2] and findTarget(args[2])
 
-    -- เช็คสิทธิ์การใช้คำสั่ง
     local hasPower = ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
 
     if hasPower then
@@ -282,11 +286,10 @@ local function ListenChat(speaker, msg)
         loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
     end
 
-    -- [Modified] เมื่อได้รับ !cmd ให้เด้ง UI และปุ่มขึ้นมาทันที
     if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then 
         HAS_COMMAND_POWER[Player.Name] = true
-        AdminPanel.Visible = true      -- เด้ง UI Admin ทันที
-        MinAdminBtn.Visible = true     -- แสดงปุ่ม 🛡️ เพื่อให้เปิด-ปิดเองได้
+        AdminPanel.Visible = true
+        MinAdminBtn.Visible = true
         UpdateBoard()
     end
 end
