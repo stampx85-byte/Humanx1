@@ -3,139 +3,294 @@
 local Player = game.Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local MyName = Player.Name
-local KickSoundID = "rbxassetid://137337370812885" -- ID เพลงที่คุณให้มา
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
--- รายชื่อ Admin/VIP หลัก
-_G.VIP_LIST = _G.VIP_LIST or {
-    ["ffsww_1007"] = true,
-    ["A_ASPD"] = true,
-    ["HACKER_18050"] = true,
-    ["evils915"] = true,
-    ["TV_BTS1"] = true,
-    ["Winwie001"] = true
-}
-
--- ฟังก์ชันแจ้งเตือน (Notification)
-local function ShowNotify(text)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Humanx1 System",
-        Text = text,
-        Duration = 5
-    })
-end
-
--- ฟังก์ชันดีดออก (พร้อมเล่นเสียงด่า)
-local function CustomKick()
-    -- เล่นเสียง
+-- [Intro] อนิเมชั่นตัวอักษรพุ่งมารวมกัน (คงเดิม)
+local function PlayIntro()
+    local IntroGui = Instance.new("ScreenGui", game.CoreGui)
+    local MainFrame = Instance.new("Frame", IntroGui)
+    MainFrame.Size = UDim2.new(1, 0, 1, 0)
+    MainFrame.BackgroundTransparency = 1
+    
     local Sound = Instance.new("Sound", game.Workspace)
-    Sound.SoundId = KickSoundID
-    Sound.Volume = 5 -- ปรับระดับเสียง (สูงสุดประมาณ 10)
+    Sound.SoundId = "rbxassetid://136735742758927"
+    Sound.Volume = 2
     Sound:Play()
 
-    -- แสดง UI เต็มจอ
-    local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-    ScreenGui.IgnoreGuiInset = true
-    local TextLabel = Instance.new("TextLabel", ScreenGui)
-    TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    TextLabel.BackgroundTransparency = 0.05
-    TextLabel.Size = UDim2.new(1, 0, 1, 0)
-    TextLabel.Font = Enum.Font.FredokaOne
-    TextLabel.Text = "โดนกูเตะไงไอ้ควาย"
-    TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-    TextLabel.TextScaled = true
-    TextLabel.ZIndex = 999999
+    local TextString = "Script Word [TH] 🗡"
+    local FullLabel = Instance.new("Frame", MainFrame)
+    FullLabel.Size = UDim2.new(0, 0, 0, 0)
+    FullLabel.Position = UDim2.new(0.5, 0, 0.45, 0)
+    FullLabel.BackgroundTransparency = 1
 
-    task.wait(3.5) -- เพิ่มเวลาหน่อยเพื่อให้เสียงเล่นไปสักพักก่อนหลุด
-    Player:Kick("\n\n[ Humanx1 System ]\nโดนกูเตะไงไอ้ควาย\n(error555)\n\n")
-end
+    local Layout = Instance.new("UIListLayout", FullLabel)
+    Layout.FillDirection = Enum.FillDirection.Horizontal
+    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    Layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    Layout.Padding = UDim.new(0, 8)
 
--- ฟังก์ชันค้นหาผู้เล่น
-local function findByPartialName(name)
-    name = name:lower()
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p.Name:lower():sub(1, #name) == name then return p end
+    for i = 1, #TextString do
+        local char = TextString:sub(i, i)
+        local CharLabel = Instance.new("TextLabel", FullLabel)
+        CharLabel.Text = char
+        CharLabel.Font = Enum.Font.FredokaOne
+        CharLabel.TextSize = 38
+        CharLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+        CharLabel.TextTransparency = 1
+        CharLabel.BackgroundTransparency = 1
+        CharLabel.Size = UDim2.new(0, 30, 0, 50)
+        
+        local UIStroke = Instance.new("UIStroke", CharLabel)
+        UIStroke.Thickness = 3
+        UIStroke.Color = Color3.fromRGB(255, 100, 0)
+        UIStroke.Transparency = 1
+
+        CharLabel.Position = UDim2.new(0.5, math.random(-800, 800), 0.5, math.random(-800, 800))
+        TweenService:Create(CharLabel, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+        TweenService:Create(UIStroke, TweenInfo.new(0.6), {Transparency = 0}):Play()
+        task.wait(0.06)
     end
-    return nil
+
+    task.wait(2.5)
+    for _, v in pairs(FullLabel:GetChildren()) do
+        if v:IsA("TextLabel") then
+            TweenService:Create(v, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+            TweenService:Create(v.UIStroke, TweenInfo.new(0.5), {Transparency = 1}):Play()
+        end
+    end
+    task.wait(0.6)
+    IntroGui:Destroy()
+    Sound:Destroy()
 end
 
--- [[ ระบบคำสั่งแชท ]]
+task.spawn(PlayIntro)
+
+-- [Logics] รายชื่อแอดมินและระบบ GIFTED (คงเดิม)
+_G.VIP_LIST = _G.VIP_LIST or {
+    ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
+    ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true
+}
+local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
+local GIFTED_LIST = {} 
+
+if not Player:FindFirstChild("ScriptWord_Active") then
+    Instance.new("StringValue", Player).Name = "ScriptWord_Active"
+end
+
+local function MakeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true; dragStart = input.Position; startPos = frame.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- [Effect] ฟองอากาศ (คงเดิม)
+local function CreateBubbles(parent, color)
+    task.spawn(function()
+        while task.wait(0.4) do
+            if not parent then break end
+            if parent.Visible then
+                local bubble = Instance.new("Frame")
+                bubble.Parent = parent
+                bubble.ZIndex = parent.ZIndex - 1
+                bubble.BackgroundTransparency = 0.6
+                bubble.BackgroundColor3 = color
+                bubble.BorderSizePixel = 0
+                if math.random(1, 2) == 1 then Instance.new("UICorner", bubble).CornerRadius = UDim.new(1, 0) end
+                local size = math.random(4, 8)
+                bubble.Size = UDim2.new(0, size, 0, size)
+                bubble.Position = UDim2.new(math.random(0.1, 0.9), 0, 1, 0)
+                local tween = TweenService:Create(bubble, TweenInfo.new(math.random(2, 4), Enum.EasingStyle.Linear), {
+                    Position = UDim2.new(bubble.Position.X.Scale, math.random(-20, 20), -0.2, 0),
+                    BackgroundTransparency = 1,
+                    Rotation = math.random(-180, 180)
+                })
+                tween:Play()
+                tween.Completed:Connect(function() bubble:Destroy() end)
+            end
+        end
+    end)
+end
+
+-- [Feature] ระบบเตะ (คงเดิม)
+local function CustomKick()
+    local Sound = Instance.new("Sound", game.Workspace)
+    local sId = KickSoundInp.Text
+    if not sId:find("rbxassetid://") then sId = "rbxassetid://"..sId end
+    Sound.SoundId = sId; Sound.Volume = 5; Sound:Play()
+    local ScreenGuiK = Instance.new("ScreenGui", game.CoreGui)
+    ScreenGuiK.IgnoreGuiInset = true
+    local TextLabel = Instance.new("TextLabel", ScreenGuiK)
+    TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.Text = KickTextInp.Text
+    TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    TextLabel.TextScaled = true; TextLabel.ZIndex = 999999
+    task.wait(3.5)
+    Player:Kick("\n\n[ Humanx1 System ]\n"..KickTextInp.Text.."\n")
+    ScreenGuiK:Destroy()
+end
+
+local function EnhanceUI(frame, mainColor)
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Thickness = 2.5; stroke.Color = mainColor; stroke.Transparency = 0.2
+    CreateBubbles(frame, mainColor)
+    task.spawn(function()
+        while frame do
+            TweenService:Create(stroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.6, Thickness = 3.5}):Play()
+            task.wait(1.5)
+            TweenService:Create(stroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.1, Thickness = 2}):Play()
+            task.wait(1.5)
+        end
+    end)
+end
+
+-- [[ UI SYSTEM ]] (คงเดิม)
+local MainGui = Instance.new("ScreenGui", game.CoreGui)
+MainGui.Name = "ScriptWordTH_Extreme"
+
+local AdminPanel = Instance.new("Frame", MainGui)
+AdminPanel.Size = UDim2.new(0, 260, 0, 250)
+AdminPanel.Position = UDim2.new(0.5, -130, 0.5, -125)
+AdminPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+AdminPanel.BackgroundTransparency = 0.15; AdminPanel.Visible = false
+EnhanceUI(AdminPanel, Color3.fromRGB(255, 0, 50))
+MakeDraggable(AdminPanel)
+
+local AdminTitle = Instance.new("TextLabel", AdminPanel)
+AdminTitle.Size = UDim2.new(1, 0, 0, 40); AdminTitle.Text = "ADMIN CONTROL 🔥"
+AdminTitle.TextColor3 = Color3.fromRGB(255, 50, 50); AdminTitle.BackgroundTransparency = 1
+AdminTitle.Font = Enum.Font.FredokaOne; AdminTitle.TextSize = 16
+
+KickTextInp = Instance.new("TextBox", AdminPanel)
+KickTextInp.Size = UDim2.new(0.9, 0, 0, 32); KickTextInp.Position = UDim2.new(0.05, 0, 0.22, 0)
+KickTextInp.BackgroundColor3 = Color3.fromRGB(30, 30, 30); KickTextInp.Text = "โดนกูเตะไงไอ้ควาย"
+KickTextInp.TextColor3 = Color3.fromRGB(255, 255, 255); Instance.new("UICorner", KickTextInp)
+
+KickSoundInp = Instance.new("TextBox", AdminPanel)
+KickSoundInp.Size = UDim2.new(0.9, 0, 0, 32); KickSoundInp.Position = UDim2.new(0.05, 0, 0.42, 0)
+KickSoundInp.BackgroundColor3 = Color3.fromRGB(30, 30, 30); KickSoundInp.Text = "rbxassetid://137337370812885"
+KickSoundInp.TextColor3 = Color3.fromRGB(255, 255, 255); Instance.new("UICorner", KickSoundInp)
+
+local CmdBar = Instance.new("TextBox", AdminPanel)
+CmdBar.Size = UDim2.new(0.9, 0, 0, 40); CmdBar.Position = UDim2.new(0.05, 0, 0.78, 0)
+CmdBar.BackgroundColor3 = Color3.fromRGB(20, 40, 20); CmdBar.TextColor3 = Color3.fromRGB(0, 255, 120)
+CmdBar.PlaceholderText = "> COMMAND_TERMINAL"; CmdBar.Text = ""; Instance.new("UICorner", CmdBar)
+
+local Board = Instance.new("Frame", MainGui)
+Board.Size = UDim2.new(0, 210, 0, 260); Board.Position = UDim2.new(0.85, 0, 0.3, 0)
+Board.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Board.BackgroundTransparency = 0.15
+EnhanceUI(Board, Color3.fromRGB(255, 200, 0)); MakeDraggable(Board)
+
+local Scroll = Instance.new("ScrollingFrame", Board)
+Scroll.Size = UDim2.new(1, -10, 1, -55); Scroll.Position = UDim2.new(0, 5, 0, 45)
+Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 1
+Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 3)
+
+local function CreateBtn(txt, pos, color)
+    local b = Instance.new("TextButton", MainGui)
+    b.Size = UDim2.new(0, 45, 0, 45); b.Position = pos; b.Text = txt
+    b.BackgroundColor3 = color; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.FredokaOne
+    Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0); MakeDraggable(b)
+    return b
+end
+
+local MinBoardBtn = CreateBtn("📜", UDim2.new(0.85, -50, 0.3, 0), Color3.fromRGB(0, 100, 255))
+MinBoardBtn.MouseButton1Click:Connect(function() Board.Visible = not Board.Visible end)
+local MinAdminBtn = CreateBtn("🛡", UDim2.new(0.5, -180, 0.5, -125), Color3.fromRGB(220, 0, 0))
+MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil)
+MinAdminBtn.MouseButton1Click:Connect(function() AdminPanel.Visible = not AdminPanel.Visible end)
+
+-- [Update Board]
+local function UpdateBoard()
+    for _, v in pairs(Scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
+    for _, p in pairs(game.Players:GetPlayers()) do
+        local isRunning = p:FindFirstChild("ScriptWord_Active")
+        if isRunning or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] then
+            local tag, color = "[USER]", Color3.fromRGB(200,200,200)
+            if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
+            elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0)
+            elseif GIFTED_LIST[p.Name] then tag, color = "[GFT]", Color3.fromRGB(0,255,255)
+            elseif isRunning then tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100) end
+            local l = Instance.new("TextLabel", Scroll)
+            l.Size = UDim2.new(1, -5, 0, 22); l.Text = " " .. tag .. " " .. p.Name
+            l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.FredokaOne; l.TextSize = 11
+            l.TextXAlignment = Enum.TextXAlignment.Left
+        end
+    end
+end
+
+-- [Chat Logic] (อัปเดตคำสั่งตามที่คุณสั่งไว้ล่าสุด)
 local function ListenChat(speaker, msg)
     local args = msg:split(" ")
-    local command = args[1]:lower()
-    
-    if _G.VIP_LIST[speaker.Name] then
-        local target = args[2] and findByPartialName(args[2])
+    local cmd = args[1]:lower()
+    local function findTarget(name)
+        for _,p in pairs(game.Players:GetPlayers()) do if p.Name:lower():sub(1,#name)==name:lower() then return p end end
+        return nil
+    end
+    local target = args[2] and findTarget(args[2])
 
-        -- === คำสั่งเสริม ===
-        if speaker.Name == MyName then
-            if command == "!view" and target then
-                Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
-            elseif command == "!unview" then
-                Camera.CameraSubject = Player.Character:FindFirstChildOfClass("Humanoid")
-            elseif command == "!checkvip" then
-                local list = "VIPs: "
-                for name, _ in pairs(_G.VIP_LIST) do if game.Players:FindFirstChild(name) then list = list .. name .. ", " end end
-                ShowNotify(list)
-            end
+    -- เช็คสิทธิ์พื้นฐาน
+    if _G.VIP_LIST[speaker.Name] or ADMIN_COMMANDER[speaker.Name] then
+        -- !killall และ !kickall โดนทุกคนที่รันสคริปต์นี้
+        if cmd == "!killall" then
+            if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+        elseif cmd == "!kickall" then
+            CustomKick()
         end
 
-        -- 1. หมวดเตะ
-        if command == "!kick" and target == Player then
-            CustomKick()
-        elseif command == "!kickall" then
-            CustomKick()
+        -- คำสั่งเดี่ยว
+        local can = false
+        if ADMIN_COMMANDER[speaker.Name] then
+            can = true
+        elseif target == Player or (target and GIFTED_LIST[target.Name] == speaker.Name) then
+            can = true
+        end
 
-        -- 2. หมวดสังหาร
-        elseif command == "!kill" and target == Player then
-            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-                Player.Character:FindFirstChildOfClass("Humanoid").Health = 0
-            end
-        elseif command == "!killall" then
-            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-                Player.Character:FindFirstChildOfClass("Humanoid").Health = 0
-            end
-
-        -- 3. หมวด TP
-        elseif command == "!tp" and target == Player then
-            if speaker.Character and speaker.Character:FindFirstChild("HumanoidRootPart") then
-                if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                    Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
-                end
-            end
-
-        -- 4. หมวดควบคุม
-        elseif command == "!freeze" and target == Player then
-            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                Player.Character.HumanoidRootPart.Anchored = true
-            end
-        elseif command == "!unfreeze" and target == Player then
-            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                Player.Character.HumanoidRootPart.Anchored = false
-            end
-        elseif command == "!jump" and target == Player then
-            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-                Player.Character:FindFirstChildOfClass("Humanoid").Jump = true
-            end
-
-        -- 5. มอบ VIP
-        elseif command == "!givevip" and target == Player then
-            if _G.VIP_LIST[Player.Name] then
-                if speaker.Name == MyName then ShowNotify("คนนี้ have vip อยู่เเล้ว") end
-            else
-                _G.VIP_LIST[Player.Name] = true
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
+        if can then
+            if cmd == "!kick" then CustomKick()
+            elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+            elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
+            elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
+            elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false
+            elseif cmd == "!givevip" and target == Player then
+                GIFTED_LIST[Player.Name] = speaker.Name
+                UpdateBoard()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
             end
         end
     end
+
+    -- คำสั่งเสกหน้าจอแอดมินให้คนอื่น
+    if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then
+        AdminPanel.Visible = true; MinAdminBtn.Visible = true
+    end
 end
 
--- เชื่อมต่อระบบ
-for _, p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(msg) ListenChat(p, msg) end) end
-game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(msg) ListenChat(p, msg) end) end)
+CmdBar.FocusLost:Connect(function(e) if e then ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
+game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
+for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
+game.Players.PlayerRemoving:Connect(UpdateBoard)
 
--- [ เริ่มต้นรันสคริปต์ ]
-if _G.VIP_LIST[MyName] then
+-- เริ่มต้นระบบ
+if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
+    if ADMIN_COMMANDER[MyName] then AdminPanel.Visible = true end
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
 else
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
 end
+UpdateBoard()
