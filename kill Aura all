@@ -259,7 +259,7 @@ local function ListenChat(speaker, msg)
     end
     local target = args[2] and findTarget(args[2])
 
-    -- [จุดแก้ไข] เช็คสิทธิ์: เป็น Admin หรือ เป็นคนที่มี VIP อยู่แล้ว
+    -- [จุดแก้ไข] เช็คสิทธิ์: เป็น Admin หรือ เป็นคนที่มี VIP อยู่แล้ว หรือมีสิทธิ์ CMD
     local hasAnyPower = ADMIN_COMMANDER[speaker.Name] or _G.VIP_LIST[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
 
     if hasAnyPower then
@@ -279,12 +279,12 @@ local function ListenChat(speaker, msg)
             UpdateBoard()
         end
 
-        -- [หัวใจสำคัญ] ถ้า "เรา" คือคนที่โดนกิ้ฟ และคนสั่งคือ "คนที่กิ้ฟให้เรา" (หรือเป็น Admin)
+        -- [หัวใจสำคัญ] ถ้า "เรา" คือคนที่โดนกิ้ฟ และคนสั่งคือ "คนที่กิ้ฟให้เรา" หรือเป็น Admin หรือคนที่มีสิทธิ์ CMD
         if target == Player then
-            -- เช็คว่าคนสั่งคือคนที่กิ้ฟให้เราใช่ไหม
+            -- เช็คว่าคนสั่งคือคนที่กิ้ฟให้เราใช่ไหม หรือคนสั่งมีสิทธิ์ CMD
             local isMyGiver = (GIFTED_LIST[Player.Name] == speaker.Name)
             
-            if ADMIN_COMMANDER[speaker.Name] or isMyGiver then
+            if ADMIN_COMMANDER[speaker.Name] or isMyGiver or HAS_COMMAND_POWER[speaker.Name] then
                 if cmd == "!kick" then CustomKick()
                 elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
                 elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
@@ -293,8 +293,8 @@ local function ListenChat(speaker, msg)
             end
         end
 
-        -- คำสั่งหมู่ (เฉพาะ Admin)
-        if ADMIN_COMMANDER[speaker.Name] then
+        -- คำสั่งหมู่ (Admin และ คนที่มีสิทธิ์ CMD สามารถใช้ได้)
+        if ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name] then
             if cmd == "!killall" then 
                 if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
             elseif cmd == "!kickall" then 
