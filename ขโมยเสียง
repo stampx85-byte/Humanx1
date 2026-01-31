@@ -1,0 +1,202 @@
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AudioStealer_V4_Fixed"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.IgnoreGuiInset = true
+
+-- [Main UI]
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 280, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -160)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Active = true
+
+local MainCorner = Instance.new("UICorner", MainFrame)
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = Color3.fromRGB(0, 255, 255)
+MainStroke.Thickness = 2
+
+-- [Mini Circle UI]
+local MiniBtn = Instance.new("TextButton", ScreenGui)
+MiniBtn.Size = UDim2.new(0, 55, 0, 55)
+MiniBtn.Position = MainFrame.Position
+MiniBtn.Visible = false
+MiniBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+MiniBtn.Text = "🎵"
+MiniBtn.TextSize = 25
+MiniBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
+MiniBtn.Active = true
+
+local MiniCorner = Instance.new("UICorner", MiniBtn)
+MiniCorner.CornerRadius = UDim.new(1, 0)
+local MiniStroke = Instance.new("UIStroke", MiniBtn)
+MiniStroke.Color = Color3.fromRGB(0, 255, 255)
+MiniStroke.Thickness = 2
+
+-- [Top Bar]
+local TopBar = Instance.new("Frame", MainFrame)
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+
+local Title = Instance.new("TextLabel", TopBar)
+Title.Text = "AUDIO STEALER"
+Title.Size = UDim2.new(1, -50, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.FredokaOne
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local CloseBtn = Instance.new("TextButton", TopBar)
+CloseBtn.Size = UDim2.new(0, 32, 0, 32)
+CloseBtn.Position = UDim2.new(1, -36, 0, 4)
+CloseBtn.Text = "-"
+CloseBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+CloseBtn.Font = Enum.Font.FredokaOne
+Instance.new("UICorner", CloseBtn)
+
+-- [Minimize Logic]
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    MiniBtn.Visible = true
+    MiniBtn.Position = MainFrame.Position
+end)
+
+MiniBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    MiniBtn.Visible = false
+    MainFrame.Position = MiniBtn.Position
+end)
+
+-- [Scrolling List]
+local Scroll = Instance.new("ScrollingFrame", MainFrame)
+Scroll.Size = UDim2.new(1, -20, 1, -100)
+Scroll.Position = UDim2.new(0, 10, 0, 50)
+Scroll.BackgroundTransparency = 1
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+Scroll.ScrollBarThickness = 3
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 255)
+Scroll.Active = true
+
+local UIList = Instance.new("UIListLayout", Scroll)
+UIList.Padding = UDim.new(0, 8)
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- [Function: Create Player Card]
+local function CreateCard(targetPlayer, soundId)
+    local Card = Instance.new("Frame", Scroll)
+    Card.Size = UDim2.new(1, -10, 0, 60)
+    Card.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    Instance.new("UICorner", Card)
+
+    local AvatarImg = Instance.new("ImageLabel", Card)
+    AvatarImg.Size = UDim2.new(0, 50, 0, 50)
+    AvatarImg.Position = UDim2.new(0, 5, 0, 5)
+    AvatarImg.Image = Players:GetUserThumbnailAsync(targetPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+    Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
+
+    local Info = Instance.new("TextLabel", Card)
+    Info.Size = UDim2.new(1, -125, 1, 0)
+    Info.Position = UDim2.new(0, 60, 0, 0)
+    Info.Text = targetPlayer.DisplayName.."\nID: "..soundId
+    Info.TextColor3 = Color3.new(1, 1, 1)
+    Info.TextSize = 13
+    Info.Font = Enum.Font.SourceSansBold
+    Info.TextXAlignment = Enum.TextXAlignment.Left
+    Info.BackgroundTransparency = 1
+
+    local CopyBtn = Instance.new("TextButton", Card)
+    CopyBtn.Size = UDim2.new(0, 55, 0, 35)
+    CopyBtn.Position = UDim2.new(1, -60, 0, 12)
+    CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 120)
+    CopyBtn.Text = "COPY"
+    CopyBtn.TextColor3 = Color3.new(1, 1, 1)
+    CopyBtn.Font = Enum.Font.SourceSansBold
+    Instance.new("UICorner", CopyBtn)
+
+    CopyBtn.MouseButton1Click:Connect(function()
+        setclipboard(tostring(soundId))
+        CopyBtn.Text = "DONE"
+        task.wait(1)
+        CopyBtn.Text = "COPY"
+    end)
+    
+    Scroll.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + 10)
+end
+
+-- [Scan Logic]
+local function Scan()
+    for _, v in pairs(Scroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character then
+            for _, s in pairs(p.Character:GetDescendants()) do
+                if s:IsA("Sound") and s.SoundId ~= "" then
+                    local id = s.SoundId:match("%d+")
+                    if id then CreateCard(p, id) end
+                end
+            end
+        end
+    end
+end
+
+local RefreshBtn = Instance.new("TextButton", MainFrame)
+RefreshBtn.Size = UDim2.new(1, -20, 0, 35)
+RefreshBtn.Position = UDim2.new(0, 10, 1, -40)
+RefreshBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+RefreshBtn.Text = "🔄 REFRESH SCAN"
+RefreshBtn.TextColor3 = Color3.new(1, 1, 1)
+RefreshBtn.Font = Enum.Font.FredokaOne
+Instance.new("UICorner", RefreshBtn)
+RefreshBtn.MouseButton1Click:Connect(Scan)
+
+-- [Fixed Drag Logic] ระบบลากที่แก้บัคขยับมั่ว
+local function MakeDraggable(gui)
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+MakeDraggable(MainFrame)
+MakeDraggable(MiniBtn)
+
+Scan()
