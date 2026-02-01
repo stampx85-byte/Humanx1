@@ -1,0 +1,138 @@
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+local UIS = game:GetService("UserInputService")
+
+-- ลบ UI เก่า
+if CoreGui:FindFirstChild("FischInventoryV3") then CoreGui.FischInventoryV3:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FischInventoryV3"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- ฟังก์ชันสำหรับทำให้ UI ลากได้ (แบบลื่นพิเศษ)
+local function MakeDraggable(uiElement)
+    local dragging, dragInput, dragStart, startPos
+
+    uiElement.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = uiElement.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    uiElement.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            uiElement.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- 1. หน้าต่างกระเป๋า (Main Frame)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BackgroundTransparency = 0.15
+MainFrame.Visible = false
+MainFrame.Active = true
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 15)
+MakeDraggable(MainFrame) -- ทำให้กระเป๋าลากได้
+
+-- หัวข้อ (Title)
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.Text = "INVENTORY"
+Title.Font = Enum.Font.GothamBold
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.BackgroundTransparency = 1
+Title.Parent = MainFrame
+
+-- Scrolling Frame
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Size = UDim2.new(1, -20, 1, -65)
+Scroll.Position = UDim2.new(0, 10, 0, 55)
+Scroll.BackgroundTransparency = 1
+Scroll.BorderSizePixel = 0
+Scroll.ScrollBarThickness = 2
+Scroll.Parent = MainFrame
+
+local Grid = Instance.new("UIGridLayout", Scroll)
+Grid.CellSize = UDim2.new(0, 75, 0, 75)
+Grid.CellPadding = UDim2.new(0, 8, 0, 8)
+
+-- 2. ปุ่มไอคอนเปิด/ปิด (Toggle Icon)
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Size = UDim2.new(0, 60, 0, 60)
+OpenBtn.Position = UDim2.new(0, 20, 0.4, 0)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+OpenBtn.BackgroundTransparency = 0.2
+OpenBtn.Text = "🎒"
+OpenBtn.TextSize = 30
+OpenBtn.Parent = ScreenGui
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
+local Stroke = Instance.new("UIStroke", OpenBtn)
+Stroke.Color = Color3.fromRGB(255, 255, 255)
+Stroke.Thickness = 1.5
+MakeDraggable(OpenBtn) -- ทำให้ไอคอนลากได้
+
+-- ฟังก์ชันอัปเดตไอเทมและการสวมใส่ (Equip)
+local function UpdateInventory()
+    for _, v in pairs(Scroll:GetChildren()) do if v:IsA("ImageButton") then v:Destroy() end end
+    
+    local allTools = {}
+    for _, t in pairs(LP.Backpack:GetChildren()) do table.insert(allTools, t) end
+    if LP.Character then
+        for _, t in pairs(LP.Character:GetChildren()) do if t:IsA("Tool") then table.insert(allTools, t) end end
+    end
+
+    for _, tool in pairs(allTools) do
+        local Slot = Instance.new("ImageButton")
+        Slot.BackgroundColor3 = tool.Parent == LP.Character and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(40, 40, 40)
+        Slot.Parent = Scroll
+        Instance.new("UICorner", Slot).CornerRadius = UDim.new(0, 10)
+        
+        local Icon = Instance.new("ImageLabel")
+        Icon.Size = UDim2.new(0.7, 0, 0.7, 0)
+        Icon.Position = UDim2.new(0.15, 0, 0.1, 0)
+        Icon.BackgroundTransparency = 1
+        Icon.Image = tool.TextureId ~= "" and tool.TextureId or "rbxassetid://15116556915"
+        Icon.Parent = Slot
+
+        Slot.MouseButton1Click:Connect(function()
+            if LP.Character then
+                local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+                if tool.Parent == LP.Character then hum:UnequipTools() else hum:EquipTool(tool) end
+                UpdateInventory()
+            end
+        end)
+    end
+end
+
+-- ปุ่มเปิด/ปิด
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+    if MainFrame.Visible then UpdateInventory() end
+end)
+
+LP.Backpack.ChildAdded:Connect(UpdateInventory)
+LP.Backpack.ChildRemoved:Connect(UpdateInventory)
+
+print("Draggable Fisch Inventory Loaded!")
