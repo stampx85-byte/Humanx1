@@ -1,7 +1,8 @@
--- [[ Script Word [TH] - Neon Edition (Full Version with Welcome Effects) ]]
+-- [[ Script Word [TH] - Neon Edition (Full Version with Animations & Notifications) ]]
 
 local Player = game.Players.LocalPlayer
 local ExpectedName = Player.Name 
+local TweenService = game:GetService("TweenService") -- เรียกใช้สำหรับ Animation
 
 local VIP_DATA = {
     ["ffsww_1007"] = "CREATOR",
@@ -13,14 +14,75 @@ local VIP_DATA = {
     ["zx71828"] = "VIP"
 }
 
-local LoginGui = Instance.new("ScreenGui", game.CoreGui)
+-- [[ FUNCTION: GLOBAL NOTIFICATION (Top Right) ]]
+local function TopRightNotify(title, text, color)
+    local NotifyGui = game.CoreGui:FindFirstChild("SW_TopNotify") or Instance.new("ScreenGui", game.CoreGui)
+    NotifyGui.Name = "SW_TopNotify"
+    
+    local container = NotifyGui:FindFirstChild("Container") or Instance.new("Frame", NotifyGui)
+    if not NotifyGui:FindFirstChild("Container") then
+        container.Name = "Container"
+        container.Size = UDim2.new(0, 250, 0, 500)
+        container.Position = UDim2.new(1, -260, 0, 20)
+        container.BackgroundTransparency = 1
+        local layout = Instance.new("UIListLayout", container)
+        layout.Padding = UDim.new(0, 10)
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    end
 
+    local nFrame = Instance.new("Frame", container)
+    nFrame.Size = UDim2.new(0, 0, 0, 50) -- เริ่มจาก 0 เพื่อขยาย
+    nFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    nFrame.ClipsDescendants = true
+    local stroke = Instance.new("UIStroke", nFrame); stroke.Color = color or Color3.fromRGB(255, 255, 255); stroke.Thickness = 2
+    Instance.new("UICorner", nFrame)
+
+    local tLabel = Instance.new("TextLabel", nFrame)
+    tLabel.Size = UDim2.new(1, -10, 0, 20); tLabel.Position = UDim2.new(0, 10, 0, 5)
+    tLabel.Text = title; tLabel.TextColor3 = color; tLabel.Font = Enum.Font.FredokaOne; tLabel.TextSize = 14; tLabel.BackgroundTransparency = 1; tLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local dLabel = Instance.new("TextLabel", nFrame)
+    dLabel.Size = UDim2.new(1, -10, 0, 20); dLabel.Position = UDim2.new(0, 10, 0, 25)
+    dLabel.Text = text; dLabel.TextColor3 = Color3.new(1,1,1); dLabel.Font = Enum.Font.SourceSansBold; dLabel.TextSize = 12; dLabel.BackgroundTransparency = 1; dLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Animation In
+    TweenService:Create(nFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(1, 0, 0, 50)}):Play()
+    
+    task.delay(4, function()
+        TweenService:Create(nFrame, TweenInfo.new(0.5), {Size = UDim2.new(0, 0, 0, 50), BackgroundTransparency = 1}):Play()
+        task.wait(0.5)
+        nFrame:Destroy()
+    end)
+end
+
+-- [[ BUTTON ANIMATION FUNCTION ]]
+local function AddButtonAnim(btn, hoverCol)
+    local oldCol = btn.BackgroundColor3
+    local oldSize = btn.Size
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = hoverCol, Size = oldSize + UDim2.new(0, 4, 0, 4)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = oldCol, Size = oldSize}):Play()
+    end)
+    btn.MouseButton1Down:Connect(function()
+        btn:TweenSize(oldSize - UDim2.new(0, 5, 0, 5), "Out", "Quad", 0.1, true)
+    end)
+    btn.MouseButton1Up:Connect(function()
+        btn:TweenSize(oldSize + UDim2.new(0, 4, 0, 4), "Out", "Quad", 0.1, true)
+    end)
+end
+
+local LoginGui = Instance.new("ScreenGui", game.CoreGui)
 local LoginFrame = Instance.new("Frame", LoginGui)
 LoginFrame.Size = UDim2.new(0, 300, 0, 180)
-LoginFrame.Position = UDim2.new(0.5, -150, 0.5, -90)
+LoginFrame.Position = UDim2.new(0.5, -150, -0.5, 0) -- เริ่มจากด้านบน (Animation)
 LoginFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 LoginFrame.BorderSizePixel = 0
 Instance.new("UICorner", LoginFrame)
+
+-- Animation เลื่อนหน้าต่างลงมา
+TweenService:Create(LoginFrame, TweenInfo.new(1, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -150, 0.5, -90)}):Play()
 
 local LeftSide = Instance.new("Frame", LoginFrame)
 LeftSide.Size = UDim2.new(0, 160, 1, 0)
@@ -58,6 +120,7 @@ CopyDiscordBtn.TextColor3 = Color3.new(1, 1, 1)
 CopyDiscordBtn.Font = Enum.Font.FredokaOne
 CopyDiscordBtn.TextSize = 12
 Instance.new("UICorner", CopyDiscordBtn)
+AddButtonAnim(CopyDiscordBtn, Color3.fromRGB(114, 137, 218))
 
 CopyDiscordBtn.MouseButton1Click:Connect(function()
     setclipboard("https://discord.gg/G3qjfaNRy")
@@ -135,20 +198,139 @@ StartBtn.Text = "START SCRIPT"
 StartBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
 StartBtn.TextColor3 = Color3.new(1, 1, 1)
 Instance.new("UICorner", StartBtn)
+AddButtonAnim(StartBtn, Color3.fromRGB(0, 220, 0))
+
+-- [[ BOOMBOX FUNCTION ]]
+local function CreateBoomboxGUI()
+    local PlayerGui = Player:WaitForChild("PlayerGui")
+    if PlayerGui:FindFirstChild("TripleBoomboxFix") then PlayerGui.TripleBoomboxFix:Destroy() end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "TripleBoomboxFix"
+    ScreenGui.Parent = PlayerGui
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Enabled = false -- [[ แก้ไขตรงนี้: ไม่ให้หน้าต่างเปิดอัติโนมัติ ]]
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 220, 0, 150)
+    Frame.Position = UDim2.new(0.37, 0, 0.35, 0)
+    Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Frame.Active = true
+    Frame.Draggable = true 
+    Frame.Parent = ScreenGui
+    Instance.new("UICorner", Frame)
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, 0, 0.25, 0)
+    Title.Text = "DOUBLE BOOMBOX"
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Title.TextScaled = true
+    Title.Parent = Frame
+    Instance.new("UICorner", Title)
+
+    local SongInput = Instance.new("TextBox")
+    SongInput.Size = UDim2.new(0.9, 0, 0.25, 0)
+    SongInput.Position = UDim2.new(0.05, 0, 0.35, 0)
+    SongInput.PlaceholderText = "ID เพลง..."
+    SongInput.Text = ""
+    SongInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    SongInput.TextColor3 = Color3.new(1, 1, 1)
+    SongInput.TextScaled = true
+    SongInput.Parent = Frame
+    Instance.new("UICorner", SongInput)
+
+    local PlayBtn = Instance.new("TextButton")
+    PlayBtn.Size = UDim2.new(0.9, 0, 0.25, 0)
+    PlayBtn.Position = UDim2.new(0.05, 0, 0.65, 0)
+    PlayBtn.Text = "เล่นแบบต่อตูด (2 เครื่อง)"
+    PlayBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 70)
+    PlayBtn.TextColor3 = Color3.new(1, 1, 1)
+    PlayBtn.TextScaled = true
+    PlayBtn.Parent = Frame
+    Instance.new("UICorner", PlayBtn)
+    AddButtonAnim(PlayBtn, Color3.fromRGB(0, 200, 100))
+
+    local function setGrip(tool, isBack)
+        if isBack then
+            tool.Grip = CFrame.new(0, 0, 1.5) * CFrame.Angles(0, math.rad(180), 0)
+        else
+            tool.Grip = CFrame.new(0, 0, 0)
+        end
+    end
+
+    PlayBtn.MouseButton1Click:Connect(function()
+        local songID = tonumber(SongInput.Text)
+        if not songID then return end
+        local boxes = {}
+        for _, item in pairs(Player.Backpack:GetChildren()) do if item.Name == "Boombox" then table.insert(boxes, item) end end
+        for _, item in pairs(Player.Character:GetChildren()) do if item.Name == "Boombox" then table.insert(boxes, item) end end
+
+        if #boxes < 2 then
+            PlayBtn.Text = "ต้องการ Boombox 2 อัน!"
+            task.wait(1)
+            PlayBtn.Text = "เล่นแบบต่อตูด (2 เครื่อง)"
+        else
+            for i = 1, 2 do
+                local box = boxes[i]
+                task.spawn(function()
+                    box.Parent = Player.Character
+                    setGrip(box, i == 2)
+                    local remote = box:FindFirstChild("Remote")
+                    if remote then remote:FireServer("PlaySong", songID) end
+                end)
+            end
+        end
+    end)
+
+    local Close = Instance.new("TextButton")
+    Close.Size = UDim2.new(0, 20, 0, 20)
+    Close.Position = UDim2.new(0.9, 0, 0, 0)
+    Close.Text = "X"
+    Close.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    Close.TextColor3 = Color3.new(1, 1, 1)
+    Close.Parent = Frame
+    Close.MouseButton1Click:Connect(function() ScreenGui.Enabled = false end)
+    
+    return ScreenGui
+end
 
 -- [[ MAIN FUNCTION START ]]
 local function RunMainScript()
+    -- [[ เพิ่มการแจ้งเตือนเฉพาะคนรันสคริปต์ ]]
+    TopRightNotify("SYSTEM", "สคริปต์เริ่มทำงานแล้ว เฉพาะคุณที่เห็นข้อความนี้", Color3.fromRGB(255, 165, 0))
+
+    -- Animation ปิดหน้าต่าง Login ก่อน Destroy
+    TweenService:Create(LoginFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -150, 1.5, 0)}):Play()
+    task.wait(0.5)
     LoginGui:Destroy()
-    
+
+    local BoomboxUI = CreateBoomboxGUI() 
     local MyName = Player.Name
     local UserInputService = game:GetService("UserInputService")
-    local TweenService = game:GetService("TweenService")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-    -- [Start Logic] ฟังก์ชันแสดงข้อความต้อนรับ
+    -- [[ แจ้งเตือนการกรอกชื่อสำเร็จที่มุมขวาบน ]]
+    TopRightNotify("LOGIN SUCCESS", "ยินดีต้อนรับคุณ " .. MyName, Color3.fromRGB(0, 255, 0))
+
+    local function NotifyLogin(name)
+        local tag = "USER"
+        local color = Color3.fromRGB(0, 255, 150)
+        
+        if VIP_DATA[name] == "CREATOR" then
+            tag = "CREATOR"; color = Color3.fromRGB(255, 40, 40)
+        elseif VIP_DATA[name] == "VIP" then
+            tag = "VIP"; color = Color3.fromRGB(255, 215, 0)
+        elseif _G.VIP_LIST and _G.VIP_LIST[name] then
+            tag = "ADMIN/CMD"; color = Color3.fromRGB(150, 0, 255)
+        end
+
+        -- ใช้ระบบ TopRightNotify ที่มุมขวาบนตามสั่ง
+        TopRightNotify(tag .. " JOINED", name .. " กำลังใช้งานสคริปต์!", color)
+    end
+
     local function ShowWelcome()
         local WelcomeGui = Instance.new("ScreenGui", game.CoreGui)
-        
         local function CreateNotify(text, pos)
             local label = Instance.new("TextLabel", WelcomeGui)
             label.Size = UDim2.new(0, 250, 0, 40); label.Position = pos; label.BackgroundTransparency = 1
@@ -156,27 +338,22 @@ local function RunMainScript()
             local WS = Instance.new("UIStroke", label); WS.Thickness = 2; WS.Color = Color3.fromRGB(255, 0, 0); WS.Transparency = 1
             return label, WS
         end
-
         local function PlaySound(id)
             local s = Instance.new("Sound", game.Workspace); s.SoundId = "rbxassetid://"..tostring(id); s.Volume = 2; s:Play(); game:GetService("Debris"):AddItem(s, 5)
         end
-
         task.wait(1)
         PlaySound(108729338139883)
         local L1, S1 = CreateNotify("Welcome to Script Word", UDim2.new(0.5, -125, 0.1, 0))
         TweenService:Create(L1, TweenInfo.new(0.8), {TextTransparency = 0}):Play(); TweenService:Create(S1, TweenInfo.new(0.8), {Transparency = 0}):Play()
         task.wait(2.5)
-        
         PlaySound(104447039817401)
         local L2, S2 = CreateNotify("By Owner Human", UDim2.new(0.5, -125, 0.15, 0))
         TweenService:Create(L2, TweenInfo.new(0.8), {TextTransparency = 0}):Play(); TweenService:Create(S2, TweenInfo.new(0.8), {Transparency = 0}):Play()
         task.wait(1.5)
-
         PlaySound(114665895100803)
         local L3, S3 = CreateNotify("Monster Kill", UDim2.new(0.5, -125, 0.2, 0))
         L3.TextColor3 = Color3.fromRGB(255, 50, 50)
         TweenService:Create(L3, TweenInfo.new(0.5), {TextTransparency = 0}):Play(); TweenService:Create(S3, TweenInfo.new(0.5), {Transparency = 0}):Play()
-        
         task.wait(3)
         TweenService:Create(L1, TweenInfo.new(1), {TextTransparency = 1}):Play(); TweenService:Create(S1, TweenInfo.new(1), {Transparency = 1}):Play()
         TweenService:Create(L2, TweenInfo.new(1), {TextTransparency = 1}):Play(); TweenService:Create(S2, TweenInfo.new(1), {Transparency = 1}):Play()
@@ -185,7 +362,6 @@ local function RunMainScript()
     end
     task.spawn(ShowWelcome)
 
-    -- [Load Core]
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/back%20pack"))()
 
     _G.VIP_LIST = _G.VIP_LIST or {["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true, ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true, ["zx71828"] = true}
@@ -225,7 +401,6 @@ local function RunMainScript()
         task.spawn(function() while true do TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.2, Thickness = 3.5}):Play(); task.wait(1); TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.7, Thickness = 2}):Play(); task.wait(1) end end)
     end
 
-    -- [[ UI SECTIONS ]]
     local MainGui = Instance.new("ScreenGui", game.CoreGui)
     local MasterFrame = Instance.new("Frame", MainGui)
     MasterFrame.Size = UDim2.new(0, 750, 0, 300); MasterFrame.Position = UDim2.new(0.5, -375, 0.5, -150); MasterFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10); MasterFrame.BackgroundTransparency = 0.1
@@ -239,13 +414,11 @@ local function RunMainScript()
         return f
     end
 
-    -- BOARD SECTION
     local BoardSide = CreateSection(MasterFrame, UDim2.new(0, 200, 0.94, 0))
     local BTitle = Instance.new("TextLabel", BoardSide); BTitle.Size = UDim2.new(1,0,0,30); BTitle.Text = "ACTIVE USERS"; BTitle.TextColor3 = Color3.fromRGB(255, 215, 0); BTitle.Font = Enum.Font.FredokaOne; BTitle.BackgroundTransparency = 1; BTitle.TextSize = 16
     local BScroll = Instance.new("ScrollingFrame", BoardSide); BScroll.Size = UDim2.new(1,0,1,-35); BScroll.Position = UDim2.new(0,0,0,35); BScroll.BackgroundTransparency = 1; BScroll.ScrollBarThickness = 2
     local BList = Instance.new("UIListLayout", BScroll); BList.Padding = UDim.new(0,5)
 
-    -- COMMANDS SECTION
     local CmdSide = CreateSection(MasterFrame, UDim2.new(0, 250, 0.94, 0))
     local CTitle = Instance.new("TextLabel", CmdSide); CTitle.Size = UDim2.new(1,0,0,30); CTitle.Text = "COMMANDS"; CTitle.TextColor3 = Color3.fromRGB(255, 50, 50); CTitle.Font = Enum.Font.FredokaOne; CTitle.BackgroundTransparency = 1; CTitle.TextSize = 16
     local HelpTxt = Instance.new("TextLabel", CmdSide); HelpTxt.Size = UDim2.new(1,0,0,100); HelpTxt.Position = UDim2.new(0,0,0,30); HelpTxt.Text = "!kill [n] | !kick [n] | !tp [n]\n!freeze [n] | !spin [n] | !void [n]\n!givevip [n] | !killall | !kickall"; HelpTxt.TextColor3 = Color3.fromRGB(180,180,180); HelpTxt.Font = Enum.Font.SourceSansBold; HelpTxt.TextSize = 11; HelpTxt.BackgroundTransparency = 1
@@ -254,15 +427,31 @@ local function RunMainScript()
     local CmdBar = Instance.new("TextBox", CmdSide); CmdBar.Size = UDim2.new(1,0,0,35); CmdBar.Position = UDim2.new(0,0,1,-35); CmdBar.PlaceholderText = "> ENTER COMMAND..."; CmdBar.BackgroundColor3 = Color3.fromRGB(20,40,20); CmdBar.TextColor3 = Color3.fromRGB(0,255,0); Instance.new("UICorner", CmdBar)
     CmdSide.Visible = (ADMIN_COMMANDER[MyName] ~= nil or _G.VIP_LIST[MyName] ~= nil)
 
-    -- CHAT SECTION
-    local ChatSide = CreateSection(MasterFrame, UDim2.new(0, 250, 0.94, 0))
-    local ChatTitle = Instance.new("TextLabel", ChatSide); ChatTitle.Size = UDim2.new(1,0,0,30); ChatTitle.Text = "PRIVATE CHAT"; ChatTitle.TextColor3 = Color3.fromRGB(0, 255, 255); ChatTitle.Font = Enum.Font.FredokaOne; ChatTitle.BackgroundTransparency = 1; ChatTitle.TextSize = 16
-    local ChatScroll = Instance.new("ScrollingFrame", ChatSide); ChatScroll.Size = UDim2.new(1,0,1,-75); ChatScroll.Position = UDim2.new(0,0,0,35); ChatScroll.BackgroundTransparency = 0.9; ChatScroll.ScrollBarThickness = 2
+    local RightContainer = CreateSection(MasterFrame, UDim2.new(0, 250, 0.94, 0))
+    local BBBtn = Instance.new("TextButton", RightContainer)
+    BBBtn.Size = UDim2.new(1, 0, 0, 50)
+    BBBtn.Position = UDim2.new(0, 0, 0, 0)
+    BBBtn.Text = "📻 OPEN BOOMBOX"
+    BBBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    BBBtn.TextColor3 = Color3.new(1,1,1)
+    BBBtn.Font = Enum.Font.FredokaOne
+    BBBtn.TextSize = 16
+    Instance.new("UICorner", BBBtn)
+    AddButtonAnim(BBBtn, Color3.fromRGB(60, 60, 60))
+    BBBtn.MouseButton1Click:Connect(function() BoomboxUI.Enabled = not BoomboxUI.Enabled end)
+
+    local ChatSide = Instance.new("Frame", RightContainer)
+    ChatSide.Size = UDim2.new(1, 0, 1, -60)
+    ChatSide.Position = UDim2.new(0, 0, 0, 60)
+    ChatSide.BackgroundTransparency = 1
+    
+    local ChatTitle = Instance.new("TextLabel", ChatSide); ChatTitle.Size = UDim2.new(1,0,0,25); ChatTitle.Text = "PRIVATE CHAT"; ChatTitle.TextColor3 = Color3.fromRGB(0, 255, 255); ChatTitle.Font = Enum.Font.FredokaOne; ChatTitle.BackgroundTransparency = 1; ChatTitle.TextSize = 14
+    local ChatScroll = Instance.new("ScrollingFrame", ChatSide); ChatScroll.Size = UDim2.new(1,0,1,-70); ChatScroll.Position = UDim2.new(0,0,0,30); ChatScroll.BackgroundTransparency = 0.9; ChatScroll.ScrollBarThickness = 2
     local ChatList = Instance.new("UIListLayout", ChatScroll); ChatList.Padding = UDim.new(0,2); ChatList.SortOrder = Enum.SortOrder.LayoutOrder
     local ChatInput = Instance.new("TextBox", ChatSide); ChatInput.Size = UDim2.new(1,0,0,35); ChatInput.Position = UDim2.new(0,0,1,-35); ChatInput.PlaceholderText = "Type message here..."; ChatInput.BackgroundColor3 = Color3.fromRGB(20,20,40); ChatInput.TextColor3 = Color3.new(1,1,1); Instance.new("UICorner", ChatInput)
 
-    -- MINIMIZE BUTTON
     local MinBtn = Instance.new("TextButton", MainGui); MinBtn.Size = UDim2.new(0, 50, 0, 50); MinBtn.Position = UDim2.new(0.1, 0, 0.1, 0); MinBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0); MinBtn.Text = "SW"; MinBtn.Font = Enum.Font.FredokaOne; MinBtn.TextSize = 20; MinBtn.TextColor3 = Color3.new(0,0,0); Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(1, 0); Instance.new("UIStroke", MinBtn).Thickness = 2; MakeDraggable(MinBtn)
+    AddButtonAnim(MinBtn, Color3.fromRGB(255, 230, 0))
     MinBtn.MouseButton1Click:Connect(function() MasterFrame.Visible = not MasterFrame.Visible; PlayUISound(452267918) end)
 
     local function UpdateBoard()
@@ -275,17 +464,14 @@ local function RunMainScript()
                 local row = Instance.new("Frame", BScroll); row.Size = UDim2.new(1,-5,0,25); row.BackgroundTransparency = 0.8; row.BackgroundColor3 = color
                 local l = Instance.new("TextLabel", row); l.Size = UDim2.new(0.7,0,1,0); l.Text = tag.." "..p.Name; l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.SourceSansBold; l.TextSize = 11; l.TextXAlignment = Enum.TextXAlignment.Left; l.Position = UDim2.new(0,5,0,0)
                 
-                -- GIFT VIP BUTTON (G)
                 local gBtn = Instance.new("TextButton", row)
                 gBtn.Size = UDim2.new(0, 18, 0, 18); gBtn.Position = UDim2.new(1, -45, 0.5, -9); gBtn.Text = "V"; gBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 0); gBtn.TextColor3 = Color3.new(1,1,1); gBtn.Font = Enum.Font.SourceSansBold; gBtn.TextSize = 12; Instance.new("UICorner", gBtn)
                 gBtn.MouseButton1Click:Connect(function() local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"); if chatEvent then chatEvent.SayMessageRequest:FireServer("!givevip "..p.Name, "All") end end)
 
-                -- GIFT CMD BUTTON (C) - เฉพาะ Admin เห็น
                 local cBtn = Instance.new("TextButton", row)
                 cBtn.Size = UDim2.new(0, 18, 0, 18); cBtn.Position = UDim2.new(1, -22, 0.5, -9); cBtn.Text = "C"; cBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 255); cBtn.TextColor3 = Color3.new(1,1,1); cBtn.Font = Enum.Font.SourceSansBold; cBtn.TextSize = 12; Instance.new("UICorner", cBtn)
                 cBtn.Visible = (ADMIN_COMMANDER[MyName] ~= nil)
                 cBtn.MouseButton1Click:Connect(function() local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"); if chatEvent then chatEvent.SayMessageRequest:FireServer("!cmd "..p.Name, "All") end end)
-
                 BScroll.CanvasSize = UDim2.new(0,0,0,BList.AbsoluteContentSize.Y)
             end
         end
@@ -320,7 +506,10 @@ local function RunMainScript()
         end
         local target = args[2] and findTarget(args[2])
 
-        if msg == "[ScriptWord_Ping]" then ACTIVE_USERS[speaker.Name] = true; UpdateBoard(); return end
+        if msg == "[ScriptWord_Ping]" then 
+            if not ACTIVE_USERS[speaker.Name] then NotifyLogin(speaker.Name) end
+            ACTIVE_USERS[speaker.Name] = true; UpdateBoard(); return 
+        end
         if msg:sub(1,9) == "[SW_CHAT]" then if speaker.Name ~= MyName then AddChatMessage(speaker.Name, msg:sub(10), Color3.fromRGB(0,255,255)) end return end
 
         local hasPower = ADMIN_COMMANDER[speaker.Name] or HAS_COMMAND_POWER[speaker.Name] or _G.VIP_LIST[speaker.Name]
@@ -361,7 +550,10 @@ local function RunMainScript()
     ACTIVE_USERS[MyName] = true 
     task.spawn(function() task.wait(2); local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"); if chatEvent then chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") end end)
     CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
-    game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
+    game.Players.PlayerAdded:Connect(function(p) 
+        p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() 
+        NotifyLogin(p.Name)
+    end)
     for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
     game.Players.PlayerRemoving:Connect(function(p) ACTIVE_USERS[p.Name] = nil; UpdateBoard() end)
 
@@ -374,6 +566,13 @@ local function RunMainScript()
 end
 
 StartBtn.MouseButton1Click:Connect(function()
-    if NameInput.Text == ExpectedName then RunMainScript()
-    else StartBtn.Text = "ชื่อไม่ถูกต้อง!"; StartBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0); task.wait(1); StartBtn.Text = "START SCRIPT"; StartBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0) end
+    if NameInput.Text == ExpectedName then 
+        RunMainScript()
+    else 
+        StartBtn.Text = "ชื่อไม่ถูกต้อง!"; 
+        StartBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0); 
+        task.wait(1); 
+        StartBtn.Text = "START SCRIPT"; 
+        StartBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0) 
+    end
 end)
