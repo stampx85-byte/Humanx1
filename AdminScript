@@ -1,0 +1,269 @@
+local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local task = task
+local camera = workspace.CurrentCamera
+
+-- === Settings ===
+local SPAWN_ANIM_ID = "rbxassetid://126663872512408"
+local NORMAL_FOV = 70
+local ZOOM_FOV = 40
+local TWEEN_TIME = 0.8
+local CAMERA_DISTANCE = 8 
+
+local SOUND_1 = "101197590188807"
+local SOUND_2 = "101197590188807"
+
+local isAnimationPlaying = false
+local hasDiedBefore = false 
+
+-- === [UPGRADED] Epic Smoke & Aura Effect ===
+local function createSmokeEffect(rootPart)
+    local attachment = Instance.new("Attachment", rootPart)
+    attachment.Position = Vector3.new(0, -3, 0)
+    
+    -- 1. ควันหลักแบบ Dark Aura
+    local smoke = Instance.new("ParticleEmitter")
+    smoke.Name = "SpawnSmoke"
+    smoke.Texture = "rbxassetid://243098098"
+    smoke.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50, 0, 80)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
+    })
+    smoke.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.2, 0.3),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    smoke.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 4),
+        NumberSequenceKeypoint.new(1, 12)
+    })
+    smoke.Lifetime = NumberRange.new(1.5, 2.5)
+    smoke.Rate = 100
+    smoke.Speed = NumberRange.new(5, 15)
+    smoke.SpreadAngle = Vector2.new(0, 360)
+    smoke.Parent = attachment
+
+    -- 2. ประกายไฟลอยขึ้น (Dark Embers)
+    local embers = Instance.new("ParticleEmitter")
+    embers.Texture = "rbxassetid://6020473016"
+    embers.Color = ColorSequence.new(Color3.fromRGB(170, 85, 255))
+    embers.Size = NumberSequence.new(0.2, 0)
+    embers.Lifetime = NumberRange.new(1, 2)
+    embers.Rate = 50
+    embers.Speed = NumberRange.new(10, 25)
+    embers.VelocitySpread = 180
+    embers.Parent = attachment
+
+    -- 3. คลื่นกระแทกตอนจุติ (Shockwave)
+    local wave = Instance.new("ParticleEmitter")
+    wave.Texture = "rbxassetid://2030245059"
+    wave.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
+    wave.Size = NumberSequence.new(0, 20)
+    wave.Transparency = NumberSequence.new(0, 1)
+    wave.Lifetime = NumberRange.new(0.5)
+    wave.Rate = 1
+    wave.Speed = NumberRange.new(0)
+    wave.Parent = attachment
+    wave:Emit(1)
+
+    -- สั่นหน้าจอเล็กน้อยตอนเริ่ม
+    task.spawn(function()
+        for i = 1, 10 do
+            camera.CFrame = camera.CFrame * CFrame.new(math.random(-2,2)/10, math.random(-2,2)/10, math.random(-2,2)/10)
+            task.wait(0.05)
+        end
+    end)
+    
+    -- [จุดที่เพิ่มเข้าไป] ตรวจสอบสถานะเพื่อปิดเอฟเฟกต์เมื่อจบแอนิเมชั่นเท่านั้น
+    task.spawn(function()
+        repeat task.wait(0.1) until isAnimationPlaying == false
+        
+        smoke.Enabled = false
+        embers.Enabled = false
+        task.wait(2.5) -- รอให้ละอองควันเดิมจางหายไปก่อนลบ
+        attachment:Destroy()
+    end)
+end
+
+-- === UI Setup ===
+local function createCinematicUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "CinematicBars"
+    screenGui.IgnoreGuiInset = true
+    screenGui.Parent = player.PlayerGui
+    
+    local topBar = Instance.new("Frame", screenGui)
+    topBar.BackgroundColor3 = Color3.new(0, 0, 0)
+    topBar.BorderSizePixel = 0
+    topBar.Size = UDim2.new(1.2, 0, 0.15, 0)
+    topBar.Position = UDim2.new(-0.1, 0, -0.2, 0)
+    
+    local bottomBar = Instance.new("Frame", screenGui)
+    bottomBar.BackgroundColor3 = Color3.new(0, 0, 0)
+    bottomBar.BorderSizePixel = 0
+    bottomBar.Size = UDim2.new(1.2, 0, 0.15, 0)
+    bottomBar.Position = UDim2.new(-0.1, 0, 1.1, 0)
+
+    local textLabel = Instance.new("TextLabel", bottomBar)
+    textLabel.Size = UDim2.new(0.8, 0, 0.6, 0)
+    textLabel.Position = UDim2.new(0.1, 0, 0.2, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.Font = Enum.Font.Michroma 
+    textLabel.TextScaled = true
+    textLabel.Text = ""
+    
+    local uiStroke = Instance.new("UIStroke", textLabel)
+    uiStroke.Thickness = 2.5
+    uiStroke.Color = Color3.new(0, 0, 0)
+    uiStroke.Transparency = 0.3
+    
+    local uiPadding = Instance.new("UIPadding", textLabel)
+    uiPadding.PaddingTop = UDim.new(0.1, 0)
+    uiPadding.PaddingBottom = UDim.new(0.1, 0)
+    
+    return screenGui, topBar, bottomBar, textLabel
+end
+
+-- ฟังก์ชันพิมพ์ข้อความทีละตัว
+local function typeWrite(label, text)
+    label.Text = ""
+    for i = 1, #text do
+        label.Text = string.sub(text, 1, i)
+        task.wait(0.06) 
+    end
+end
+
+-- ฟังก์ชันหยุดเสียง
+local function stopRadioSound()
+    pcall(function()
+        workspace.DRadio_Script.STOPEvent:FireServer()
+    end)
+end
+
+-- ฟังก์ชันเปิดเสียง
+local function playRadioSound(id)
+    pcall(function()
+        workspace.DRadio_Script.STOPEvent:FireServer()
+        workspace.DRadio_Script.Event:FireServer(id)
+        game:GetService("ReplicatedStorage").Search_Audio:InvokeServer(id)
+        workspace.Boards.SettingsHandler.Retriever:InvokeServer("Authenticate")
+    end)
+end
+
+-- ฟังก์ชันจัดการลำดับเสียง
+local function handleAudioSequence()
+    local tempSound = Instance.new("Sound")
+    tempSound.SoundId = "rbxassetid://" .. SOUND_1
+    playRadioSound(SOUND_1)
+
+    task.spawn(function()
+        if not tempSound.IsLoaded then tempSound.Loaded:Wait() end
+        local duration = tempSound.TimeLength
+        local elapsed = 0
+        while elapsed < duration and isAnimationPlaying do
+            task.wait(0.1)
+            elapsed = elapsed + 0.1
+        end
+        stopRadioSound()
+        tempSound:Destroy()
+        if isAnimationPlaying then
+            task.wait(2)
+            if isAnimationPlaying then playRadioSound(SOUND_2) end
+        end
+    end)
+end
+
+-- ฟังก์ชัน Tween กล้องและ UI
+local function tweenCinematic(gui, top, bottom, state)
+    local targetTop = state and UDim2.new(-0.1, 0, 0, 0) or UDim2.new(-0.1, 0, -0.2, 0)
+    local targetBottom = state and UDim2.new(-0.1, 0, 0.85, 0) or UDim2.new(-0.1, 0, 1.1, 0)
+    local targetFOV = state and ZOOM_FOV or NORMAL_FOV
+    
+    local info = TweenInfo.new(TWEEN_TIME, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    TweenService:Create(top, info, {Position = targetTop}):Play()
+    TweenService:Create(bottom, info, {Position = targetBottom}):Play()
+    TweenService:Create(camera, info, {FieldOfView = targetFOV}):Play()
+    
+    if not state then
+        task.delay(TWEEN_TIME, function() 
+            if gui and gui.Parent then gui:Destroy() end 
+        end)
+    end
+end
+
+-- ฟังก์ชันเล่น Animation
+local function playSpawnAnimation(character)
+    isAnimationPlaying = true
+    local humanoid = character:WaitForChild("Humanoid")
+    local rootPart = character:WaitForChild("HumanoidRootPart")
+    local head = character:WaitForChild("Head")
+    
+    local gui, top, bottom, textLabel = createCinematicUI()
+    tweenCinematic(gui, top, bottom, true)
+    handleAudioSequence()
+    
+    -- === [CALL] สร้างเอฟเฟกต์ควัน ===
+    createSmokeEffect(rootPart)
+
+    -- ข้อความ
+    local message = hasDiedBefore and "เจ้าคิดว่าข้ายยอมเจ้างั้นหรอ!" or "บัดนี้... ราชาได้ถือกำเนิดขึ้นแล้ว"
+    task.spawn(function()
+        task.wait(TWEEN_TIME) 
+        typeWrite(textLabel, message)
+    end)
+
+    -- ล็อคตัวละคร
+    humanoid.WalkSpeed = 0
+    humanoid.JumpHeight = 0
+    rootPart.Anchored = true 
+
+    local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
+    local spawnAnim = Instance.new("Animation")
+    spawnAnim.AnimationId = SPAWN_ANIM_ID
+    local spawnTrack = animator:LoadAnimation(spawnAnim)
+    spawnTrack.Looped = false
+    spawnTrack.Priority = Enum.AnimationPriority.Action
+
+    spawnTrack:Play()
+    camera.CameraType = Enum.CameraType.Scriptable
+    
+    local updateConnection
+    updateConnection = RunService.RenderStepped:Connect(function()
+        if spawnTrack.IsPlaying then
+            local lookAtPos = head.Position
+            local camPos = (rootPart.CFrame * CFrame.new(0, 1.5, -CAMERA_DISTANCE)).Position
+            camera.CFrame = CFrame.new(camPos, lookAtPos)
+        else
+            updateConnection:Disconnect()
+            isAnimationPlaying = false -- ปิดสถานะตรงนี้ เพื่อให้ Smoke ทราบว่าต้องหยุด
+            stopRadioSound()
+            
+            camera.CameraType = Enum.CameraType.Custom
+            tweenCinematic(gui, top, bottom, false)
+            humanoid.WalkSpeed = 16
+            humanoid.JumpHeight = 7.2
+            rootPart.Anchored = false
+            hasDiedBefore = true 
+        end
+    end)
+
+    -- Glitch Effect
+    task.spawn(function()
+        while spawnTrack.IsPlaying do
+            task.wait(0.1 + math.random() * 0.05)
+            if spawnTrack.IsPlaying then
+                spawnTrack:AdjustSpeed(0)
+                task.wait(0.15)
+                spawnTrack:AdjustSpeed(1)
+            end
+        end
+    end)
+end
+
+-- === รันระบบ ===
+if player.Character then playSpawnAnimation(player.Character) end
+player.CharacterAdded:Connect(function(character) playSpawnAnimation(character) end)
