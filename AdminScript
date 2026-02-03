@@ -14,17 +14,151 @@ local ZOOM_FOV = 40
 local TWEEN_TIME = 0.8
 local CAMERA_DISTANCE = 8 
 
-local SOUND_1 = "101197590188807"
-local SOUND_2 = "101197590188807"
+-- [เพิ่มระบบโหลด Data]
+local SOUND_1 = player:GetAttribute("SavedBossSound") or "101197590188807" -- ดึงค่าที่เซฟไว้ ถ้าไม่มีให้ใช้ค่าเริ่มต้น
 
 local isAnimationPlaying = false
 local hasDiedBefore = false 
 
+-- === Audio Control Variables (New) ===
+local isMusicEnabled = true
+
 -- === Animation Controller Variables ===
 local idleTrack, walkTrack
-local moveConnection -- เก็บการเชื่อมต่อไว้เพื่อยกเลิกตอนตาย
+local moveConnection 
 
--- === [UPGRADED] Epic Dark & Purple Aura Effect ===
+-- === UI Creation (Boss Style & Minimize System) ===
+local function createAudioControlUI()
+    local sg = Instance.new("ScreenGui", player.PlayerGui)
+    sg.Name = "AudioSettingsUI"
+    sg.ResetOnSpawn = false
+
+    -- Main Container
+    local mainFrame = Instance.new("Frame", sg)
+    mainFrame.Size = UDim2.new(0, 250, 0, 120)
+    mainFrame.Position = UDim2.new(0, 15, 0.5, -60)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+    mainFrame.BackgroundTransparency = 0.2
+    mainFrame.BorderSizePixel = 0
+    Instance.new("UICorner", mainFrame)
+    
+    local stroke = Instance.new("UIStroke", mainFrame)
+    stroke.Color = Color3.fromRGB(255, 0, 0)
+    stroke.Thickness = 2
+
+    -- Minimize Button
+    local minBtn = Instance.new("TextButton", sg)
+    minBtn.Size = UDim2.new(0, 30, 0, 30)
+    minBtn.Position = UDim2.new(0, 15, 0.5, -95)
+    minBtn.Text = "X"
+    minBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    minBtn.TextColor3 = Color3.new(1, 1, 1)
+    minBtn.Font = Enum.Font.SpecialElite
+    Instance.new("UICorner", minBtn)
+
+    local isMinimized = false
+    minBtn.MouseButton1Click:Connect(function()
+        isMinimized = not isMinimized
+        mainFrame.Visible = not isMinimized
+        minBtn.Text = isMinimized and "+" or "X"
+        minBtn.BackgroundColor3 = isMinimized and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    end)
+
+    -- Character Portrait (Viewport)
+    local portraitFrame = Instance.new("Frame", mainFrame)
+    portraitFrame.Size = UDim2.new(0, 70, 0, 70)
+    portraitFrame.Position = UDim2.new(0, 10, 0, 10)
+    portraitFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Instance.new("UICorner", portraitFrame).CornerRadius = UDim.new(1, 0)
+    Instance.new("UIStroke", portraitFrame).Color = Color3.fromRGB(255, 0, 0)
+
+    local viewport = Instance.new("ViewportFrame", portraitFrame)
+    viewport.Size = UDim2.new(1, 0, 1, 0)
+    viewport.BackgroundTransparency = 1
+
+    local function updateViewport()
+        viewport:ClearAllChildren()
+        local char = player.Character or player.CharacterAdded:Wait()
+        char.Archivable = true
+        local clone = char:Clone()
+        clone.Parent = viewport
+        local vCam = Instance.new("Camera")
+        vCam.CFrame = CFrame.new(clone.Head.Position + (clone.Head.CFrame.LookVector * 2.5), clone.Head.Position)
+        viewport.CurrentCamera = vCam
+        vCam.Parent = viewport
+    end
+    updateViewport()
+    player.CharacterAdded:Connect(updateViewport)
+
+    -- Inputs and Buttons
+    local idInput = Instance.new("TextBox", mainFrame)
+    idInput.Size = UDim2.new(0, 150, 0, 25)
+    idInput.Position = UDim2.new(0, 90, 0, 15)
+    idInput.PlaceholderText = "BOSS SOUND ID..."
+    idInput.Text = SOUND_1
+    idInput.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    idInput.TextColor3 = Color3.new(1, 1, 1)
+    idInput.Font = Enum.Font.SpecialElite
+    Instance.new("UICorner", idInput)
+
+    local saveBtn = Instance.new("TextButton", mainFrame)
+    saveBtn.Size = UDim2.new(0, 70, 0, 35)
+    saveBtn.Position = UDim2.new(0, 90, 0, 50)
+    saveBtn.Text = "SAVE"
+    saveBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+    saveBtn.TextColor3 = Color3.new(1, 1, 1)
+    saveBtn.Font = Enum.Font.SpecialElite
+    Instance.new("UICorner", saveBtn)
+
+    local toggleBtn = Instance.new("TextButton", mainFrame)
+    toggleBtn.Size = UDim2.new(0, 70, 0, 35)
+    toggleBtn.Position = UDim2.new(0, 170, 0, 50)
+    toggleBtn.Text = "ON"
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+    toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+    toggleBtn.Font = Enum.Font.SpecialElite
+    Instance.new("UICorner", toggleBtn)
+
+    local bossLabel = Instance.new("TextLabel", mainFrame)
+    bossLabel.Size = UDim2.new(0, 230, 0, 20)
+    bossLabel.Position = UDim2.new(0, 10, 0, 90)
+    bossLabel.Text = "LORD: " .. player.Name:upper()
+    bossLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    bossLabel.BackgroundTransparency = 1
+    bossLabel.Font = Enum.Font.SpecialElite
+    bossLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    saveBtn.MouseButton1Click:Connect(function()
+        SOUND_1 = idInput.Text
+        -- [เพิ่มส่วนการบันทึกลง Data]
+        player:SetAttribute("SavedBossSound", SOUND_1) 
+        
+        saveBtn.Text = "SAVED"
+        task.wait(1)
+        saveBtn.Text = "SAVE"
+    end)
+
+    toggleBtn.MouseButton1Click:Connect(function()
+        isMusicEnabled = not isMusicEnabled
+        if isMusicEnabled then
+            toggleBtn.Text = "ON"
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+        else
+            toggleBtn.Text = "OFF"
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+            pcall(function() workspace.DRadio_Script.STOPEvent:FireServer() end)
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local s = player.Character.HumanoidRootPart:FindFirstChild("BackupIntroSound")
+                if s then s:Stop() end
+            end
+        end
+    end)
+end
+
+-- เรียกใช้ UI
+createAudioControlUI()
+
+-- === Effect Functions ===
 local function createSmokeEffect(rootPart)
     local attachment = Instance.new("Attachment", rootPart)
     attachment.Position = Vector3.new(0, -3, 0)
@@ -94,7 +228,6 @@ local function createSmokeEffect(rootPart)
     end)
 end
 
--- === UI Setup ===
 local function createCinematicUI()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "CinematicBars"
@@ -138,38 +271,31 @@ local function typeWrite(label, text)
     end
 end
 
-local function stopRadioSound()
-    pcall(function() workspace.DRadio_Script.STOPEvent:FireServer() end)
-end
+-- === Hybrid Audio System ===
+local function handleAudioSequence(id, rootPart)
+    if not isMusicEnabled then return end -- เพิ่มเช็คสถานะเปิด/ปิดเสียง
 
-local function playRadioSound(id)
+    -- 1. พยายามใช้ Remote ของแมพ (ถ้ามี)
     pcall(function()
         workspace.DRadio_Script.STOPEvent:FireServer()
         workspace.DRadio_Script.Event:FireServer(id)
         game:GetService("ReplicatedStorage").Search_Audio:InvokeServer(id)
         workspace.Boards.SettingsHandler.Retriever:InvokeServer("Authenticate")
     end)
-end
 
-local function handleAudioSequence()
-    local tempSound = Instance.new("Sound")
-    tempSound.SoundId = "rbxassetid://" .. SOUND_1
-    playRadioSound(SOUND_1)
+    -- 2. สร้างเสียงสำรองแบบ Local
+    local localSound = Instance.new("Sound")
+    localSound.Name = "BackupIntroSound"
+    localSound.SoundId = "rbxassetid://" .. id
+    localSound.Volume = 2
+    localSound.Parent = rootPart
+    
+    if not localSound.IsLoaded then localSound.Loaded:Wait() end
+    localSound:Play()
 
     task.spawn(function()
-        if not tempSound.IsLoaded then tempSound.Loaded:Wait() end
-        local duration = tempSound.TimeLength
-        local elapsed = 0
-        while elapsed < duration and isAnimationPlaying do
-            task.wait(0.1)
-            elapsed = elapsed + 0.1
-        end
-        stopRadioSound()
-        tempSound:Destroy()
-        if isAnimationPlaying then
-            task.wait(2)
-            if isAnimationPlaying then playRadioSound(SOUND_2) end
-        end
+        localSound.Ended:Wait()
+        localSound:Destroy()
     end)
 end
 
@@ -199,9 +325,7 @@ local function tweenCinematic(gui, top, bottom, state)
     end
 end
 
--- === Animation Handler (Updated for Reset) ===
 local function setupMovementAnimations(humanoid, animator)
-    -- ยกเลิก Connection เก่าถ้ามี
     if moveConnection then moveConnection:Disconnect() end
     
     local idleAnim = Instance.new("Animation")
@@ -219,11 +343,7 @@ local function setupMovementAnimations(humanoid, animator)
             return 
         end
         
-        if isAnimationPlaying then 
-            if idleTrack.IsPlaying then idleTrack:Stop() end
-            if walkTrack.IsPlaying then walkTrack:Stop() end
-            return 
-        end
+        if isAnimationPlaying then return end
         
         if humanoid.MoveDirection.Magnitude == 0 then
             if not idleTrack.IsPlaying then
@@ -246,27 +366,21 @@ local function playSpawnAnimation(character)
     local head = character:WaitForChild("Head")
     local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
 
-    -- หยุดอนิเมชั่นเก่าที่อาจค้างอยู่
     for _, track in pairs(animator:GetPlayingAnimationTracks()) do
         track:Stop(0)
     end
 
-    -- ปิด Animate เดิม
     local animate = character:FindFirstChild("Animate")
     if animate then animate.Disabled = true end
 
-    -- โหลดท่าทางเดิน/ยืนใหม่
     setupMovementAnimations(humanoid, animator)
     
-    -- === เอฟเฟกต์ตาแดง ===
     local eyeAttachment = Instance.new("Attachment", head)
     eyeAttachment.Name = "EyeAttachment"
-    
     local eyeLight = Instance.new("PointLight", eyeAttachment)
     eyeLight.Color = Color3.fromRGB(255, 0, 0)
     eyeLight.Brightness = 5
     eyeLight.Range = 5
-    eyeLight.Enabled = true
 
     local function createEyeGlow(offset)
         local bg = Instance.new("BillboardGui", eyeAttachment)
@@ -281,8 +395,8 @@ local function playSpawnAnimation(character)
         return bg
     end
 
-    local leftEye = createEyeGlow(Vector3.new(-0.2, 0.1, -0.55))
-    local rightEye = createEyeGlow(Vector3.new(0.2, 0.1, -0.55))
+    createEyeGlow(Vector3.new(-0.2, 0.1, -0.55))
+    createEyeGlow(Vector3.new(0.2, 0.1, -0.55))
 
     humanoid.WalkSpeed = 0
     rootPart.Anchored = true 
@@ -292,7 +406,7 @@ local function playSpawnAnimation(character)
     
     task.wait(0.5) 
 
-    handleAudioSequence()
+    handleAudioSequence(SOUND_1, rootPart)
     createSmokeEffect(rootPart)
 
     local message = hasDiedBefore and "ความตาย... ไม่ใช่จุดจบของข้า!" or "เจ้าคิดว่าจะหนีพ้นความมืดได้งั้นหรอ?"
@@ -306,8 +420,8 @@ local function playSpawnAnimation(character)
     local spawnTrack = animator:LoadAnimation(spawnAnim)
     spawnTrack.Looped = false
     spawnTrack.Priority = Enum.AnimationPriority.Action
-
     spawnTrack:Play()
+
     camera.CameraType = Enum.CameraType.Scriptable
     
     local updateConnection
@@ -319,10 +433,8 @@ local function playSpawnAnimation(character)
         else
             updateConnection:Disconnect()
             isAnimationPlaying = false 
-            stopRadioSound()
             
             if eyeAttachment then eyeAttachment:Destroy() end
-            
             camera.CameraType = Enum.CameraType.Custom
             tweenCinematic(gui, top, bottom, false)
             
@@ -334,28 +446,18 @@ local function playSpawnAnimation(character)
             end
         end
     end)
-
-    task.spawn(function()
-        while spawnTrack.IsPlaying and humanoid.Health > 0 do
-            task.wait(math.random(1, 3)/10)
-            if spawnTrack.IsPlaying then
-                spawnTrack:AdjustSpeed(0.2) 
-                task.wait(0.1)
-                spawnTrack:AdjustSpeed(1)
-            end
-        end
-    end)
 end
 
 -- === Core Connections ===
 if player.Character then playSpawnAnimation(player.Character) end
 player.CharacterAdded:Connect(function(character) 
+    -- [โหลด ID ล่าสุดจาก Data ก่อนเริ่มแอนิเมชั่น]
+    SOUND_1 = player:GetAttribute("SavedBossSound") or SOUND_1
     playSpawnAnimation(character) 
 end)
 
--- ล้างค่าเมื่อตาย (Cleanup)
 player.CharacterRemoving:Connect(function()
     if moveConnection then moveConnection:Disconnect() end
     isAnimationPlaying = false
-    stopRadioSound()
+    pcall(function() workspace.DRadio_Script.STOPEvent:FireServer() end)
 end)
