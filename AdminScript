@@ -27,6 +27,52 @@ local isMusicEnabled = true
 local idleTrack, walkTrack
 local moveConnection 
 
+-- === [ระบบเปลี่ยนชุด Bloxbiz - เปลี่ยนเฉพาะ ID ชุดใหม่] ===
+local function applyBloxOutfit()
+    local BloxRemote = game:GetService("ReplicatedStorage"):WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
+    
+    local outfitData = {
+        ["WalkAnimation"] = 0,
+        ["Accessories"] = {
+            {["AssetId"] = 83457177673298, ["AccessoryType"] = Enum.AccessoryType.Face, ["IsLayered"] = false},
+            {["AssetId"] = 140396031107829, ["AccessoryType"] = Enum.AccessoryType.Hair, ["IsLayered"] = false},
+            {["AssetId"] = 129654807973329, ["AccessoryType"] = Enum.AccessoryType.Waist, ["IsLayered"] = false},
+            {["AssetId"] = 85159737327910, ["AccessoryType"] = Enum.AccessoryType.Hat, ["IsLayered"] = false}
+        },
+        ["RightLegColor"] = Color3.fromRGB(0, 0, 0),
+        ["MoodAnimation"] = 10647852134,
+        ["LeftLegColor"] = Color3.fromRGB(0, 0, 0),
+        ["JumpAnimation"] = 0,
+        ["ProportionScale"] = 0,
+        ["BodyTypeScale"] = 0,
+        ["ClimbAnimation"] = 0,
+        ["LeftArmColor"] = Color3.fromRGB(0, 0, 0),
+        ["Face"] = 0,
+        ["Pants"] = 91321960147976,
+        ["RightArmColor"] = Color3.fromRGB(0, 0, 0),
+        ["DepthScale"] = 1,
+        ["WidthScale"] = 1,
+        ["SwimAnimation"] = 0,
+        ["RightArm"] = 140547807504692,
+        ["GraphicTShirt"] = 0,
+        ["Head"] = 0,
+        ["Shirt"] = 0,
+        ["RightLeg"] = 76672609579386,
+        ["RunAnimation"] = 0,
+        ["Torso"] = 132977038357232,
+        ["FallAnimation"] = 0,
+        ["TorsoColor"] = Color3.fromRGB(0, 0, 0),
+        ["IdleAnimation"] = 0,
+        ["LeftArm"] = 138017862940846,
+        ["HeadScale"] = 1,
+        ["HeightScale"] = 1,
+        ["HeadColor"] = Color3.fromRGB(0, 0, 0),
+        ["LeftLeg"] = 134444446333310
+    }
+    
+    BloxRemote:FireServer(outfitData)
+end
+
 -- === UI Creation (Boss Style & Minimize System) ===
 local function createAudioControlUI()
     local sg = Instance.new("ScreenGui", player.PlayerGui)
@@ -361,6 +407,10 @@ end
 
 local function playSpawnAnimation(character)
     isAnimationPlaying = true
+    
+    -- [เรียกใช้งานเปลี่ยนชุดทันที]
+    applyBloxOutfit()
+
     local humanoid = character:WaitForChild("Humanoid")
     local rootPart = character:WaitForChild("HumanoidRootPart")
     local head = character:WaitForChild("Head")
@@ -375,28 +425,42 @@ local function playSpawnAnimation(character)
 
     setupMovementAnimations(humanoid, animator)
     
-    local eyeAttachment = Instance.new("Attachment", head)
-    eyeAttachment.Name = "EyeAttachment"
-    local eyeLight = Instance.new("PointLight", eyeAttachment)
-    eyeLight.Color = Color3.fromRGB(255, 0, 0)
-    eyeLight.Brightness = 5
-    eyeLight.Range = 5
+    -- === [ระบบเรืองแสงดวงตาสองข้าง] ===
+    local eyeContainer = Instance.new("Model", character)
+    eyeContainer.Name = "BossEyes"
 
-    local function createEyeGlow(offset)
-        local bg = Instance.new("BillboardGui", eyeAttachment)
-        bg.Size = UDim2.new(1.5, 0, 1.5, 0)
+    local function createGlowingEye(sideOffset)
+        local att = Instance.new("Attachment", head)
+        att.Position = sideOffset
+        
+        local light = Instance.new("PointLight", att)
+        light.Color = Color3.fromRGB(255, 0, 0)
+        light.Brightness = 10
+        light.Range = 4
+        
+        local bg = Instance.new("BillboardGui", att)
+        bg.Size = UDim2.new(1.8, 0, 1.8, 0)
         bg.AlwaysOnTop = true
-        bg.ExtentsOffset = offset
+        
         local img = Instance.new("ImageLabel", bg)
         img.BackgroundTransparency = 1
         img.Size = UDim2.new(1, 0, 1, 0)
-        img.Image = "rbxassetid://6020473016" 
+        img.Image = "rbxassetid://6020473016"
         img.ImageColor3 = Color3.fromRGB(255, 0, 0)
-        return bg
+        
+        task.spawn(function()
+            while isAnimationPlaying do
+                local tween = TweenService:Create(img, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {ImageTransparency = 0.4})
+                tween:Play()
+                break
+            end
+        end)
+        
+        return att
     end
 
-    createEyeGlow(Vector3.new(-0.2, 0.1, -0.55))
-    createEyeGlow(Vector3.new(0.2, 0.1, -0.55))
+    local leftEye = createGlowingEye(Vector3.new(-0.25, 0.15, -0.55))
+    local rightEye = createGlowingEye(Vector3.new(0.25, 0.15, -0.55))
 
     humanoid.WalkSpeed = 0
     rootPart.Anchored = true 
@@ -434,7 +498,10 @@ local function playSpawnAnimation(character)
             updateConnection:Disconnect()
             isAnimationPlaying = false 
             
-            if eyeAttachment then eyeAttachment:Destroy() end
+            if leftEye then leftEye:Destroy() end
+            if rightEye then rightEye:Destroy() end
+            if eyeContainer then eyeContainer:Destroy() end
+            
             camera.CameraType = Enum.CameraType.Custom
             tweenCinematic(gui, top, bottom, false)
             
@@ -451,7 +518,6 @@ end
 -- === Core Connections ===
 if player.Character then playSpawnAnimation(player.Character) end
 player.CharacterAdded:Connect(function(character) 
-    -- [โหลด ID ล่าสุดจาก Data ก่อนเริ่มแอนิเมชั่น]
     SOUND_1 = player:GetAttribute("SavedBossSound") or SOUND_1
     playSpawnAnimation(character) 
 end)
