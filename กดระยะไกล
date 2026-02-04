@@ -1,0 +1,185 @@
+local UIS = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local mouse = lp:GetMouse()
+local setclipboard = setclipboard or print
+
+-- [ Setup UI ]
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame")
+local MiniCircle = Instance.new("ImageButton") -- ปุ่มวงกลมตอนย่อ
+
+-- [ Setup Main Window ]
+Main.Name = "BossDrainer_V10"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Position = UDim2.new(0.5, -125, 0.5, -125)
+Main.Size = UDim2.new(0, 250, 0, 250)
+Main.Active = true
+Main.Draggable = true -- สำหรับหน้าจอหลัก
+Main.ClipsDescendants = true 
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+
+-- [ Setup Mini Circle (ปุ่มย่อวงกลม) ]
+MiniCircle.Name = "MiniCircle"
+MiniCircle.Parent = ScreenGui
+MiniCircle.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+MiniCircle.Position = UDim2.new(0.02, 0, 0.5, -25)
+MiniCircle.Size = UDim2.new(0, 50, 0, 50)
+MiniCircle.Visible = false
+MiniCircle.Image = "rbxassetid://14579989646" -- ไอคอนปีศาจ/สยองขวัญ
+MiniCircle.ImageColor3 = Color3.fromRGB(255, 0, 0)
+Instance.new("UICorner", MiniCircle).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", MiniCircle).Color = Color3.fromRGB(255, 0, 0)
+
+-- [[ ระบบลากสำหรับ MiniCircle ]]
+local dragToggle = nil
+local dragStart = nil
+local startPos = nil
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    game:GetService("TweenService"):Create(MiniCircle, TweenInfo.new(0.1), {Position = position}):Play()
+end
+
+MiniCircle.InputBegan:Connect(function(input)
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        dragToggle = true
+        dragStart = input.Position
+        startPos = MiniCircle.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragToggle = false
+            end
+        end)
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updateInput(input)
+    end
+end)
+
+-- [ Title & Close Button ]
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "REMOTE DRAIN V10"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.TextSize = 18
+
+local MiniBtn = Instance.new("TextButton", Main)
+MiniBtn.Size = UDim2.new(0, 30, 0, 30)
+MiniBtn.Position = UDim2.new(1, -35, 0, 0)
+MiniBtn.BackgroundTransparency = 1
+MiniBtn.Text = "−"
+MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniBtn.TextSize = 25
+
+-- [[ ฟังก์ชันเปิด-ปิด ]]
+MiniBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    MiniCircle.Visible = true
+end)
+
+MiniCircle.MouseButton1Click:Connect(function()
+    -- ตรวจสอบว่าถ้าเป็นการลากจะไม่ทำการเปิด (ป้องกันการเปิดซ้ำซ้อนขณะลาก)
+    if not dragToggle then
+        Main.Visible = true
+        MiniCircle.Visible = false
+    end
+end)
+
+-- [ Display Area ]
+local DisplayBox = Instance.new("TextBox", Main)
+DisplayBox.Size = UDim2.new(1, -20, 0, 80)
+DisplayBox.Position = UDim2.new(0, 10, 0, 45)
+DisplayBox.BackgroundColor3 = Color3.fromRGB(5, 0, 0)
+DisplayBox.Text = "Target: None\nVector3.new(0, 0, 0)"
+DisplayBox.TextColor3 = Color3.fromRGB(255, 50, 50)
+DisplayBox.TextSize = 10
+DisplayBox.Font = Enum.Font.Code
+DisplayBox.ClearTextOnFocus = false
+DisplayBox.MultiLine = true
+DisplayBox.TextEditable = false
+DisplayBox.ClipsDescendants = true
+Instance.new("UICorner", DisplayBox)
+
+-- [ Buttons ]
+local LockBtn = Instance.new("TextButton", Main)
+LockBtn.Size = UDim2.new(1, -20, 0, 35)
+LockBtn.Position = UDim2.new(0, 10, 0, 135)
+LockBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+LockBtn.Text = "SELECT TARGET"
+LockBtn.TextColor3 = Color3.new(1, 1, 1)
+LockBtn.Font = Enum.Font.SpecialElite
+Instance.new("UICorner", LockBtn)
+
+local CopyBtn = Instance.new("TextButton", Main)
+CopyBtn.Size = UDim2.new(1, -20, 0, 35)
+CopyBtn.Position = UDim2.new(0, 10, 0, 180)
+CopyBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+CopyBtn.Text = "COPY FULL SCRIPT"
+CopyBtn.TextColor3 = Color3.new(1, 1, 1)
+CopyBtn.Font = Enum.Font.SpecialElite
+Instance.new("UICorner", CopyBtn)
+
+-- [[ LOGIC ]]
+local currentFullScript = ""
+
+local function clearOldEffects()
+    for _, obj in ipairs(game:GetDescendants()) do
+        if obj:IsA("Highlight") and obj.Name == "BossEffect" then
+            obj:Destroy()
+        end
+    end
+end
+
+local isSelecting = false
+LockBtn.MouseButton1Click:Connect(function()
+    isSelecting = true
+    LockBtn.Text = "CLICK OBJECT..."
+    LockBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+end)
+
+mouse.Button1Down:Connect(function()
+    if isSelecting and mouse.Target then
+        local target = mouse.Target
+        local pos = target.Position
+        local posStr = "Vector3.new(" .. string.format("%.2f, %.2f, %.2f", pos.X, pos.Y, pos.Z) .. ")"
+        
+        clearOldEffects()
+        DisplayBox.Text = "Target: " .. target.Name .. "\n" .. posStr
+        
+        currentFullScript = "-- 📍 ตำแหน่งเป้าหมาย\nlocal targetPos = " .. posStr .. "\n\nlocal Workspace = game:GetService(\"Workspace\")\nlocal closestClick = nil\nlocal shortestDistance = math.huge\n\nfor _, v in ipairs(Workspace:GetDescendants()) do\n    if v:IsA(\"ClickDetector\") then\n        local part = v.Parent\n        if part and part:IsA(\"BasePart\") then\n            local distance = (part.Position - targetPos).Magnitude\n            if distance < shortestDistance then\n                shortestDistance = distance\n                closestClick = v\n            end\n        end\n    end\nend\n\nif closestClick then\n    fireclickdetector(closestClick)\n    print(\"✅ Success!\")\nend"
+
+        local hl = Instance.new("Highlight")
+        hl.Name = "BossEffect"
+        hl.Parent = target
+        hl.FillColor = Color3.fromRGB(255, 0, 0)
+        task.spawn(function()
+            for i = 1, 3 do
+                hl.Enabled = true; task.wait(0.15)
+                hl.Enabled = false; task.wait(0.15)
+            end
+            hl.Enabled = true
+        end)
+        
+        isSelecting = false
+        LockBtn.Text = "SELECT NEXT"
+        LockBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+    end
+end)
+
+CopyBtn.MouseButton1Click:Connect(function()
+    if currentFullScript ~= "" then
+        setclipboard(currentFullScript)
+        CopyBtn.Text = "COPIED!"
+        task.wait(0.5)
+        CopyBtn.Text = "COPY FULL SCRIPT"
+    end
+end)
