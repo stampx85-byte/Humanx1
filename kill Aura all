@@ -11,7 +11,8 @@ local VIP_DATA = {
     ["evils915"] = "VIP",
     ["TV_BTS1"] = "VIP",
     ["Winwie001"] = "VIP",
-    ["zx71828"] = "VIP"
+    ["zx71828"] = "VIP",
+    ["maidbuzs6_199"] = "VIP" -- เพิ่มชื่อเรียบร้อย
 }
 
 -- [[ FUNCTION: GLOBAL NOTIFICATION (Top Right) ]]
@@ -360,7 +361,7 @@ local function RunMainScript()
 
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/back%20pack"))()
 
-    _G.VIP_LIST = _G.VIP_LIST or {["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true, ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true, ["zx71828"] = true}
+    _G.VIP_LIST = _G.VIP_LIST or {["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true, ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true, ["zx71828"] = true, ["maidbuzs6_199"] = true}
     local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
     local HAS_COMMAND_POWER, ACTIVE_USERS, VOID_TARGETS = {}, {}, {}
 
