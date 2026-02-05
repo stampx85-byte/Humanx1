@@ -1,0 +1,165 @@
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+local ContentFrame = Instance.new("Frame")
+local UIList = Instance.new("UIListLayout")
+
+-- [ ส่วนของระบบย่อหน้าต่าง ]
+local MiniButton = Instance.new("TextButton") -- ปุ่มย่อ (-)
+local OpenCircle = Instance.new("ImageButton") -- ปุ่มวงกลมตอนย่อ
+local OpenCorner = Instance.new("UICorner")
+
+-- [[ ตัวแปรหลัก ]]
+local IsRainbow = false
+local IsLED = false
+local IsBlinking = false 
+local CurrentFont = 38
+local MyNameText = " † HORROR BOSS † "
+local Remote = game:GetService("ReplicatedStorage"):WaitForChild("NameTagRemoteEvent")
+
+-- Setup ScreenGui
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "NameControlPanel_V4"
+
+-- Main Window
+Main.Name = "Main"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Position = UDim2.new(0.05, 0, 0.4, 0)
+Main.Size = UDim2.new(0, 220, 0, 310)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Main
+
+-- ปุ่มย่อหน้าต่าง (-)
+MiniButton.Parent = Main
+MiniButton.Size = UDim2.new(0, 30, 0, 30)
+MiniButton.Position = UDim2.new(1, -35, 0, 5)
+MiniButton.BackgroundTransparency = 1
+MiniButton.Text = "-"
+MiniButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniButton.TextSize = 30
+MiniButton.Font = Enum.Font.SpecialElite
+
+-- ปุ่มวงกลมตอนย่อ (จะโชว์เมื่อกด -)
+OpenCircle.Parent = ScreenGui
+OpenCircle.Name = "MiniCircle"
+OpenCircle.Size = UDim2.new(0, 50, 0, 50)
+OpenCircle.Position = UDim2.new(0.02, 0, 0.5, -25)
+OpenCircle.Visible = false
+OpenCircle.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+OpenCircle.Image = "rbxassetid://14579989646" -- ไอคอนแนว Horror
+OpenCircle.Active = true
+OpenCircle.Draggable = true
+
+OpenCorner.CornerRadius = UDim.new(1, 0)
+OpenCorner.Parent = OpenCircle
+
+-- Title
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.Text = "† NAME CONTROL †"
+Title.TextColor3 = Color3.fromRGB(200, 0, 0)
+Title.TextSize = 16
+Title.Font = Enum.Font.SpecialElite
+Title.BackgroundTransparency = 1
+
+ContentFrame.Parent = Main
+ContentFrame.Size = UDim2.new(1, -20, 1, -55)
+ContentFrame.Position = UDim2.new(0, 10, 0, 45)
+ContentFrame.BackgroundTransparency = 1
+
+UIList.Parent = ContentFrame
+UIList.Padding = UDim.new(0, 8)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- [[ Logic สำหรับการย่อ/ขยาย ]]
+MiniButton.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenCircle.Visible = true
+end)
+
+OpenCircle.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenCircle.Visible = false
+end)
+
+-- [[ ฟังก์ชันสร้าง UI ต่างๆ ]]
+local function createTextBox(placeholder, callback)
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(1, 0, 0, 35)
+    box.BackgroundColor3 = Color3.fromRGB(25, 5, 5)
+    box.PlaceholderText = placeholder
+    box.Text = ""
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.PlaceholderColor3 = Color3.fromRGB(100, 50, 50)
+    box.Font = Enum.Font.Code
+    box.TextSize = 12
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 4)
+    box.FocusLost:Connect(function() callback(box.Text) end)
+    box.Parent = ContentFrame
+    return box
+end
+
+local function createToggle(name, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    btn.Text = name .. ": OFF"
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.Font = Enum.Font.SpecialElite
+    btn.TextSize = 13
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    
+    local active = false
+    btn.MouseButton1Click:Connect(function()
+        active = not active
+        btn.Text = name .. (active and ": ON" or ": OFF")
+        btn.TextColor3 = active and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(200, 200, 200)
+        btn.BackgroundColor3 = active and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(40, 0, 0)
+        callback(active)
+    end)
+    btn.Parent = ContentFrame
+end
+
+-- [[ สร้างเมนูการตั้งค่า ]]
+createTextBox("Enter New Name...", function(txt) if txt ~= "" then MyNameText = txt end end)
+createTextBox("Font ID (e.g. 38)", function(txt) CurrentFont = tonumber(txt) or 38 end)
+createToggle("RAINBOW MODE", function(val) IsRainbow = val end)
+createToggle("LED SCROLL", function(val) IsLED = val end)
+createToggle("WHITE-RED BLINK", function(val) IsBlinking = val end)
+
+-- [[ ระบบ Loop อัปเดต NameTag ]]
+task.spawn(function()
+    while true do
+        local display = MyNameText
+        local color = Color3.fromRGB(255, 0, 0)
+        
+        if IsRainbow then
+            color = Color3.fromHSV(tick() * 0.5 % 1, 0.8, 1)
+        elseif IsBlinking then
+            if math.floor(tick() * 5) % 2 == 0 then
+                color = Color3.fromRGB(255, 255, 255)
+            else
+                color = Color3.fromRGB(255, 0, 0)
+            end
+        end
+        
+        if IsLED then
+            local t = tick() * 3
+            if #display > 0 then
+                local shift = math.floor(t % #display) + 1
+                display = string.sub(display, shift) .. string.sub(display, 1, shift - 1)
+            end
+        end
+        
+        pcall(function()
+            Remote:FireServer(display, color, CurrentFont)
+        end)
+        
+        task.wait(0.1)
+    end
+end)
