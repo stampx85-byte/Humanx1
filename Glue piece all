@@ -1,322 +1,314 @@
--- [[ Script Word [TH] - Neon Edition (Enhanced Background Effect) ]]
+-- [ Whitelist System ]
+local AllowedUsers = {"ffsww_1007", "A_ASPD", "noobnoobinwza"}
+local PlayerName = game:GetService("Players").LocalPlayer.Name
+local isAllowed = false
 
-local Player = game.Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local MyName = Player.Name
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-
--- [Logics] ระบบสิทธิ์การใช้งาน (เพิ่ม Noobnoobinwza ลงใน ADMIN_COMMANDER)
-_G.VIP_LIST = _G.VIP_LIST or {
-    ["ffsww_1007"] = true, ["A_ASPD"] = true, ["HACKER_18050"] = true,
-    ["evils915"] = true, ["TV_BTS1"] = true, ["Winwie001"] = true,
-    ["zx71828"] = true, ["noobnoobbinwza_"] = true
-}
-local ADMIN_COMMANDER = {
-    ["ffsww_1007"] = true, 
-    ["A_ASPD"] = true,
-    ["Noobnoobinwza"] = true -- เพิ่มสิทธิ์แอดมินตรงนี้เรียบร้อย
-}
-local GIFTED_LIST = {} 
-local HAS_COMMAND_POWER = {}
-local ACTIVE_USERS = {} -- เก็บรายชื่อคนที่รันสคริปต์ในเซิร์ฟนี้
-
--- [Start Logic] ฟังก์ชันสำหรับเล่นเสียง UI
-local function PlayUISound(id)
-    local s = Instance.new("Sound", game.Workspace)
-    s.SoundId = "rbxassetid://"..tostring(id)
-    s.Volume = 1
-    s:Play()
-    game:GetService("Debris"):AddItem(s, 2)
-end
-
--- [Effect Logic] ฟังก์ชันเพิ่มพื้นหลังเคลื่อนไหว
-local function AddBackgroundEffect(frame)
-    local gradient = Instance.new("UIGradient", frame)
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, frame.BackgroundColor3),
-        ColorSequenceKeypoint.new(0.45, Color3.fromRGB(60, 60, 60)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 80, 80)),
-        ColorSequenceKeypoint.new(0.55, Color3.fromRGB(60, 60, 60)),
-        ColorSequenceKeypoint.new(1, frame.BackgroundColor3)
-    })
-    
-    task.spawn(function()
-        local offset = -1
-        while true do
-            gradient.Offset = Vector2.new(offset, 0)
-            offset = offset + 0.015
-            if offset >= 1 then offset = -1 end
-            task.wait(0.01)
-        end
-    end)
-end
-
--- [Start Logic] ลำดับการแสดงผล
-local function ShowWelcome()
-    local WelcomeGui = Instance.new("ScreenGui", game.CoreGui)
-    
-    local function CreateNotify(text, pos)
-        local label = Instance.new("TextLabel", WelcomeGui)
-        label.Size = UDim2.new(0, 250, 0, 40)
-        label.Position = pos
-        label.BackgroundTransparency = 1
-        label.Text = text
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.Font = Enum.Font.FredokaOne
-        label.TextSize = 14
-        label.TextTransparency = 1
-        local WS = Instance.new("UIStroke", label)
-        WS.Thickness = 2; WS.Color = Color3.fromRGB(255, 0, 0); WS.Transparency = 1
-        return label, WS
-    end
-
-    local function PlaySound(id)
-        local s = Instance.new("Sound", game.Workspace)
-        s.SoundId = "rbxassetid://"..tostring(id)
-        s.Volume = 2
-        s:Play()
-        game:GetService("Debris"):AddItem(s, 5)
-    end
-
-    task.wait(5)
-    PlaySound(108729338139883)
-    local L1, S1 = CreateNotify("Welcome to Script Word", UDim2.new(0.5, -125, 0.1, 0))
-    TweenService:Create(L1, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
-    TweenService:Create(S1, TweenInfo.new(0.8), {Transparency = 0}):Play()
-    task.wait(2.5)
-    
-    PlaySound(104447039817401)
-    local L2, S2 = CreateNotify("By Owner Human", UDim2.new(0.5, -125, 0.15, 0))
-    TweenService:Create(L2, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
-    TweenService:Create(S2, TweenInfo.new(0.8), {Transparency = 0}):Play()
-    task.wait(1.5)
-
-    PlaySound(114665895100803)
-    local L3, S3 = CreateNotify("Monster Kill", UDim2.new(0.5, -125, 0.2, 0))
-    L3.TextColor3 = Color3.fromRGB(255, 50, 50)
-    TweenService:Create(L3, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
-    TweenService:Create(S3, TweenInfo.new(0.5), {Transparency = 0}):Play()
-    
-    task.wait(3)
-    TweenService:Create(L1, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S1, TweenInfo.new(1), {Transparency = 1}):Play()
-    TweenService:Create(L2, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S2, TweenInfo.new(1), {Transparency = 1}):Play()
-    TweenService:Create(L3, TweenInfo.new(1), {TextTransparency = 1}):Play()
-    TweenService:Create(S3, TweenInfo.new(1), {Transparency = 1}):Play()
-    
-    task.wait(1)
-    WelcomeGui:Destroy()
-end
-
-task.spawn(ShowWelcome)
-
-local function MakeDraggable(frame)
-    local dragging, dragInput, dragStart, startPos
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true; dragStart = input.Position; startPos = frame.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
-        end
-    end)
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
-
-local function ApplyNeonEffect(frame, color)
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-    local stroke = Instance.new("UIStroke", frame)
-    stroke.Thickness = 2.5; stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; stroke.Color = color
-    task.spawn(function()
-        while true do
-            TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.2, Thickness = 3.5}):Play()
-            task.wait(1)
-            TweenService:Create(stroke, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.7, Thickness = 2}):Play()
-            task.wait(1)
-        end
-    end)
-end
-
-local function CustomKick()
-    local Sound = Instance.new("Sound", game.Workspace)
-    local sId = KickSoundInp.Text
-    if not sId:find("rbxassetid://") then sId = "rbxassetid://"..sId end
-    Sound.SoundId = sId; Sound.Volume = 5; Sound:Play()
-    local ScreenGuiK = Instance.new("ScreenGui", game.CoreGui)
-    ScreenGuiK.IgnoreGuiInset = true
-    local TextLabel = Instance.new("TextLabel", ScreenGuiK)
-    TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0); TextLabel.Size = UDim2.new(1, 0, 1, 0)
-    TextLabel.Text = KickTextInp.Text; TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-    TextLabel.TextScaled = true; TextLabel.ZIndex = 999999
-    task.wait(3.5)
-    Player:Kick("\n\n[ Humanx1 System ]\n"..KickTextInp.Text.."\n")
-    ScreenGuiK:Destroy()
-end
-
--- [[ UI SYSTEM ]]
-local MainGui = Instance.new("ScreenGui", game.CoreGui)
-MainGui.Name = "ScriptWordTH_Extreme"
-
-local AdminPanel = Instance.new("Frame", MainGui)
-AdminPanel.Size = UDim2.new(0, 260, 0, 320); AdminPanel.Position = UDim2.new(0.5, -130, 0.5, -160)
-AdminPanel.BackgroundColor3 = Color3.fromRGB(15, 5, 5); AdminPanel.BackgroundTransparency = 0.1; AdminPanel.Visible = false
-ApplyNeonEffect(AdminPanel, Color3.fromRGB(255, 0, 0)); MakeDraggable(AdminPanel); AddBackgroundEffect(AdminPanel)
-
-local AdminTitle = Instance.new("TextLabel", AdminPanel)
-AdminTitle.Size = UDim2.new(1, 0, 0, 35); AdminTitle.Text = "Commands Script Word [TH]"
-AdminTitle.TextColor3 = Color3.fromRGB(255, 50, 50); AdminTitle.BackgroundTransparency = 1
-AdminTitle.Font = Enum.Font.FredokaOne; AdminTitle.TextSize = 14
-
-local HelpList = Instance.new("TextLabel", AdminPanel)
-HelpList.Size = UDim2.new(0.9, 0, 0, 60); HelpList.Position = UDim2.new(0.05, 0, 0.12, 0)
-HelpList.BackgroundTransparency = 1; HelpList.TextColor3 = Color3.fromRGB(200, 200, 200)
-HelpList.Text = "!kill [name] | !kick [name] | !tp [name]\n!freeze [name] | !unfreeze [name]\n!givevip [name] | !killall | !kickall"
-HelpList.Font = Enum.Font.SourceSansBold; HelpList.TextSize = 12
-
-KickTextInp = Instance.new("TextBox", AdminPanel)
-KickTextInp.Size = UDim2.new(0.9, 0, 0, 32); KickTextInp.Position = UDim2.new(0.05, 0, 0.35, 0)
-KickTextInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickTextInp.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", KickTextInp); KickTextInp.Text = "โดนกูเตะไงไอ้ควาย"
-
-KickSoundInp = Instance.new("TextBox", AdminPanel)
-KickSoundInp.Size = UDim2.new(0.9, 0, 0, 32); KickSoundInp.Position = UDim2.new(0.05, 0, 0.50, 0)
-KickSoundInp.BackgroundColor3 = Color3.fromRGB(25, 25, 25); KickSoundInp.TextColor3 = Color3.new(1,1,1)
-Instance.new("UICorner", KickSoundInp); KickSoundInp.Text = "rbxassetid://137337370812885"
-
-local CmdBar = Instance.new("TextBox", AdminPanel)
-CmdBar.Size = UDim2.new(0.9, 0, 0, 40); CmdBar.Position = UDim2.new(0.05, 0, 0.82, 0)
-CmdBar.BackgroundColor3 = Color3.fromRGB(10, 30, 10); CmdBar.TextColor3 = Color3.fromRGB(0, 255, 120)
-CmdBar.PlaceholderText = "> ENTER COMMAND..."; Instance.new("UICorner", CmdBar)
-
-local Board = Instance.new("Frame", MainGui)
-Board.Size = UDim2.new(0, 210, 0, 260); Board.Position = UDim2.new(0.85, 0, 0.3, 0)
-Board.BackgroundColor3 = Color3.fromRGB(10, 10, 10); Board.BackgroundTransparency = 0.15
-ApplyNeonEffect(Board, Color3.fromRGB(255, 215, 0)); MakeDraggable(Board); AddBackgroundEffect(Board)
-
-local BoardTitle = Instance.new("TextLabel", Board)
-BoardTitle.Size = UDim2.new(1, 0, 0, 40); BoardTitle.Text = "Script Word [TH]"
-BoardTitle.TextColor3 = Color3.fromRGB(255, 215, 0); BoardTitle.BackgroundTransparency = 1
-BoardTitle.Font = Enum.Font.FredokaOne; BoardTitle.TextSize = 15
-
-local Scroll = Instance.new("ScrollingFrame", Board)
-Scroll.Size = UDim2.new(1, -10, 1, -55); Scroll.Position = UDim2.new(0, 5, 0, 45)
-Scroll.BackgroundTransparency = 1; Scroll.ScrollBarThickness = 2
-
-local function CreateBtn(txt, pos, color)
-    local b = Instance.new("TextButton", MainGui)
-    b.Size = UDim2.new(0, 48, 0, 48); b.Position = pos; b.Text = txt
-    b.BackgroundColor3 = color; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.FredokaOne
-    b.TextSize = 20; Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
-    local bs = Instance.new("UIStroke", b); bs.Thickness = 2; bs.Color = Color3.new(1,1,1)
-    b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 55, 0, 55), BackgroundColor3 = Color3.new(1,1,1), TextColor3 = color}):Play() end)
-    b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.3), {Size = UDim2.new(0, 48, 0, 48), BackgroundColor3 = color, TextColor3 = Color3.new(1,1,1)}):Play() end)
-    b.MouseButton1Click:Connect(function() PlayUISound(452267918) end)
-    MakeDraggable(b); return b
-end
-
-local MinBoardBtn = CreateBtn("📜", UDim2.new(0.85, -50, 0.3, 0), Color3.fromRGB(0, 120, 255))
-MinBoardBtn.MouseButton1Click:Connect(function() Board.Visible = not Board.Visible end)
-local MinAdminBtn = CreateBtn("🛡", UDim2.new(0.5, -180, 0.5, -125), Color3.fromRGB(255, 0, 0))
-MinAdminBtn.Visible = (ADMIN_COMMANDER[Player.Name] ~= nil)
-MinAdminBtn.MouseButton1Click:Connect(function() AdminPanel.Visible = not AdminPanel.Visible end)
-
-local function UpdateBoard()
-    for _, v in pairs(Scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
-    Instance.new("UIListLayout", Scroll).Padding = UDim.new(0, 4)
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if ACTIVE_USERS[p.Name] or _G.VIP_LIST[p.Name] or ADMIN_COMMANDER[p.Name] or GIFTED_LIST[p.Name] or HAS_COMMAND_POWER[p.Name] then
-            local tag, color = "[ACTIVE]", Color3.fromRGB(100, 255, 100)
-            if ADMIN_COMMANDER[p.Name] then tag, color = "[CREATOR]", Color3.fromRGB(255,50,50)
-            elseif _G.VIP_LIST[p.Name] then tag, color = "[VIP]", Color3.fromRGB(255,215,0)
-            elseif HAS_COMMAND_POWER[p.Name] then tag, color = "[CMD]", Color3.fromRGB(255,0,255)
-            elseif GIFTED_LIST[p.Name] then tag, color = "[GFT]", Color3.fromRGB(0,255,255) end
-            local l = Instance.new("TextLabel", Scroll)
-            l.Size = UDim2.new(1, -5, 0, 22); l.Text = " " .. tag .. " " .. p.Name
-            l.TextColor3 = color; l.BackgroundTransparency = 1; l.Font = Enum.Font.FredokaOne; l.TextSize = 12
-            l.TextXAlignment = Enum.TextXAlignment.Left
-        end
+for _, v in pairs(AllowedUsers) do
+    if PlayerName == v then
+        isAllowed = true
+        break
     end
 end
 
-task.spawn(function() while task.wait(3) do UpdateBoard() end end)
-
-local function ListenChat(speaker, msg)
-    if msg == "[ScriptWord_Ping]" then
-        ACTIVE_USERS[speaker.Name] = true
-        UpdateBoard()
-        return
-    end
-
-    local args = msg:split(" ")
-    local cmd = args[1]:lower()
-    local function findTarget(name)
-        for _,p in pairs(game.Players:GetPlayers()) do if p.Name:lower():sub(1,#name)==name:lower() then return p end end
-        return nil
-    end
-    local target = args[2] and findTarget(args[2])
-
-    local hasAnyPower = ADMIN_COMMANDER[speaker.Name] or _G.VIP_LIST[speaker.Name] or HAS_COMMAND_POWER[speaker.Name]
-
-    if hasAnyPower then
-        if speaker ~= Player then PlayUISound(203785501) end
-        
-        if cmd == "!givevip" and target == Player then
-            GIFTED_LIST[Player.Name] = speaker.Name 
-            UpdateBoard()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/GluePieceVip"))()
-        end
-        
-        if ADMIN_COMMANDER[speaker.Name] and cmd == "!cmd" and target == Player then
-            HAS_COMMAND_POWER[Player.Name] = true
-            AdminPanel.Visible = true; MinAdminBtn.Visible = true
-            UpdateBoard()
-        end
-
-        if target == Player then
-            local isMyGiver = (GIFTED_LIST[Player.Name] == speaker.Name)
-            
-            if ADMIN_COMMANDER[speaker.Name] or isMyGiver then
-                if cmd == "!kick" then CustomKick()
-                elseif cmd == "!kill" then if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-                elseif cmd == "!tp" then Player.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame
-                elseif cmd == "!freeze" then Player.Character.HumanoidRootPart.Anchored = true
-                elseif cmd == "!unfreeze" then Player.Character.HumanoidRootPart.Anchored = false end
-            end
-        end
-
-        if ADMIN_COMMANDER[speaker.Name] then
-            if cmd == "!killall" then 
-                if Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.Health = 0 end
-            elseif cmd == "!kickall" then 
-                CustomKick() 
-            end
-        end
-    end
+if not isAllowed then 
+    return 
 end
 
-task.spawn(function()
-    task.wait(2)
-    local chatEvent = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
-    if chatEvent then chatEvent.SayMessageRequest:FireServer("[ScriptWord_Ping]", "All") end
+-- [ Original Script Starts Here ]
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+local window = DrRayLibrary:Load("v0.0.0.3", "Default")
+
+-- [ Services ]
+local Player = game:GetService("Players").LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+-- [ Anti-AFK ]
+Player.Idled:Connect(function()
+    game:GetService("VirtualUser"):CaptureController()
+    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
 end)
 
-CmdBar.FocusLost:Connect(function(e) if e then PlayUISound(452267918); ListenChat(Player, CmdBar.Text); CmdBar.Text = "" end end)
-game.Players.PlayerAdded:Connect(function(p) p.Chatted:Connect(function(m) ListenChat(p,m) end); UpdateBoard() end)
-for _,p in pairs(game.Players:GetPlayers()) do p.Chatted:Connect(function(m) ListenChat(p,m) end) end
-game.Players.PlayerRemoving:Connect(function(p) ACTIVE_USERS[p.Name] = nil; UpdateBoard() end)
+-- [ Global Config ]
+local Config = {
+    SlimeGroupHunter = false, 
+    NoobyHunter = false,      
+    NoobGroupHunter = false,  
+    ThugHunter = false,
+    EvilThugHunter = false, 
+    DuckHunter = false, 
+    SwordMasterHunter = false, 
+    CutieBossHunter = false,
+    ShinoaHunter = false, 
+    CharaHunter = false, 
+    EvilThugHunter = false, 
+    UnknownBossHunter = false,
+    SansHunter = false,
+    KyoHunter = false,
+    AutoLightSword = false,
+    LightSwordPos = CFrame.new(554.939148, -29.1302795, -630.229553),
+    BringChara = false,
+    CharaPoint = CFrame.new(-29.4552612, -6.01364279, -2148.53149),
+    AutoWarpToBoss = false,
+    AutoRandom = false, 
+    FastAttack = false, 
+    AutoEquip = false, 
+    ToolName = "", 
+    AttackRange = 100,
+    AutoFruit = false, AutoMelee = false, AutoDefense = false, AutoStrength = false,
+    TargetHeight = 6 -- ปรับความสูงเป็น 6 ตามที่สั่ง
+}
 
-if _G.VIP_LIST[MyName] or ADMIN_COMMANDER[MyName] then
-    if ADMIN_COMMANDER[MyName] then AdminPanel.Visible = true end
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/GluePieceVip"))()
-else
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/GluePieceVip"))()
+-- [ รายชื่อบอส ]
+local BossToCheck = {
+    ["Sans"] = "sans", ["Chara"] = "chara", ["Duck Boss"] = "duck boss",
+    ["Shinoa"] = "shinoa", ["Cutie Boss"] = "cutie boss",
+    ["Sword Master"] = "sword master", ["Unknown Boss"] = "unknown boss",
+    ["Kyo"] = "kyo"
+}
+local PriorityTarget = nil
+
+-- [ ระบบแจ้งเตือนบอส ]
+local function Notify(title, text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 5
+    })
 end
-UpdateBoard()
+
+Workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("Model") then
+        local nameLower = string.lower(obj.Name)
+        for displayName, internalName in pairs(BossToCheck) do
+            if nameLower == internalName then
+                task.wait(0.1)
+                if obj:FindFirstChildOfClass("Humanoid") then
+                    Notify("📢 แจ้งเตือนบอส!", displayName .. " เกิดแล้ว!")
+                end
+            end
+        end
+    end
+end)
+
+Workspace.DescendantRemoving:Connect(function(obj)
+    if obj:IsA("Model") then
+        local nameLower = string.lower(obj.Name)
+        for displayName, internalName in pairs(BossToCheck) do
+            if nameLower == internalName then
+                Notify("💀 บอสตายแล้ว!", displayName .. " ถูกกำจัดแล้ว!")
+            end
+        end
+    end
+end)
+
+-- [ Logic พื้นฐาน ]
+local function GetCharacter() return Player.Character or Player.CharacterAdded:Wait() end
+
+local function FindBoss(name)
+    local targetName = string.lower(name)
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and string.lower(obj.Name) == targetName then
+            local hrp = obj:FindFirstChild("HumanoidRootPart")
+            local hum = obj:FindFirstChildOfClass("Humanoid")
+            if hrp and hum and hum.Health > 0 then return obj, hrp, hum end
+        end
+    end
+    return nil
+end
+
+-- [ ระบบหาเป้าหมายบอส ]
+task.spawn(function()
+    while task.wait(0.1) do 
+        PriorityTarget = nil
+        if Config.AutoWarpToBoss then
+            for displayName, internalName in pairs(BossToCheck) do
+                local cfgName = displayName:gsub(" ", "") .. "Hunter"
+                if Config[cfgName] then
+                    local b, bh, hm = FindBoss(internalName)
+                    if b then PriorityTarget = {b, bh} break end
+                end
+            end
+        end
+    end
+end)
+
+local function DoFastAttack()
+    pcall(function()
+        local Char = GetCharacter()
+        local CombatRemote = Char:FindFirstChild("Combat_Event", true) or Player.Backpack:FindFirstChild("Combat_Event", true)
+        local WeaponRemote = Char:FindFirstChild("Weapon_Event", true) or Player.Backpack:FindFirstChild("Weapon_Event", true)
+        local HitboxModule = require(RS:WaitForChild("Module"):WaitForChild("Hitbox"))
+        if (CombatRemote or WeaponRemote) and Char:FindFirstChild("HumanoidRootPart") then
+            local Range = Config.AttackRange
+            local Targets = HitboxModule:Overlap({MaxTarget = 100, Humanoid = Char.Humanoid, CF = Char.HumanoidRootPart.CFrame, Size = Vector3.new(Range, Range, Range)})
+            if #Targets > 0 then
+                for i = 1, 10 do 
+                    if CombatRemote then CombatRemote:FireServer("Attack", Targets) end
+                    if WeaponRemote then WeaponRemote:FireServer("Slash", Targets) end
+                end
+            end
+        end
+    end)
+end
+
+-- [ UI Setup ]
+local tabMain = DrRayLibrary.newTab("ฟาร์มอัตโนมัติ", "rbxassetid://4483345998")
+local tabBoss = DrRayLibrary.newTab("ล่าบอส", "rbxassetid://4483345998")
+local tabCombat = DrRayLibrary.newTab("ต่อสู้", "rbxassetid://4483345998")
+local tabStats = DrRayLibrary.newTab("สเตตัส", "rbxassetid://4483345998")
+local tabMisc = DrRayLibrary.newTab("อื่นๆ", "rbxassetid://4483345998")
+
+tabMain.newToggle("ฟาร์ม Slime", "Slime & King Slime", false, function(s) Config.SlimeGroupHunter = s end)
+tabMain.newToggle("ฟาร์ม Nooby", "Nooby & Cutie Noob", false, function(s) Config.NoobyHunter = s end)
+tabMain.newToggle("ฟาร์ม Noob", "Elite & King Noob", false, function(s) Config.NoobGroupHunter = s end)
+tabMain.newToggle("ฟาร์ม Thug", "Thug ปกติ", false, function(s) Config.ThugHunter = s end)
+tabMain.newToggle("ฟาร์ม Evil Thug", "Evil Thug", false, function(s) Config.EvilThugHunter = s end)
+
+tabBoss.newToggle("เปิดระบบวาร์ปหาบอส", "ไปหาบอสทันทีที่เกิด", false, function(s) Config.AutoWarpToBoss = s end)
+tabBoss.newLabel("--- เลือกบอสที่ต้องการ ---")
+tabBoss.newToggle("ล่า Kyo", "", false, function(s) Config.KyoHunter = s end)
+tabBoss.newToggle("ล่า Sans", "", false, function(s) Config.SansHunter = s end)
+tabBoss.newToggle("ล่า Chara", "", false, function(s) Config.CharaHunter = s end)
+tabBoss.newToggle("ล่า Shinoa", "", false, function(s) Config.ShinoaHunter = s end)
+tabBoss.newToggle("ล่า Unknown Boss", "", false, function(s) Config.UnknownBossHunter = s end)
+tabBoss.newToggle("ล่า Duck Boss", "", false, function(s) Config.DuckHunter = s end)
+tabBoss.newToggle("ล่า Sword Master", "", false, function(s) Config.SwordMasterHunter = s end)
+tabBoss.newToggle("ล่า Cutie Boss", "", false, function(s) Config.CutieBossHunter = s end)
+
+tabCombat.newToggle("ถืออาวุธอัตโนมัติ", "บังคับถือของในรายการ", false, function(s) Config.AutoEquip = s end)
+local ToolList = {"Cursed Scythe", "Epic Sword", "Youru", "True Yorou", "Elucidator", "Dual Sword", "Real Knife", "True Knife", "Saber", "Bisento", "Amethyst Scythe", "Lighting Sword", "Limitless", "Black leg", "OFA [Deku]", "Combat"}
+tabCombat.newDropdown("เลือกอาวุธ", "เลือกของที่ต้องการถือ", ToolList, function(selected) Config.ToolName = selected end)
+tabCombat.newToggle("โจมตีรวดเร็ว (Fast Attack)", "", false, function(s) Config.FastAttack = s end)
+tabCombat.newSlider("ระยะโจมตี", "", 3000, false, function(num) Config.AttackRange = num end)
+
+tabStats.newButton("รีเซ็ตสเตตัส (เงิน)", "", function() RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Reset","Stats","Money") end)
+tabStats.newToggle("อัพผลปีศาจ", "", false, function(s) Config.AutoFruit = s end)
+tabStats.newToggle("อัพหมัด", "", false, function(s) Config.AutoMelee = s end)
+tabStats.newToggle("อัพป้องกัน", "", false, function(s) Config.AutoDefense = s end)
+tabStats.newToggle("อัพดาบ/กำลัง", "", false, function(s) Config.AutoStrength = s end)
+
+tabMisc.newToggle("ทำดาบแสงอัตโนมัติ", "", false, function(s) Config.AutoLightSword = s end)
+tabMisc.newToggle("ดูด Chara", "", false, function(s) Config.BringChara = s end)
+tabMisc.newToggle("สุ่มผลไม้อัตโนมัติ", "", false, function(s) Config.AutoRandom = s end)
+
+-- [ Loop หลัก ]
+task.spawn(function()
+    while true do
+        RunService.Heartbeat:Wait()
+        
+        -- Logic ดูด Chara
+        if Config.BringChara then
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("Model") and string.lower(obj.Name) == "chara" then
+                    local hum = obj:FindFirstChildOfClass("Humanoid")
+                    local hrp = obj:FindFirstChild("HumanoidRootPart")
+                    if hum and hum.Health > 0 and hrp then
+                        obj:PivotTo(Config.CharaPoint)
+                        hrp.Velocity = Vector3.new(0,0,0)
+                    end
+                end
+            end
+        end
+
+        pcall(function()
+            local Char = GetCharacter()
+            local Hrp = Char.HumanoidRootPart
+            local Hum = Char.Humanoid
+            
+            -- บอส
+            local currentBossHrp = nil
+            if PriorityTarget then
+                local targetHrp = PriorityTarget[2]
+                local targetHum = PriorityTarget[1]:FindFirstChildOfClass("Humanoid")
+                if targetHum and targetHum.Health > 0 then currentBossHrp = targetHrp end
+            end
+
+            -- มอส
+            local targetObj, targetHrp, targetHum = nil, nil, nil
+            if not currentBossHrp then
+                if Config.KyoHunter then targetObj, targetHrp, targetHum = FindBoss("kyo")
+                elseif Config.SlimeGroupHunter then
+                    local b, bh, hm = FindBoss("slime")
+                    if not b then b, bh, hm = FindBoss("king slime") end
+                    targetObj, targetHrp, targetHum = b, bh, hm
+                elseif Config.NoobyHunter then
+                    local b, bh, hm = FindBoss("nooby")
+                    if not b then b, bh, hm = FindBoss("cutie noob") end
+                    targetObj, targetHrp, targetHum = b, bh, hm
+                elseif Config.NoobGroupHunter then
+                    local b, bh, hm = FindBoss("elite noob")
+                    if not b then b, bh, hm = FindBoss("king noob") end
+                    targetObj, targetHrp, targetHum = b, bh, hm
+                elseif Config.ThugHunter then targetObj, targetHrp, targetHum = FindBoss("thug")
+                elseif Config.EvilThugHunter then targetObj, targetHrp, targetHum = FindBoss("evil thug")
+                elseif Config.CutieBossHunter then targetObj, targetHrp, targetHum = FindBoss("cutie boss")
+                elseif Config.SansHunter then targetObj, targetHrp, targetHum = FindBoss("sans")
+                elseif Config.CharaHunter then targetObj, targetHrp, targetHum = FindBoss("chara")
+                elseif Config.UnknownBossHunter then targetObj, targetHrp, targetHum = FindBoss("unknown boss")
+                elseif Config.DuckHunter then targetObj, targetHrp, targetHum = FindBoss("duck boss")
+                elseif Config.SwordMasterHunter then targetObj, targetHrp, targetHum = FindBoss("sword master")
+                elseif Config.ShinoaHunter then targetObj, targetHrp, targetHum = FindBoss("shinoa")
+                end
+            end
+
+            -- Action (ปรับความสูงเป็น +6)
+            if currentBossHrp then
+                Hum.PlatformStand = true
+                Hrp.CFrame = CFrame.new(currentBossHrp.Position + Vector3.new(0, Config.TargetHeight, 0), currentBossHrp.Position)
+                Hrp.Velocity = Vector3.new(0,0,0)
+                if Config.FastAttack then DoFastAttack() end
+            elseif targetHrp and targetHum and targetHum.Health > 0 then
+                Hum.PlatformStand = true
+                Hrp.CFrame = CFrame.new(targetHrp.Position + Vector3.new(0, Config.TargetHeight, 0), targetHrp.Position)
+                Hrp.Velocity = Vector3.new(0,0,0)
+                if Config.FastAttack then DoFastAttack() end
+            else
+                Hum.PlatformStand = false
+                if Config.AutoLightSword then
+                    Hrp.CFrame = Config.LightSwordPos
+                    Hrp.Velocity = Vector3.new(0,0,0)
+                elseif Config.BringChara then
+                    Hrp.CFrame = Config.CharaPoint * CFrame.new(0, Config.TargetHeight, 0)
+                    Hrp.Velocity = Vector3.new(0,0,0)
+                    if Config.FastAttack then DoFastAttack() end
+                end
+            end
+        end)
+    end
+end)
+
+-- [ ปรับปรุงระบบ Auto Equip ให้เสถียรขึ้น ]
+task.spawn(function()
+    while task.wait(0.3) do
+        if Config.AutoEquip and Config.ToolName ~= "" then
+            pcall(function()
+                local Char = GetCharacter()
+                local Backpack = Player.Backpack
+                local CurrentTool = Char:FindFirstChildOfClass("Tool")
+                
+                -- ถ้าไม่ได้ถือของ หรือของที่ถือไม่ใช่ตัวที่เลือก
+                if not CurrentTool or CurrentTool.Name ~= Config.ToolName then
+                    local TargetTool = Backpack:FindFirstChild(Config.ToolName)
+                    if TargetTool then
+                        Char.Humanoid:UnequipTools() -- วางของเก่า
+                        task.wait(0.1)
+                        Char.Humanoid:EquipTool(TargetTool) -- ถือของใหม่
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Stats Loop
+task.spawn(function()
+    while task.wait(0.3) do
+        if Config.AutoRandom then RS.Remote.RemoteEvent.Shop_Event:FireServer("Shop","Random Fruity","Money") end
+        if Config.AutoFruit then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","DevilFruit","1") end
+        if Config.AutoMelee then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","Melee","1") end
+        if Config.AutoDefense then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","Defense","1") end
+        if Config.AutoStrength then RS.Remote.RemoteEvent.UI_Event:FireServer("Add Stats","Strength","1") end
+    end
+end)
