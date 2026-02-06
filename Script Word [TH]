@@ -1,1 +1,329 @@
+-- Horror Boss Executor V2.6 (Sidebar & Clicker Items Update)
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local ScrollFrame = Instance.new("ScrollingFrame")
+local Editor = Instance.new("TextBox")
+local Btns = Instance.new("Frame")
+local UIList = Instance.new("UIListLayout")
+local Title = Instance.new("TextLabel")
 
+-- Profile & Quick Buttons
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local CharFrame = Instance.new("Frame")
+local CharImage = Instance.new("ImageLabel")
+local CharName = Instance.new("TextLabel")
+local QuickFrame = Instance.new("Frame")
+local QuickLayout = Instance.new("UIListLayout")
+
+-- [ ส่วนที่เพิ่มใหม่: Script Word [TH] ]
+local ScriptWord = Instance.new("TextLabel")
+
+-- [ ส่วนของระบบย่อหน้าต่างและเมนู ]
+local MiniButton = Instance.new("TextButton") -- ปุ่ม -
+local MenuButton = Instance.new("TextButton") -- ปุ่ม ≡
+local MenuLeftButton = Instance.new("TextButton") -- ปุ่ม = (ที่เพิ่มใหม่ด้านซ้าย)
+local S_Button = Instance.new("TextButton") -- [เพิ่ม] ปุ่ม S
+local Sidebar = Instance.new("Frame")
+local SidebarLeft = Instance.new("Frame") -- แถบสี่เหลี่ยมด้านซ้าย
+local TopBar = Instance.new("Frame") -- [เพิ่ม] แถบยาวด้านบน
+local SideLayout = Instance.new("UIListLayout")
+local OpenCircle = Instance.new("ImageButton") -- ปุ่มวงกลมตอนย่อ
+local OpenCorner = Instance.new("UICorner")
+
+-- Setup Main Window
+ScreenGui.Parent = game.CoreGui
+Main.Name = "HorrorExecutorV2_Final"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0.5, -240, 0.5, -110)
+Main.Size = UDim2.new(0, 480, 0, 220)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 6)
+UICorner.Parent = Main
+
+-- [[ ปุ่มสองขีด (=) ด้านซ้ายบนตามที่วงในรูป ]]
+MenuLeftButton.Parent = Main
+MenuLeftButton.Size = UDim2.new(0, 30, 0, 30)
+MenuLeftButton.Position = UDim2.new(0, 5, 0, 0) -- ชิดซ้ายบน
+MenuLeftButton.BackgroundTransparency = 1
+MenuLeftButton.Text = "="
+MenuLeftButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MenuLeftButton.TextSize = 25
+MenuLeftButton.Font = Enum.Font.SpecialElite
+
+-- [[ ปุ่ม S เพิ่มข้างๆ สองขีด ]]
+S_Button.Parent = Main
+S_Button.Size = UDim2.new(0, 30, 0, 30)
+S_Button.Position = UDim2.new(0, 35, 0, 0)
+S_Button.BackgroundTransparency = 1
+S_Button.Text = "S"
+S_Button.TextColor3 = Color3.fromRGB(255, 0, 0)
+S_Button.TextSize = 22
+S_Button.Font = Enum.Font.SpecialElite
+
+-- [[ แถบสี่เหลี่ยมด้านซ้าย ]]
+SidebarLeft.Parent = Main
+SidebarLeft.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+SidebarLeft.Position = UDim2.new(0, -125, 0, 0)
+SidebarLeft.Size = UDim2.new(0, 120, 1, 0)
+SidebarLeft.Visible = false 
+Instance.new("UICorner", SidebarLeft).CornerRadius = UDim.new(0, 6)
+
+local LeftLayout = Instance.new("UIListLayout")
+LeftLayout.Parent = SidebarLeft
+LeftLayout.Padding = UDim.new(0, 5)
+LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- [[ แถบยาวด้านบน ]]
+TopBar.Parent = Main
+TopBar.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+TopBar.Position = UDim2.new(0, 0, 0, -45)
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.Visible = false
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 6)
+
+-- เพิ่ม Layout ให้แถบด้านบน (แนวนอน)
+local TopLayout = Instance.new("UIListLayout")
+TopLayout.Parent = TopBar
+TopLayout.FillDirection = Enum.FillDirection.Horizontal
+TopLayout.Padding = UDim.new(0, 10)
+TopLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+TopLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- Script Word [TH] (ตำแหน่งซ้ายล่างหน้าปก)
+ScriptWord.Name = "ScriptWordTag"
+ScriptWord.Parent = Main
+ScriptWord.Size = UDim2.new(0, 100, 0, 20)
+ScriptWord.Position = UDim2.new(0.02, 0, 0.9, 0) 
+ScriptWord.BackgroundTransparency = 1
+ScriptWord.Text = "Script Word [TH]"
+ScriptWord.TextColor3 = Color3.fromRGB(150, 0, 0) 
+ScriptWord.TextSize = 10
+ScriptWord.Font = Enum.Font.SpecialElite
+ScriptWord.TextXAlignment = Enum.TextXAlignment.Left
+
+-- ปุ่มย่อหน้าต่าง (-) ให้อยู่ด้านหน้าสามขีด
+MiniButton.Parent = Main
+MiniButton.Size = UDim2.new(0, 30, 0, 30)
+MiniButton.Position = UDim2.new(1, -65, 0, 0) 
+MiniButton.BackgroundTransparency = 1
+MiniButton.Text = "-"
+MiniButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniButton.TextSize = 25
+MiniButton.Font = Enum.Font.SpecialElite
+
+-- ปุ่มสามขีด (≡)
+MenuButton.Parent = Main
+MenuButton.Size = UDim2.new(0, 30, 0, 30)
+MenuButton.Position = UDim2.new(1, -35, 0, 0)
+MenuButton.BackgroundTransparency = 1
+MenuButton.Text = "≡"
+MenuButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MenuButton.TextSize = 25
+MenuButton.Font = Enum.Font.SpecialElite
+
+-- Sidebar (แถบข้าง)
+Sidebar.Parent = Main
+Sidebar.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Sidebar.Position = UDim2.new(1, 5, 0, 0)
+Sidebar.Size = UDim2.new(0, 120, 1, 0)
+Sidebar.Visible = false 
+local SideCorner = Instance.new("UICorner", Sidebar)
+SideCorner.CornerRadius = UDim.new(0, 6)
+
+SideLayout.Parent = Sidebar
+SideLayout.Padding = UDim.new(0, 5)
+SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- Circle Button (ปุ่มวงกลมตอนย่อ)
+OpenCircle.Parent = ScreenGui
+OpenCircle.Name = "MiniCircle"
+OpenCircle.Size = UDim2.new(0, 60, 0, 60)
+OpenCircle.Position = UDim2.new(0.05, 0, 0.5, -30)
+OpenCircle.Visible = false
+OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+OpenCircle.Image = "rbxassetid://14579989646" 
+OpenCircle.Active = true
+OpenCircle.Draggable = true
+
+OpenCorner.CornerRadius = UDim.new(1, 0)
+OpenCorner.Parent = OpenCircle
+
+-- Title
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundTransparency = 1
+Title.Text = "EXECUTIONER SYSTEM"
+Title.TextColor3 = Color3.fromRGB(200, 0, 0)
+Title.TextSize = 16
+Title.Font = Enum.Font.SpecialElite
+
+-- Profile Left Side
+CharFrame.Parent = Main
+CharFrame.BackgroundTransparency = 1
+CharFrame.Position = UDim2.new(0.02, 0, 0.15, 0)
+CharFrame.Size = UDim2.new(0, 100, 0, 140)
+
+CharImage.Parent = CharFrame
+CharImage.BackgroundTransparency = 1
+CharImage.Size = UDim2.new(1, 0, 0.8, 0)
+CharImage.Image = Players:GetUserThumbnailAsync(lp.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+CharImage.ScaleType = Enum.ScaleType.Fit
+
+CharName.Parent = CharFrame
+CharName.Size = UDim2.new(1, 0, 0.2, 0)
+CharName.Position = UDim2.new(0, 0, 0.8, 5)
+CharName.BackgroundTransparency = 1
+CharName.Text = lp.DisplayName
+CharName.TextColor3 = Color3.fromRGB(255, 0, 0)
+CharName.Font = Enum.Font.SpecialElite
+CharName.TextSize = 10
+
+-- Editor Area
+ScrollFrame.Parent = Main
+ScrollFrame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+ScrollFrame.BorderSizePixel = 1
+ScrollFrame.BorderColor3 = Color3.fromRGB(100, 0, 0)
+ScrollFrame.Position = UDim2.new(0.25, 0, 0.15, 0)
+ScrollFrame.Size = UDim2.new(0, 260, 0, 140)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 5, 0)
+ScrollFrame.ScrollBarThickness = 4
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+
+Editor.Parent = ScrollFrame
+Editor.BackgroundTransparency = 1
+Editor.Size = UDim2.new(1, -10, 1, 0)
+Editor.Position = UDim2.new(0, 5, 0, 0)
+Editor.Text = "-- Paste your dark scripts here"
+Editor.TextColor3 = Color3.fromRGB(255, 50, 50)
+Editor.TextSize = 13
+Editor.Font = Enum.Font.Code
+Editor.MultiLine = true
+Editor.ClearTextOnFocus = false
+Editor.TextXAlignment = Enum.TextXAlignment.Left
+Editor.TextYAlignment = Enum.TextYAlignment.Top
+
+-- Quick Script Section (Right Side)
+QuickFrame.Parent = Main
+QuickFrame.BackgroundTransparency = 1
+QuickFrame.Position = UDim2.new(0.81, 0, 0.15, 0)
+QuickFrame.Size = UDim2.new(0, 80, 0, 140)
+
+QuickLayout.Parent = QuickFrame
+QuickLayout.Padding = UDim.new(0, 8)
+
+local function createQuickBtn(txt, parent)
+    local b = Instance.new("TextButton")
+    b.Parent = parent or QuickFrame
+    b.Size = UDim2.new(0.9, 0, 0, 35)
+    b.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    b.BorderColor3 = Color3.fromRGB(255, 0, 0)
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 10
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    return b
+end
+
+local R6Btn = createQuickBtn("R6 BOSS")
+
+-- [[ ย้ายปุ่ม City [TH] และ GluePiece มาไว้ที่ TopBar ]]
+local CityBtn = createQuickBtn("City [TH]", TopBar)
+local GlueBtn = createQuickBtn("GluePiece", TopBar)
+CityBtn.Size = UDim2.new(0, 100, 0, 30) -- ปรับขนาดให้เหมาะกับแถบบน
+GlueBtn.Size = UDim2.new(0, 100, 0, 30)
+
+-- ปุ่มอื่นๆ ในแถบที่เหลือ
+local ClickerBtn = createQuickBtn("Clicker Items", Sidebar)
+local NameCityBtn = createQuickBtn("Namecity", SidebarLeft)
+
+-- Main Buttons Bottom
+Btns.Parent = Main
+Btns.BackgroundTransparency = 1
+Btns.Position = UDim2.new(0.25, 0, 0.82, 0)
+Btns.Size = UDim2.new(0, 260, 0, 30)
+
+UIList.Parent = Btns
+UIList.FillDirection = Enum.FillDirection.Horizontal
+UIList.Padding = UDim.new(0, 8)
+
+local function createBtn(txt, color)
+    local b = Instance.new("TextButton")
+    b.Parent = Btns
+    b.Size = UDim2.new(0, 81, 1, 0)
+    b.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    b.BorderColor3 = color
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.Code
+    b.TextSize = 11
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    return b
+end
+
+local run = createBtn("EXECUTE", Color3.fromRGB(255, 0, 0))
+local clr = createBtn("PURGE", Color3.fromRGB(150, 0, 0))
+local cpy = createBtn("DRAIN", Color3.fromRGB(150, 0, 0))
+
+-- [[ Logic Section ]]
+
+-- 1. Sidebar Toggle 
+MenuButton.MouseButton1Click:Connect(function()
+    Sidebar.Visible = not Sidebar.Visible
+end)
+
+MenuLeftButton.MouseButton1Click:Connect(function() 
+    SidebarLeft.Visible = not SidebarLeft.Visible
+end)
+
+-- ปุ่ม S เปิดแถบยาวบน
+S_Button.MouseButton1Click:Connect(function()
+    TopBar.Visible = not TopBar.Visible
+end)
+
+-- 2. Minimize/Open Logic
+MiniButton.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    Sidebar.Visible = false
+    SidebarLeft.Visible = false
+    TopBar.Visible = false
+    OpenCircle.Visible = true
+end)
+
+OpenCircle.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenCircle.Visible = false
+end)
+
+-- 3. Execution Logic
+clr.MouseButton1Click:Connect(function() Editor.Text = "" end)
+run.MouseButton1Click:Connect(function()
+    local s, e = pcall(function() loadstring(Editor.Text)() end)
+    if not s then warn("SYSTEM ERROR: " .. e) end
+end)
+
+R6Btn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/AdminScript"))()
+end)
+
+CityBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20Aura%20all"))()
+end)
+
+GlueBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Glue%20piece%20all"))()
+end)
+
+ClickerBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%81%E0%B8%94%E0%B8%A3%E0%B8%B0%E0%B8%A2%E0%B8%B0%E0%B9%84%E0%B8%81%E0%B8%A5"))()
+end)
+
+NameCityBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Namecity"))()
+end)
