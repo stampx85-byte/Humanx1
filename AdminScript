@@ -15,7 +15,7 @@ local TWEEN_TIME = 0.8
 local CAMERA_DISTANCE = 8 
 
 -- [เพิ่มระบบโหลด Data]
-local SOUND_1 = player:GetAttribute("SavedBossSound") or "101197590188807" -- ดึงค่าที่เซฟไว้ ถ้าไม่มีให้ใช้ค่าเริ่มต้น
+local SOUND_1 = player:GetAttribute("SavedBossSound") or "101197590188807" 
 
 local isAnimationPlaying = false
 local hasDiedBefore = false 
@@ -27,7 +27,7 @@ local isMusicEnabled = true
 local idleTrack, walkTrack
 local moveConnection 
 
--- === [ระบบเปลี่ยนชุด Bloxbiz - เปลี่ยนเฉพาะ ID ชุดใหม่] ===
+-- === [ระบบเปลี่ยนชุด Bloxbiz] ===
 local function applyBloxOutfit()
     local BloxRemote = game:GetService("ReplicatedStorage"):WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
     
@@ -73,7 +73,7 @@ local function applyBloxOutfit()
     BloxRemote:FireServer(outfitData)
 end
 
--- === UI Creation (Boss Style & Minimize System) ===
+-- === UI Creation (Boss Style & Draggable Minimize System) ===
 local function createAudioControlUI()
     local sg = Instance.new("ScreenGui", player.PlayerGui)
     sg.Name = "AudioSettingsUI"
@@ -92,25 +92,63 @@ local function createAudioControlUI()
     stroke.Color = Color3.fromRGB(255, 0, 0)
     stroke.Thickness = 2
 
-    -- Minimize Button
+    -- === [ปุ่มย่อแบบวงกลมที่ลากได้] ===
     local minBtn = Instance.new("TextButton", sg)
-    minBtn.Size = UDim2.new(0, 30, 0, 30)
-    minBtn.Position = UDim2.new(0, 15, 0.5, -95)
-    minBtn.Text = "X"
-    minBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    minBtn.TextColor3 = Color3.new(1, 1, 1)
-    minBtn.Font = Enum.Font.SpecialElite
-    Instance.new("UICorner", minBtn)
+    minBtn.Name = "DraggableMinBtn"
+    minBtn.Size = UDim2.new(0, 60, 0, 60)
+    minBtn.Position = UDim2.new(0, 15, 0.5, -130)
+    minBtn.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+    minBtn.Text = "" 
+    minBtn.AutoButtonColor = false
+    local btnCorner = Instance.new("UICorner", minBtn)
+    btnCorner.CornerRadius = UDim.new(1, 0)
+    local btnStroke = Instance.new("UIStroke", minBtn)
+    btnStroke.Color = Color3.fromRGB(255, 0, 0)
+    btnStroke.Thickness = 2
 
-    local isMinimized = false
-    minBtn.MouseButton1Click:Connect(function()
-        isMinimized = not isMinimized
-        mainFrame.Visible = not isMinimized
-        minBtn.Text = isMinimized and "+" or "X"
-        minBtn.BackgroundColor3 = isMinimized and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    local btnViewport = Instance.new("ViewportFrame", minBtn)
+    btnViewport.Size = UDim2.new(0.9, 0, 0.9, 0)
+    btnViewport.Position = UDim2.new(0.05, 0, 0.05, 0)
+    btnViewport.BackgroundTransparency = 1
+    Instance.new("UICorner", btnViewport).CornerRadius = UDim.new(1, 0)
+
+    local function updateBtnViewport()
+        btnViewport:ClearAllChildren()
+        local char = player.Character or player.CharacterAdded:Wait()
+        char.Archivable = true
+        local clone = char:Clone()
+        clone.Parent = btnViewport
+        local vCam = Instance.new("Camera")
+        vCam.CFrame = CFrame.new(clone.Head.Position + (clone.Head.CFrame.LookVector * 2.5), clone.Head.Position)
+        btnViewport.CurrentCamera = vCam
+        vCam.Parent = btnViewport
+    end
+    updateBtnViewport()
+    player.CharacterAdded:Connect(updateBtnViewport)
+
+    -- Drag Logic
+    local dragging, dragInput, dragStart, startPos
+    minBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true dragStart = input.Position startPos = minBtn.Position
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            minBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    minBtn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
     end)
 
-    -- Character Portrait (Viewport)
+    minBtn.MouseButton1Click:Connect(function()
+        mainFrame.Visible = not mainFrame.Visible
+        btnStroke.Color = mainFrame.Visible and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(0, 255, 0)
+    end)
+
+    -- Character Portrait (Main Frame)
     local portraitFrame = Instance.new("Frame", mainFrame)
     portraitFrame.Size = UDim2.new(0, 70, 0, 70)
     portraitFrame.Position = UDim2.new(0, 10, 0, 10)
@@ -176,9 +214,7 @@ local function createAudioControlUI()
 
     saveBtn.MouseButton1Click:Connect(function()
         SOUND_1 = idInput.Text
-        -- [เพิ่มส่วนการบันทึกลง Data]
         player:SetAttribute("SavedBossSound", SOUND_1) 
-        
         saveBtn.Text = "SAVED"
         task.wait(1)
         saveBtn.Text = "SAVE"
@@ -201,7 +237,6 @@ local function createAudioControlUI()
     end)
 end
 
--- เรียกใช้ UI
 createAudioControlUI()
 
 -- === Effect Functions ===
@@ -319,26 +354,20 @@ end
 
 -- === Hybrid Audio System ===
 local function handleAudioSequence(id, rootPart)
-    if not isMusicEnabled then return end -- เพิ่มเช็คสถานะเปิด/ปิดเสียง
-
-    -- 1. พยายามใช้ Remote ของแมพ (ถ้ามี)
+    if not isMusicEnabled then return end
     pcall(function()
         workspace.DRadio_Script.STOPEvent:FireServer()
         workspace.DRadio_Script.Event:FireServer(id)
         game:GetService("ReplicatedStorage").Search_Audio:InvokeServer(id)
         workspace.Boards.SettingsHandler.Retriever:InvokeServer("Authenticate")
     end)
-
-    -- 2. สร้างเสียงสำรองแบบ Local
     local localSound = Instance.new("Sound")
     localSound.Name = "BackupIntroSound"
     localSound.SoundId = "rbxassetid://" .. id
     localSound.Volume = 2
     localSound.Parent = rootPart
-    
     if not localSound.IsLoaded then localSound.Loaded:Wait() end
     localSound:Play()
-
     task.spawn(function()
         localSound.Ended:Wait()
         localSound:Destroy()
@@ -349,21 +378,16 @@ local function tweenCinematic(gui, top, bottom, state)
     local targetTop = state and UDim2.new(-0.1, 0, 0, 0) or UDim2.new(-0.1, 0, -0.2, 0)
     local targetBottom = state and UDim2.new(-0.1, 0, 0.85, 0) or UDim2.new(-0.1, 0, 1.1, 0)
     local targetFOV = state and ZOOM_FOV or NORMAL_FOV
-    
     local targetExposure = state and -2.5 or 0 
     local targetContrast = state and 0.5 or 0 
-    
     local info = TweenInfo.new(TWEEN_TIME, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
     TweenService:Create(top, info, {Position = targetTop}):Play()
     TweenService:Create(bottom, info, {Position = targetBottom}):Play()
     TweenService:Create(camera, info, {FieldOfView = targetFOV}):Play()
-    
     local cc = Lighting:FindFirstChild("BossEffect") or Instance.new("ColorCorrectionEffect", Lighting)
     cc.Name = "BossEffect"
-    
     TweenService:Create(Lighting, info, {ExposureCompensation = targetExposure}):Play()
     TweenService:Create(cc, info, {Contrast = targetContrast, Saturation = state and -0.4 or 0}):Play()
-    
     if not state then
         task.delay(TWEEN_TIME, function() 
             if gui and gui.Parent then gui:Destroy() end 
@@ -373,24 +397,19 @@ end
 
 local function setupMovementAnimations(humanoid, animator)
     if moveConnection then moveConnection:Disconnect() end
-    
     local idleAnim = Instance.new("Animation")
     idleAnim.AnimationId = IDLE_ID
     local walkAnim = Instance.new("Animation")
     walkAnim.AnimationId = WALK_ID
-    
     idleTrack = animator:LoadAnimation(idleAnim)
     walkTrack = animator:LoadAnimation(walkAnim)
-    
     moveConnection = RunService.RenderStepped:Connect(function()
         if not humanoid or humanoid.Health <= 0 then 
             if idleTrack then idleTrack:Stop() end
             if walkTrack then walkTrack:Stop() end
             return 
         end
-        
         if isAnimationPlaying then return end
-        
         if humanoid.MoveDirection.Magnitude == 0 then
             if not idleTrack.IsPlaying then
                 walkTrack:Stop()
@@ -407,47 +426,35 @@ end
 
 local function playSpawnAnimation(character)
     isAnimationPlaying = true
-    
-    -- [เรียกใช้งานเปลี่ยนชุดทันที]
     applyBloxOutfit()
-
     local humanoid = character:WaitForChild("Humanoid")
     local rootPart = character:WaitForChild("HumanoidRootPart")
     local head = character:WaitForChild("Head")
     local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
-
     for _, track in pairs(animator:GetPlayingAnimationTracks()) do
         track:Stop(0)
     end
-
     local animate = character:FindFirstChild("Animate")
     if animate then animate.Disabled = true end
-
     setupMovementAnimations(humanoid, animator)
     
-    -- === [ระบบเรืองแสงดวงตาสองข้าง] ===
     local eyeContainer = Instance.new("Model", character)
     eyeContainer.Name = "BossEyes"
-
     local function createGlowingEye(sideOffset)
         local att = Instance.new("Attachment", head)
         att.Position = sideOffset
-        
         local light = Instance.new("PointLight", att)
         light.Color = Color3.fromRGB(255, 0, 0)
         light.Brightness = 10
         light.Range = 4
-        
         local bg = Instance.new("BillboardGui", att)
         bg.Size = UDim2.new(1.8, 0, 1.8, 0)
         bg.AlwaysOnTop = true
-        
         local img = Instance.new("ImageLabel", bg)
         img.BackgroundTransparency = 1
         img.Size = UDim2.new(1, 0, 1, 0)
         img.Image = "rbxassetid://6020473016"
         img.ImageColor3 = Color3.fromRGB(255, 0, 0)
-        
         task.spawn(function()
             while isAnimationPlaying do
                 local tween = TweenService:Create(img, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {ImageTransparency = 0.4})
@@ -455,39 +462,30 @@ local function playSpawnAnimation(character)
                 break
             end
         end)
-        
         return att
     end
-
     local leftEye = createGlowingEye(Vector3.new(-0.25, 0.15, -0.55))
     local rightEye = createGlowingEye(Vector3.new(0.25, 0.15, -0.55))
 
     humanoid.WalkSpeed = 0
     rootPart.Anchored = true 
-
     local gui, top, bottom, textLabel = createCinematicUI()
     tweenCinematic(gui, top, bottom, true)
-    
     task.wait(0.5) 
-
     handleAudioSequence(SOUND_1, rootPart)
     createSmokeEffect(rootPart)
-
     local message = hasDiedBefore and "ความตาย... ไม่ใช่จุดจบของข้า!" or "เจ้าคิดว่าจะหนีพ้นความมืดได้งั้นหรอ?"
     task.spawn(function()
         task.wait(TWEEN_TIME) 
         typeWrite(textLabel, message)
     end)
-
     local spawnAnim = Instance.new("Animation")
     spawnAnim.AnimationId = SPAWN_ANIM_ID
     local spawnTrack = animator:LoadAnimation(spawnAnim)
     spawnTrack.Looped = false
     spawnTrack.Priority = Enum.AnimationPriority.Action
     spawnTrack:Play()
-
     camera.CameraType = Enum.CameraType.Scriptable
-    
     local updateConnection
     updateConnection = RunService.RenderStepped:Connect(function()
         if spawnTrack.IsPlaying and humanoid.Health > 0 then
@@ -497,14 +495,11 @@ local function playSpawnAnimation(character)
         else
             updateConnection:Disconnect()
             isAnimationPlaying = false 
-            
             if leftEye then leftEye:Destroy() end
             if rightEye then rightEye:Destroy() end
             if eyeContainer then eyeContainer:Destroy() end
-            
             camera.CameraType = Enum.CameraType.Custom
             tweenCinematic(gui, top, bottom, false)
-            
             if humanoid.Health > 0 then
                 humanoid.WalkSpeed = 16
                 humanoid.JumpHeight = 7.2
@@ -521,9 +516,13 @@ player.CharacterAdded:Connect(function(character)
     SOUND_1 = player:GetAttribute("SavedBossSound") or SOUND_1
     playSpawnAnimation(character) 
 end)
-
 player.CharacterRemoving:Connect(function()
     if moveConnection then moveConnection:Disconnect() end
     isAnimationPlaying = false
     pcall(function() workspace.DRadio_Script.STOPEvent:FireServer() end)
+end)
+
+-- [NEW] Skill Boss Script Loading
+pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Skills%20Boss"))()
 end)
