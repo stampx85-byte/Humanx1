@@ -35,9 +35,10 @@ local function applyBloxOutfit()
         ["WalkAnimation"] = 0,
         ["Accessories"] = {
             {["AssetId"] = 83457177673298, ["AccessoryType"] = Enum.AccessoryType.Face, ["IsLayered"] = false},
-            {["AssetId"] = 140396031107829, ["AccessoryType"] = Enum.AccessoryType.Hair, ["IsLayered"] = false},
+            {["AssetId"] = 15362311998, ["AccessoryType"] = Enum.AccessoryType.Hat, ["IsLayered"] = false},
+            {["AssetId"] = 85159737327910, ["AccessoryType"] = Enum.AccessoryType.Hat, ["IsLayered"] = false},
             {["AssetId"] = 129654807973329, ["AccessoryType"] = Enum.AccessoryType.Waist, ["IsLayered"] = false},
-            {["AssetId"] = 85159737327910, ["AccessoryType"] = Enum.AccessoryType.Hat, ["IsLayered"] = false}
+            {["AssetId"] = 87249776813246, ["AccessoryType"] = Enum.AccessoryType.Shoulder, ["IsLayered"] = false}
         },
         ["RightLegColor"] = Color3.fromRGB(0, 0, 0),
         ["MoodAnimation"] = 10647852134,
