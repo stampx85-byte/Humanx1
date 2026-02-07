@@ -23,7 +23,7 @@ end)
 setreadonly(mt, true)
 
 -- [[ VIP & ADMIN LIST ]]
-local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828"} 
+local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828","llukaku991"} 
 local isVIP = false
 for _, name in ipairs(allowedNames) do if plr.Name == name then isVIP = true break end end
 
