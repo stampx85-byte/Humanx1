@@ -1,5 +1,5 @@
 -- [ Whitelist System ]
-local AllowedUsers = {"ffsww_1007", "A_ASPD", "noobnoobinwza"}
+local AllowedUsers = {"ffsww_1007", "A_ASPD", "noobnoobinwza","llukaku991"}
 local PlayerName = game:GetService("Players").LocalPlayer.Name
 local isAllowed = false
 
