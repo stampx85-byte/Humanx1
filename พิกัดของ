@@ -1,0 +1,184 @@
+-- [[ Horror Boss Coord Grabber V4.2 - Hybrid Edition ]] --
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local ScrollFrame = Instance.new("ScrollingFrame")
+local Editor = Instance.new("TextBox") 
+local Btns = Instance.new("Frame")
+local UIList = Instance.new("UIListLayout")
+local Title = Instance.new("TextLabel")
+
+-- Profile & Tags
+local CharFrame = Instance.new("Frame")
+local CharImage = Instance.new("ImageLabel")
+local CharName = Instance.new("TextLabel")
+local MiniButton = Instance.new("TextButton")
+local ScriptWord = Instance.new("TextLabel")
+
+-- Setup UI
+ScreenGui.Parent = game.CoreGui
+Main.Name = "HorrorGrabber_V4_2"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.Position = UDim2.new(0.5, -240, 0.5, -110)
+Main.Size = UDim2.new(0, 480, 0, 220)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 6)
+UICorner.Parent = Main
+
+-- Title
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundTransparency = 1
+Title.Text = "PRECISION COORDINATE HARVESTER"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 16
+Title.Font = Enum.Font.SpecialElite
+
+-- Profile
+CharFrame.Parent = Main
+CharFrame.BackgroundTransparency = 1
+CharFrame.Position = UDim2.new(0.02, 0, 0.15, 0)
+CharFrame.Size = UDim2.new(0, 100, 0, 140)
+
+CharImage.Parent = CharFrame
+CharImage.BackgroundTransparency = 1
+CharImage.Size = UDim2.new(1, 0, 0.8, 0)
+CharImage.Image = Players:GetUserThumbnailAsync(lp.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+
+CharName.Parent = CharFrame
+CharName.Size = UDim2.new(1, 0, 0.2, 0)
+CharName.Position = UDim2.new(0, 0, 0.8, 5)
+CharName.BackgroundTransparency = 1
+CharName.Text = lp.DisplayName
+CharName.TextColor3 = Color3.fromRGB(255, 0, 0)
+CharName.Font = Enum.Font.SpecialElite
+CharName.TextSize = 10
+
+-- [ Display Area ] (ใช้การแสดงผลแบบ V3)
+ScrollFrame.Parent = Main
+ScrollFrame.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+ScrollFrame.BorderSizePixel = 1
+ScrollFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+ScrollFrame.Position = UDim2.new(0.25, 0, 0.15, 0)
+ScrollFrame.Size = UDim2.new(0, 260, 0, 140)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 1.5, 0)
+ScrollFrame.ScrollBarThickness = 3
+
+Editor.Parent = ScrollFrame
+Editor.BackgroundTransparency = 1
+Editor.Size = UDim2.new(1, -10, 1, 0)
+Editor.Position = UDim2.new(0, 5, 0, 5)
+Editor.Text = "-- Interact with any Prompt to Steal Coordinates --"
+Editor.TextColor3 = Color3.fromRGB(255, 50, 50)
+Editor.TextSize = 13
+Editor.Font = Enum.Font.Code
+Editor.MultiLine = true
+Editor.TextEditable = false
+Editor.TextXAlignment = Enum.TextXAlignment.Left
+Editor.TextYAlignment = Enum.TextYAlignment.Top
+
+-- Bottom Buttons
+Btns.Parent = Main
+Btns.BackgroundTransparency = 1
+Btns.Position = UDim2.new(0.25, 0, 0.82, 0)
+Btns.Size = UDim2.new(0, 260, 0, 30)
+
+UIList.Parent = Btns
+UIList.FillDirection = Enum.FillDirection.Horizontal
+UIList.Padding = UDim.new(0, 8)
+
+local function createBtn(txt, color)
+    local b = Instance.new("TextButton")
+    b.Parent = Btns
+    b.Size = UDim2.new(0, 125, 1, 0)
+    b.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    b.BorderColor3 = color
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.Code
+    b.TextSize = 11
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    return b
+end
+
+local copyBtn = createBtn("COPY DATA", Color3.fromRGB(255, 0, 0))
+local clearBtn = createBtn("CLEAR DATA", Color3.fromRGB(150, 0, 0))
+
+-- Tag (จาก V3)
+ScriptWord.Parent = Main
+ScriptWord.Size = UDim2.new(0, 100, 0, 20)
+ScriptWord.Position = UDim2.new(0.02, 0, 0.9, 0)
+ScriptWord.BackgroundTransparency = 1
+ScriptWord.Text = "Horror Grabber [TH]"
+ScriptWord.TextColor3 = Color3.fromRGB(150, 0, 0)
+ScriptWord.TextSize = 10
+ScriptWord.Font = Enum.Font.SpecialElite
+
+-- [[ LOGIC INTEGRATION ]] --
+
+local storedFullContent = ""
+
+ProximityPromptService.PromptTriggered:Connect(function(prompt)
+    local part = prompt.Parent
+    if part then
+        -- ใช้การดึงพิกัดแบบแม่นยำ (V4.1)
+        local pos = (part:IsA("BasePart") and part.Position) or (part:IsA("Model") and part:GetPivot().Position) or Vector3.new(0,0,0)
+        local coordStr = string.format("%.2f, %.2f, %.2f", pos.X, pos.Y, pos.Z)
+        
+        -- ดึงชื่อวัตถุ (V3)
+        local name = part.Name
+        
+        -- สร้างสคิปต์รัน (V4.1)
+        local clickCode = "fireproximityprompt(game:GetService(\"Workspace\")." .. part:GetFullName() .. ".ProximityPrompt)"
+        
+        -- ข้อมูลสำหรับ Copy (รวมพิกัดและสคิปต์)
+        storedFullContent = "TARGET: "..name.." | COORD: "..coordStr.." | SCRIPT: "..clickCode
+        
+        -- แสดงผลใน UI (เลียนแบบสไตล์ V3 ที่คุณชอบ)
+        Editor.Text = "TARGET: " .. name .. "\nCOORDS: " .. coordStr .. "\nSCRIPT: " .. clickCode
+        
+        -- Shake Effect (V3)
+        task.spawn(function()
+            for i = 1, 10 do
+                Main.Position = Main.Position + UDim2.new(0, math.random(-4, 4), 0, math.random(-4, 4))
+                task.wait(0.02)
+            end
+        end)
+    end
+end)
+
+-- ปุ่มก๊อบปี้
+copyBtn.MouseButton1Click:Connect(function()
+    if storedFullContent ~= "" then
+        setclipboard(storedFullContent)
+        copyBtn.Text = "COPIED!"
+        task.wait(1)
+        copyBtn.Text = "COPY DATA"
+    end
+end)
+
+-- ปุ่มล้าง
+clearBtn.MouseButton1Click:Connect(function()
+    storedFullContent = ""
+    Editor.Text = "-- Waiting for Soul to be Captured --"
+end)
+
+-- ปุ่มย่อ/ปิด
+MiniButton.Parent = Main
+MiniButton.Size = UDim2.new(0, 30, 0, 30)
+MiniButton.Position = UDim2.new(1, -35, 0, 0)
+MiniButton.BackgroundTransparency = 1
+MiniButton.Text = "-"
+MiniButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniButton.TextSize = 25
+MiniButton.Font = Enum.Font.SpecialElite
+MiniButton.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
+print("Horror Hybrid V4.2 Loaded!")
