@@ -1,0 +1,205 @@
+-- [[ Body Scale Adjuster - Horror Boss Edition ]]
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local remoteEvent = game:GetService("ReplicatedStorage"):WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyToRealHumanoid")
+
+-- สร้าง ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HorrorBodyScaleV2"
+screenGui.Parent = game.CoreGui -- ใช้ CoreGui เพื่อไม่ให้หายตอนตาย (ถ้ามีสิทธิ์) หรือเปลี่ยนเป็น player.PlayerGui
+
+-- Main Frame (สไตล์ Horror Boss)
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Parent = screenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0) -- ดำมืด
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0.5, -150, 0.5, -150)
+Main.Size = UDim2.new(0, 300, 0, 320)
+Main.Active = true
+Main.Draggable = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 6)
+UICorner.Parent = Main
+
+-- Title Bar (แถบหัวข้อ)
+local Title = Instance.new("TextLabel")
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "BODY SCALE SYSTEM"
+Title.TextColor3 = Color3.fromRGB(200, 0, 0) -- แดงเข้ม
+Title.TextSize = 16
+Title.Font = Enum.Font.SpecialElite
+Title.TextXAlignment = Enum.TextXAlignment.Center
+
+-- ปุ่มย่อหน้าต่าง (-) และปิด (X)
+local MiniBtn = Instance.new("TextButton")
+MiniBtn.Parent = Main
+MiniBtn.Size = UDim2.new(0, 30, 0, 30)
+MiniBtn.Position = UDim2.new(1, -60, 0, 2)
+MiniBtn.BackgroundTransparency = 1
+MiniBtn.Text = "-"
+MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniBtn.TextSize = 25
+MiniBtn.Font = Enum.Font.SpecialElite
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Main
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -30, 0, 2)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+CloseBtn.TextSize = 20
+CloseBtn.Font = Enum.Font.SpecialElite
+
+-- Content Frame (พื้นที่ใส่ช่องกรอกข้อมูล)
+local Content = Instance.new("ScrollingFrame")
+Content.Parent = Main
+Content.BackgroundTransparency = 1
+Content.Position = UDim2.new(0.05, 0, 0.12, 0)
+Content.Size = UDim2.new(0.9, 0, 0.65, 0)
+Content.CanvasSize = UDim2.new(0, 0, 1.2, 0)
+Content.ScrollBarThickness = 2
+Content.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+
+local UIList = Instance.new("UIListLayout")
+UIList.Parent = Content
+UIList.Padding = UDim.new(0, 5)
+
+-- ฟังก์ชันสร้างช่อง Input (สไตล์ Horror)
+local function createInputField(labelText, defaultValue)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 30)
+    frame.BackgroundTransparency = 1
+    frame.Parent = Content
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.5, 0, 1, 0)
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(150, 0, 0)
+    label.Font = Enum.Font.SpecialElite
+    label.TextSize = 12
+    label.BackgroundTransparency = 1
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(0.45, 0, 0.8, 0)
+    box.Position = UDim2.new(0.5, 0, 0.1, 0)
+    box.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+    box.BorderColor3 = Color3.fromRGB(100, 0, 0)
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Text = tostring(defaultValue)
+    box.Font = Enum.Font.Code
+    box.TextSize = 12
+    box.Parent = frame
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 4)
+    
+    return box
+end
+
+local inputs = {
+    BodyType = createInputField("BODY TYPE:", 0),
+    Depth = createInputField("DEPTH:", 0.5),
+    Head = createInputField("HEAD:", 0.5),
+    Height = createInputField("HEIGHT:", 0.5),
+    Width = createInputField("WIDTH:", 0.5),
+    Proportion = createInputField("PROPORTION:", 0)
+}
+
+-- ปุ่มกดหลัก (Bottom Area)
+local ApplyBtn = Instance.new("TextButton")
+ApplyBtn.Parent = Main
+ApplyBtn.Size = UDim2.new(0.9, 0, 0, 35)
+ApplyBtn.Position = UDim2.new(0.05, 0, 0.78, 0)
+ApplyBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+ApplyBtn.BorderColor3 = Color3.fromRGB(255, 0, 0)
+ApplyBtn.Text = "EXECUTE SCALE"
+ApplyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ApplyBtn.Font = Enum.Font.SpecialElite
+ApplyBtn.TextSize = 14
+Instance.new("UICorner", ApplyBtn).CornerRadius = UDim.new(0, 4)
+
+-- Preset Buttons Frame
+local Presets = Instance.new("Frame")
+Presets.Parent = Main
+Presets.Size = UDim2.new(0.9, 0, 0, 25)
+Presets.Position = UDim2.new(0.05, 0, 0.9, 0)
+Presets.BackgroundTransparency = 1
+
+local function createPresetBtn(txt, posX, sizeX)
+    local b = Instance.new("TextButton")
+    b.Parent = Presets
+    b.Size = UDim2.new(sizeX, -4, 1, 0)
+    b.Position = UDim2.new(posX, 0, 0, 0)
+    b.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(180, 0, 0)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 10
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    return b
+end
+
+local normalBtn = createPresetBtn("NORMAL", 0, 0.33)
+local smallBtn = createPresetBtn("SMALL", 0.33, 0.33)
+local extremeBtn = createPresetBtn("EXTREME", 0.66, 0.34)
+
+-- [[ Logic Section ]]
+
+local function applyScale()
+    local args = {
+        [1] = {
+            ["BodyScale"] = {
+                ["BodyTypeScale"] = tonumber(inputs.BodyType.Text) or 0,
+                ["DepthScale"] = tonumber(inputs.Depth.Text) or 0.5,
+                ["HeadScale"] = tonumber(inputs.Head.Text) or 0.5,
+                ["HeightScale"] = tonumber(inputs.Height.Text) or 0.5,
+                ["WidthScale"] = tonumber(inputs.Width.Text) or 0.5,
+                ["ProportionScale"] = tonumber(inputs.Proportion.Text) or 0
+            }
+        }
+    }
+    pcall(function() remoteEvent:FireServer(unpack(args)) end)
+end
+
+ApplyBtn.MouseButton1Click:Connect(function()
+    ApplyBtn.Text = "APPLYING..."
+    ApplyBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+    applyScale()
+    wait(0.5)
+    ApplyBtn.Text = "EXECUTE SCALE"
+    ApplyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+end)
+
+-- Preset Logic
+normalBtn.MouseButton1Click:Connect(function()
+    inputs.BodyType.Text = "0"; inputs.Depth.Text = "0.5"; inputs.Head.Text = "0.5"; inputs.Height.Text = "0.5"; inputs.Width.Text = "0.5"; inputs.Proportion.Text = "0"
+end)
+
+smallBtn.MouseButton1Click:Connect(function()
+    inputs.Depth.Text = "0.3"; inputs.Height.Text = "0.3"; inputs.Width.Text = "0.3"
+end)
+
+extremeBtn.MouseButton1Click:Connect(function()
+    inputs.Depth.Text = "10"; inputs.Height.Text = "10"; inputs.Width.Text = "10"; inputs.Head.Text = "10"
+end)
+
+-- Minimize/Close Logic
+local minimized = false
+MiniBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    Content.Visible = not minimized
+    ApplyBtn.Visible = not minimized
+    Presets.Visible = not minimized
+    Main:TweenSize(minimized and UDim2.new(0, 300, 0, 35) or UDim2.new(0, 300, 0, 320), "Out", "Quad", 0.3, true)
+end)
+
+CloseBtn.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+
+print("Horror Scale Loaded - Style Matched.")
