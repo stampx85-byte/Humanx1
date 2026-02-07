@@ -23,13 +23,33 @@ end)
 setreadonly(mt, true)
 
 -- [[ VIP & ADMIN LIST ]]
-local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828","llukaku991"} 
+local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828","llukaku991","LeoSingha508","maidbuzs6_199","Ruce066"} 
 local isVIP = false
 for _, name in ipairs(allowedNames) do if plr.Name == name then isVIP = true break end end
 
 if not isVIP then 
     StarterGui:SetCore("SendNotification", {Title = "Access Denied", Text = "User is not in VIP list.", Duration = 10})
     return 
+end
+
+---------------------------------------------------------
+-- [ NEW: REFLECT & PIERCE LOGIC ] (เพิ่มเข้าไปใหม่)
+---------------------------------------------------------
+local function ApplyReflectAndPierce(targetPos)
+    -- 1. ปัดป้องกระสุนที่ยิงมาหาเรา (กั้นและปัดออก)
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:IsA("BasePart") and (obj.Name:lower():find("bullet") or obj.Name:lower():find("projectile")) then
+            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (obj.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+                if dist < 18 then 
+                    obj.Velocity = -obj.Velocity * 2 -- ปัดออกไปทิศตรงข้าม
+                    obj.CanCollide = false
+                end
+            end
+        end
+    end
+    -- 2. เจาะเกราะ (Offset พิกัดยิงให้ทะลุตัวปัดป้องของศัตรู)
+    return targetPos + Vector3.new(math.random(-1,1)/10, -0.4, math.random(-1,1)/10)
 end
 
 ---------------------------------------------------------
@@ -263,7 +283,11 @@ createToggle("ULTIMATE MASSACRE MODE", function(v)
             local target = getClosestPlayer(999999)
             if target and target.Character and target.Character:FindFirstChild("Head") then
                 local tHeadPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.14)
-                myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(tHeadPos.X, myHRP.Position.Y, tHeadPos.Z))
+                
+                -- [[ เพิ่มระบบ Reflect & Pierce ]]
+                local finalPos = ApplyReflectAndPierce(tHeadPos)
+                
+                myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(finalPos.X, myHRP.Position.Y, finalPos.Z))
                 
                 local guns = {}
                 for _, item in ipairs(plr.Backpack:GetChildren()) do
@@ -274,9 +298,16 @@ createToggle("ULTIMATE MASSACRE MODE", function(v)
                     if not _G.MassacreActive then break end
                     gun.Parent = plr.Character 
                     local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Remote") or gun:FindFirstChild("Fire")
-                    if remote then for i = 1, 30 do remote:FireServer(tHeadPos) end end
+                    if remote then 
+                        for i = 1, 30 do 
+                            remote:FireServer(finalPos) -- ยิงด้วยพิกัดเจาะเกราะ
+                        end 
+                    end
                     gun.Parent = plr.Backpack task.wait()
                 end
+            else
+                -- แม้ไม่มีเป้าหมาย ระบบปัดป้องก็ยังทำงาน
+                ApplyReflectAndPierce(Vector3.new(0,0,0))
             end
         end
         shield.Parent = nil
@@ -284,7 +315,7 @@ createToggle("ULTIMATE MASSACRE MODE", function(v)
     end)
 end)
 
--- 2. SLAUGHTER 2-TAP (ULTRA OPTIMIZED) -- [แก้โหลดแมพไม่ทัน / Invisible Kill]
+-- 2. SLAUGHTER 2-TAP (ULTRA OPTIMIZED)
 createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v)
     _G.UltraTwoTap = v
     local shield = Instance.new("Part")
@@ -313,22 +344,26 @@ createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v)
             local target = getClosestPlayer(999999)
             if target and target.Character and target.Character:FindFirstChild("Head") then
                 local tHeadPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.12)
-                myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(tHeadPos.X, myHRP.Position.Y, tHeadPos.Z))
                 
-                -- ยิงจากกระเป๋า ไม่ถือปืน
+                -- [[ เพิ่มระบบ Reflect & Pierce ]]
+                local finalPos = ApplyReflectAndPierce(tHeadPos)
+                
+                myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(finalPos.X, myHRP.Position.Y, finalPos.Z))
+                
                 for _, gun in ipairs(plr.Backpack:GetChildren()) do
                     if not _G.UltraTwoTap then break end
                     if gun:IsA("Tool") and gun.Name ~= "Phone" and gun.Name ~= "Boombox" then
                         local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Remote") or gun:FindFirstChild("Fire")
                         if remote then
-                            -- [ BURST PRECISION ] ยิง 5 นัดซ้อน แรงพอแต่เซิร์ฟไม่ค้าง
                             for i = 1, 5 do
-                                remote:FireServer(tHeadPos)
+                                remote:FireServer(finalPos) -- ยิงด้วยพิกัดเจาะเกราะ
                             end
                         end
                     end
                 end
-                task.wait(0.02) -- ดีเลย์จังหวะยิงเพื่อให้เซิร์ฟเวอร์ประมวลผลแมพทัน
+                task.wait(0.02)
+            else
+                ApplyReflectAndPierce(Vector3.new(0,0,0))
             end
         end
         shield.Parent = nil
