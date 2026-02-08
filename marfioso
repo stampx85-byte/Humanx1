@@ -1,0 +1,198 @@
+local player = game.Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+
+-- === [ โหลดแอนิเมชั่นภายนอก ] ===
+local function loadExternalAnim()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/animation1"))()
+    end)
+end
+loadExternalAnim() -- รันทันทีที่รันสคริปต์
+
+-- === [ การตั้งค่า ] ===
+local CAMERA_OFFSET = Vector3.new(-4, 0, -10) 
+local ZOOM_TARGET = Vector3.new(0, 0.5, -3.8)   
+local DURATION = 5 
+local FOV_START = 100 
+local FOV_END = 45    
+
+-- === [ ระบบเพลงวนลูป - ของเดิมเป๊ะ ] ===
+local PLAYLIST = {
+    "138344542540550", "76334540406606", "135697113167218", "116862891453703", "103835955948520"
+}
+local currentTrackIndex = 1
+local function playNextSong()
+    local SOUND_ID = PLAYLIST[currentTrackIndex]
+    pcall(function()
+        game:GetService("ReplicatedStorage").Search_Audio:InvokeServer(SOUND_ID)
+        workspace.DRadio_Script.Event:FireServer(SOUND_ID)
+    end)
+    task.spawn(function()
+        local soundObj = nil
+        for i = 1, 20 do
+            for _, v in ipairs(workspace:GetDescendants()) do
+                if v:IsA("Sound") and (v.Name == "Sound" or v.Parent.Name:find("Radio") or v.SoundId:find(SOUND_ID)) then
+                    soundObj = v break
+                end
+            end
+            if soundObj then break end task.wait(0.5)
+        end
+        if soundObj then soundObj.Ended:Wait() else task.wait(120) end
+        pcall(function() workspace.DRadio_Script.STOPEvent:FireServer() end)
+        task.wait(1)
+        currentTrackIndex = currentTrackIndex + 1
+        if currentTrackIndex > #PLAYLIST then currentTrackIndex = 1 end
+        playNextSong()
+    end)
+end
+task.spawn(playNextSong)
+
+-- === [ 1. ระบบจัดแสงและบรรยากาศ - ของเดิมเป๊ะ ] ===
+local function applyMafiaEnvironment(state)
+    local cc = Lighting:FindFirstChild("MafiaCC") or Instance.new("ColorCorrectionEffect", Lighting)
+    cc.Name = "MafiaCC"
+    local blur = Lighting:FindFirstChild("MafiaBlur") or Instance.new("BlurEffect", Lighting)
+    blur.Name = "MafiaBlur"
+    if state then
+        cc.Saturation = -1 cc.Contrast = 0.8 cc.Brightness = -0.15 blur.Size = 10
+        Lighting.ClockTime = 2
+        TweenService:Create(blur, TweenInfo.new(DURATION), {Size = 0}):Play()
+    else
+        TweenService:Create(cc, TweenInfo.new(2), {Saturation = 0, Contrast = 0, Brightness = 0}):Play()
+        Lighting.ClockTime = 14
+    end
+end
+
+-- === [ 2. ระบบ UI ข้อความ เเละ Mafia HUD (มุมขวาบน) ] ===
+local function playCinematicUI(text)
+    local sg = Instance.new("ScreenGui", player.PlayerGui)
+    sg.Name = "MafiaUI"
+
+    -- ข้อความ THE MAFIOSO
+    local label = Instance.new("TextLabel", sg)
+    label.Size = UDim2.new(1, 0, 0.2, 0)
+    label.Position = UDim2.new(0, 0, 0.45, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.SpecialElite
+    label.TextSize = 60
+    label.Text = ""
+    label.TextStrokeTransparency = 0.5
+    
+    -- สร้าง HUD หลอดเลือด (ย้ายไปมุมขวาบน)
+    local hudFrame = Instance.new("Frame", sg)
+    hudFrame.Size = UDim2.new(0, 320, 0, 100)
+    hudFrame.Position = UDim2.new(1, 100, 0.05, 0) -- เริ่มจากนอกจอด้านขวา
+    hudFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    hudFrame.BackgroundTransparency = 0.2
+    hudFrame.BorderSizePixel = 0
+    
+    local corner = Instance.new("UICorner", hudFrame)
+    corner.CornerRadius = UDim.new(0, 8)
+
+    -- รูปตัวละคร
+    local icon = Instance.new("ImageLabel", hudFrame)
+    icon.Size = UDim2.new(0, 80, 0, 80)
+    icon.Position = UDim2.new(1, -90, 0.5, -40) -- รูปอยู่ฝั่งขวาของแถว
+    icon.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..player.UserId.."&width=420&height=420&format=png"
+    icon.BackgroundTransparency = 1
+    
+    -- หลอดเลือด
+    local healthBg = Instance.new("Frame", hudFrame)
+    healthBg.Size = UDim2.new(0, 200, 0, 20)
+    healthBg.Position = UDim2.new(0, 20, 0.5, -10)
+    healthBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    
+    local healthBar = Instance.new("Frame", healthBg)
+    healthBar.Size = UDim2.new(1, 0, 1, 0)
+    healthBar.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    healthBar.BorderSizePixel = 0
+
+    -- อนิเมชั่นเลื่อน HUD เข้ามาจากขวาบน
+    TweenService:Create(hudFrame, TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(1, -340, 0.05, 0)}):Play()
+
+    -- พิมพ์ข้อความ
+    for i = 1, #text do
+        label.Text = string.sub(text, 1, i)
+        task.wait(0.1)
+    end
+    
+    task.delay(2, function()
+        TweenService:Create(label, TweenInfo.new(1.5), {TextTransparency = 1}):Play()
+        TweenService:Create(hudFrame, TweenInfo.new(1), {Position = UDim2.new(1, 100, 0.05, 0)}):Play()
+        task.wait(1.5)
+        sg:Destroy()
+    end)
+end
+
+-- === [ 3. ระบบเปลี่ยนชุด Bloxbiz - ของเดิมเป๊ะ ] ===
+local function applyBloxOutfit()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local BloxRemote = ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
+    local outfitData = {
+        ["WalkAnimation"] = 5319909330, ["IdleAnimation"] = 18538150608,
+        ["Accessories"] = {{["AssetId"] = 10554380131, ["AccessoryType"] = Enum.AccessoryType.Hat, ["IsLayered"] = false}},
+        ["Torso"] = 18970728812, ["LeftArm"] = 87202958751790, ["RightArm"] = 103452055306587,
+        ["LeftLeg"] = 106411216404626, ["RightLeg"] = 129699548221468,
+        ["HeadColor"] = Color3.fromRGB(245, 205, 48), ["TorsoColor"] = Color3.fromRGB(38, 117, 0),
+        ["LeftArmColor"] = Color3.fromRGB(38, 117, 0), ["RightArmColor"] = Color3.fromRGB(38, 117, 0),
+        ["LeftLegColor"] = Color3.fromRGB(38, 117, 0), ["RightLegColor"] = Color3.fromRGB(38, 117, 0),
+        ["Pants"] = 6546480210, ["Shirt"] = 6181817802,
+        ["HeightScale"] = 1, ["WidthScale"] = 1, ["DepthScale"] = 1, ["HeadScale"] = 1
+    }
+    BloxRemote:FireServer(outfitData)
+end
+
+-- === [ 4. Main Logic: เอาเเค่หัวสไตล์เเอ็คชั่น (เเขนขาไม่ขยับ) ] ===
+local function onSpawn(character)
+    loadExternalAnim() -- รันทุกครั้งที่เกิดใหม่
+    local root = character:WaitForChild("HumanoidRootPart")
+    local head = character:WaitForChild("Head")
+    local camera = workspace.CurrentCamera
+    local neck = head:WaitForChild("Neck")
+    local origNeck = neck.C0
+    
+    root.Anchored = true
+    applyMafiaEnvironment(true)
+    applyBloxOutfit() 
+    task.spawn(function() playCinematicUI("THE MAFIOSO") end)
+    
+    camera.CameraType = Enum.CameraType.Scriptable
+    
+    local startTime = tick()
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        local t = tick()
+        local alpha = math.clamp((t - startTime) / DURATION, 0, 1)
+        
+        -- กล้องแอ็คชั่นซูมกระแทก
+        local actionPulse = math.sin(t * 12) * 0.15 
+        local zoomAlpha = math.pow(alpha, 1.2)
+        local currentOffset = CAMERA_OFFSET:Lerp(ZOOM_TARGET, zoomAlpha)
+        local shake = Vector3.new(math.sin(t * 30) * 0.08, math.cos(t * 30) * 0.08, 0)
+        camera.FieldOfView = (FOV_START + (FOV_END - FOV_START) * zoomAlpha) + (actionPulse * 6)
+        local camPos = (root.CFrame * CFrame.new(currentOffset + shake)).Position
+        camera.CFrame = CFrame.new(camPos, head.Position + Vector3.new(0, 0.3, 0))
+        
+        -- ขยับหัว (ไม่มีการขยับแขนขา)
+        local goalCFrame = CFrame.new(head.Position, camera.CFrame.Position)
+        local relativeCFrame = root.CFrame:ToObjectSpace(goalCFrame)
+        local rx, ry, _ = relativeCFrame:ToEulerAnglesYXZ()
+        local headTilt = math.rad(15 * (1-alpha)) 
+        neck.C0 = origNeck * CFrame.Angles(rx + headTilt, ry, headTilt * 0.5)
+        
+        if alpha >= 1 then
+            connection:Disconnect()
+            neck.C0 = origNeck
+            root.Anchored = false
+            camera.CameraType = Enum.CameraType.Custom
+            camera.FieldOfView = 70
+            applyMafiaEnvironment(false)
+        end
+    end)
+end
+
+if player.Character then onSpawn(player.Character) end
+player.CharacterAdded:Connect(onSpawn)
