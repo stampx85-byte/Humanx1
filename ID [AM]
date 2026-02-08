@@ -1,0 +1,172 @@
+-- Horror Emote Snatcher V1.0 (Dark Style)
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+local MiniButton = Instance.new("TextButton")
+local OpenCircle = Instance.new("ImageButton")
+local OpenCorner = Instance.new("UICorner")
+
+-- รายชื่อท่าที่ดักได้
+local LogFrame = Instance.new("ScrollingFrame")
+local LogLayout = Instance.new("UIListLayout")
+
+-- ส่วนตั้งชื่อเป้าหมาย
+local TargetInput = Instance.new("TextBox")
+local ScriptWord = Instance.new("TextLabel")
+
+-- Profile
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "EmoteSnatcher_GUI"
+
+-- Setup Main Window
+Main.Name = "MainFrame"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.Position = UDim2.new(0.5, -240, 0.5, -110)
+Main.Size = UDim2.new(0, 480, 0, 220)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = Main
+
+-- Title
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "EMOTE SNATCHER SYSTEM"
+Title.TextColor3 = Color3.fromRGB(200, 0, 0)
+Title.TextSize = 18
+Title.Font = Enum.Font.SpecialElite
+
+-- Input ชื่อเป้าหมาย
+TargetInput.Parent = Main
+TargetInput.PlaceholderText = "ENTER TARGET NAME..."
+TargetInput.Text = ""
+TargetInput.Size = UDim2.new(0, 200, 0, 30)
+TargetInput.Position = UDim2.new(0.05, 0, 0.2, 0)
+TargetInput.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+TargetInput.TextColor3 = Color3.fromRGB(255, 0, 0)
+TargetInput.Font = Enum.Font.SpecialElite
+TargetInput.TextSize = 14
+Instance.new("UICorner", TargetInput).CornerRadius = UDim.new(0, 4)
+
+ScriptWord.Parent = Main
+ScriptWord.Size = UDim2.new(0, 100, 0, 20)
+ScriptWord.Position = UDim2.new(0.05, 0, 0.35, 0) 
+ScriptWord.BackgroundTransparency = 1
+ScriptWord.Text = "LOGGED EMOTES [TH]"
+ScriptWord.TextColor3 = Color3.fromRGB(120, 0, 0) 
+ScriptWord.TextSize = 10
+ScriptWord.Font = Enum.Font.SpecialElite
+
+-- Log Area (รายการท่าเต้น)
+LogFrame.Parent = Main
+LogFrame.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+LogFrame.Position = UDim2.new(0.05, 0, 0.45, 0)
+LogFrame.Size = UDim2.new(0, 430, 0, 100)
+LogFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+LogFrame.ScrollBarThickness = 4
+LogFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
+Instance.new("UICorner", LogFrame)
+
+LogLayout.Parent = LogFrame
+LogLayout.Padding = UDim.new(0, 5)
+
+-- ย่อหน้าต่าง
+MiniButton.Parent = Main
+MiniButton.Size = UDim2.new(0, 30, 0, 30)
+MiniButton.Position = UDim2.new(1, -35, 0, 0) 
+MiniButton.BackgroundTransparency = 1
+MiniButton.Text = "-"
+MiniButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniButton.TextSize = 30
+MiniButton.Font = Enum.Font.SpecialElite
+
+OpenCircle.Parent = ScreenGui
+OpenCircle.Size = UDim2.new(0, 50, 0, 50)
+OpenCircle.Position = UDim2.new(0, 20, 0.5, 0)
+OpenCircle.Visible = false
+OpenCircle.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+OpenCircle.Image = "rbxassetid://14579989646" -- ไอคอนสไตล์สยองขวัญ
+OpenCircle.Draggable = true
+Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0)
+
+-- Function: สร้างแถบท่าเต้นใน Log
+local function addToLog(animName, animId)
+    local Item = Instance.new("Frame")
+    Item.Size = UDim2.new(0.95, 0, 0, 30)
+    Item.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    Item.Parent = LogFrame
+    Instance.new("UICorner", Item)
+
+    local Info = Instance.new("TextLabel")
+    Info.Size = UDim2.new(0.7, 0, 1, 0)
+    Info.Position = UDim2.new(0.05, 0, 0, 0)
+    Info.BackgroundTransparency = 1
+    Info.Text = animName .. " | ID: " .. animId:match("%d+")
+    Info.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Info.Font = Enum.Font.Code
+    Info.TextSize = 12
+    Info.TextXAlignment = Enum.TextXAlignment.Left
+    Info.Parent = Item
+
+    local CopyBtn = Instance.new("TextButton")
+    CopyBtn.Size = UDim2.new(0, 60, 0, 20)
+    CopyBtn.Position = UDim2.new(0.78, 0, 0.15, 0)
+    CopyBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+    CopyBtn.Text = "COPY"
+    CopyBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    CopyBtn.Font = Enum.Font.SpecialElite
+    CopyBtn.TextSize = 10
+    CopyBtn.Parent = Item
+    Instance.new("UICorner", CopyBtn)
+
+    CopyBtn.MouseButton1Click:Connect(function()
+        setclipboard(animId:match("%d+"))
+        CopyBtn.Text = "DONE!"
+        wait(1)
+        CopyBtn.Text = "COPY"
+    end)
+
+    LogFrame.CanvasSize = UDim2.new(0, 0, 0, LogLayout.AbsoluteContentSize.Y)
+end
+
+-- ระบบดักจับ
+local currentConnection = nil
+
+TargetInput.FocusLost:Connect(function()
+    local targetName = TargetInput.Text
+    local target = Players:FindFirstChild(targetName)
+
+    if currentConnection then currentConnection:Disconnect() end
+
+    if target and target.Character then
+        local hum = target.Character:FindFirstChildOfClass("Humanoid")
+        if hum then
+            currentConnection = hum.AnimationPlayed:Connect(function(track)
+                addToLog(track.Name, track.Animation.AnimationId)
+            end)
+            TargetInput.TextColor3 = Color3.fromRGB(0, 255, 0) -- เปลี่ยนเป็นสีเขียวถ้าเจอ
+        end
+    else
+        TargetInput.TextColor3 = Color3.fromRGB(255, 0, 0) -- สีแดงถ้าไม่พบ
+    end
+end)
+
+-- UI Logic
+MiniButton.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenCircle.Visible = true
+end)
+
+OpenCircle.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenCircle.Visible = false
+end)
+
+print("Horror Emote Snatcher Loaded!")
