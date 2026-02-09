@@ -289,16 +289,31 @@ MiniButton.MouseButton1Click:Connect(function()
     OpenCircle.Visible = true
 end)
 
--- Mini Circle Setup (Keeping original)
+-- Mini Circle Setup (Updated Icon ID)
 OpenCircle.Parent = ScreenGui
 OpenCircle.Size = UDim2.new(0, 60, 0, 60)
 OpenCircle.Position = UDim2.new(0.05, 0, 0.5, -30)
 OpenCircle.Visible = false
 OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
-OpenCircle.Image = "rbxassetid://14579989646" 
+OpenCircle.Image = "rbxassetid://99753024999347" -- ไอคอนใหม่ที่คุณเลือก
 OpenCircle.Active = true
 OpenCircle.Draggable = true
 Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0)
+
+-- [[ ส่วนที่เพิ่มใหม่: ระบบขอบรุ้งสำหรับไอคอนย่อจอ ]]
+local RainbowStroke = Instance.new("UIStroke")
+RainbowStroke.Parent = OpenCircle
+RainbowStroke.Thickness = 3
+RainbowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+task.spawn(function()
+    while true do
+        for i = 0, 1, 0.01 do
+            RainbowStroke.Color = Color3.fromHSV(i, 1, 1)
+            task.wait(0.03)
+        end
+    end
+end)
 
 OpenCircle.MouseButton1Click:Connect(function()
     Main.Visible = true
