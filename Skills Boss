@@ -18,12 +18,16 @@ mt.__namecall = newcclosure(function(self, ...)
         warn("Anti-Kick: Blocked a kick attempt!") 
         return nil 
     end
+    -- เพิ่ม Bypass เล็กน้อยเพื่อกันเด้งเวลาใช้ Orbit
+    if tostring(method) == "FireServer" and self.Name == "MainEvent" then
+        if args[1] == "TeleportDetect" or args[1] == "WalkSpeed" then return nil end
+    end
     return oldNamecall(self, unpack(args))
 end)
 setreadonly(mt, true)
 
 -- [[ VIP & ADMIN LIST ]]
-local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828","llukaku991","LeoSingha508","maidbuzs6_199","Ruce066"} 
+local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828","llukaku991","LeoSingha508","maidbuzs6_199","Ruce066","16xd5664"} 
 local isVIP = false
 for _, name in ipairs(allowedNames) do if plr.Name == name then isVIP = true break end end
 
@@ -33,22 +37,20 @@ if not isVIP then
 end
 
 ---------------------------------------------------------
--- [ NEW: REFLECT & PIERCE LOGIC ] (เพิ่มเข้าไปใหม่)
+-- [ NEW: REFLECT & PIERCE LOGIC ]
 ---------------------------------------------------------
 local function ApplyReflectAndPierce(targetPos)
-    -- 1. ปัดป้องกระสุนที่ยิงมาหาเรา (กั้นและปัดออก)
     for _, obj in ipairs(workspace:GetChildren()) do
         if obj:IsA("BasePart") and (obj.Name:lower():find("bullet") or obj.Name:lower():find("projectile")) then
             if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local dist = (obj.Position - plr.Character.HumanoidRootPart.Position).Magnitude
                 if dist < 18 then 
-                    obj.Velocity = -obj.Velocity * 2 -- ปัดออกไปทิศตรงข้าม
+                    obj.Velocity = -obj.Velocity * 2 
                     obj.CanCollide = false
                 end
             end
         end
     end
-    -- 2. เจาะเกราะ (Offset พิกัดยิงให้ทะลุตัวปัดป้องของศัตรู)
     return targetPos + Vector3.new(math.random(-1,1)/10, -0.4, math.random(-1,1)/10)
 end
 
@@ -159,12 +161,22 @@ MiniCorner.CornerRadius = UDim.new(0, 6)
 local MiniStroke = Instance.new("UIStroke", Mini)
 MiniStroke.Color = Color3.fromRGB(200, 0, 0)
 
+-- [ เพิ่มปุ่มสามขีด ]
+local MenuToggle = Instance.new("TextButton", Main)
+MenuToggle.Size = UDim2.new(0, 30, 0, 30)
+MenuToggle.Position = UDim2.new(0, 10, 1, -40)
+MenuToggle.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+MenuToggle.Text = "≡"
+MenuToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+MenuToggle.TextSize = 25
+Instance.new("UICorner", MenuToggle).CornerRadius = UDim.new(0, 5)
+
 local ScrollFrame = Instance.new("ScrollingFrame")
 ScrollFrame.Parent = Main
 ScrollFrame.BackgroundTransparency = 1
 ScrollFrame.Position = UDim2.new(0.36, 0, 0.15, 0)
 ScrollFrame.Size = UDim2.new(0.6, 0, 0.7, 0)
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 1.8, 0)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 2.0, 0) 
 ScrollFrame.ScrollBarThickness = 2
 ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
 
@@ -172,6 +184,18 @@ local ListLayout = Instance.new("UIListLayout")
 ListLayout.Parent = ScrollFrame
 ListLayout.Padding = UDim.new(0, 10)
 ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- [ เพิ่มรายชื่อผู้เล่นด้านขวา ]
+local RightList = Instance.new("ScrollingFrame", Main)
+RightList.Visible = false
+RightList.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+RightList.Position = UDim2.new(1.02, 0, 0, 0)
+RightList.Size = UDim2.new(0, 160, 0, 220)
+RightList.ScrollBarThickness = 3
+Instance.new("UIStroke", RightList).Color = Color3.fromRGB(200, 0, 0)
+Instance.new("UICorner", RightList)
+local RightLayout = Instance.new("UIListLayout", RightList)
+RightLayout.Padding = UDim.new(0, 5)
 
 local OpenCircle = Instance.new("ImageButton")
 OpenCircle.Parent = ScreenGui
@@ -190,6 +214,64 @@ OpenCircle.Draggable = true
 local isForcingHolster = false
 local antiWarpEnabled = false
 local lastValidPos = nil
+local TargetPlayer = nil
+local OrbitAngle = 0
+
+local function UpdateRightList()
+    -- ล้างข้อมูลเดิม (ยกเว้น UIListLayout)
+    for _, v in ipairs(RightList:GetChildren()) do if v:IsA("Frame") or v:IsA("TextButton") then v:Destroy() end end
+    
+    -- เพิ่มปุ่ม Refresh ไว้บนสุด
+    local RefBtn = Instance.new("TextButton", RightList)
+    RefBtn.Size = UDim2.new(1, -10, 0, 30)
+    RefBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+    RefBtn.Text = "REFRESH LIST"
+    RefBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    RefBtn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", RefBtn)
+    RefBtn.MouseButton1Click:Connect(UpdateRightList)
+
+    for _, p in ipairs(game.Players:GetPlayers()) do
+        if p ~= plr then
+            local f = Instance.new("Frame", RightList)
+            f.Size = UDim2.new(1, -10, 0, 45)
+            f.BackgroundColor3 = (TargetPlayer == p) and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(30, 0, 0)
+            Instance.new("UICorner", f)
+            local img = Instance.new("ImageLabel", f)
+            img.Size = UDim2.new(0, 35, 0, 35)
+            img.Position = UDim2.new(0.05, 0, 0.1, 0)
+            img.Image = "rbxthumb://type=AvatarHeadShot&id="..p.UserId.."&w=420&h=420"
+            Instance.new("UICorner", img).CornerRadius = UDim.new(1, 0)
+            local btn = Instance.new("TextButton", f)
+            btn.Size = UDim2.new(0.6, 0, 1, 0)
+            btn.Position = UDim2.new(0.35, 0, 0, 0)
+            btn.BackgroundTransparency = 1
+            btn.Text = p.DisplayName
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.TextSize = 10
+            
+            -- แก้บั๊ก: กดซ้ำเพื่อปิด
+            btn.MouseButton1Click:Connect(function()
+                if TargetPlayer == p then 
+                    TargetPlayer = nil 
+                    UpdateRightList() -- อัปเดตสี
+                    StarterGui:SetCore("SendNotification", {Title = "Orbit", Text = "Orbit Disabled", Duration = 2})
+                else 
+                    TargetPlayer = p 
+                    UpdateRightList() -- อัปเดตสี
+                    StarterGui:SetCore("SendNotification", {Title = "Orbit", Text = "Target: "..p.DisplayName, Duration = 2})
+                end
+            end)
+        end
+    end
+    -- แก้ไขจุดที่เลื่อนไม่ได้: ปรับ CanvasSize ตามความสูงของคนในรายชื่อ
+    RightList.CanvasSize = UDim2.new(0, 0, 0, RightLayout.AbsoluteContentSize.Y + 40)
+end
+
+MenuToggle.MouseButton1Click:Connect(function()
+    RightList.Visible = not RightList.Visible
+    if RightList.Visible then UpdateRightList() end
+end)
 
 local function needsMore(itemName)
     local count = 0
@@ -256,7 +338,66 @@ end
 -- [ FEATURES LOGIC ]
 ---------------------------------------------------------
 
--- 1. ULTIMATE MASSACRE MODE
+-- [ ORBIT & AUTO FIRE LOOP ]
+RunService.RenderStepped:Connect(function(dt)
+    if TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+        local tHRP = TargetPlayer.Character.HumanoidRootPart
+        local myHRP = plr.Character.HumanoidRootPart
+        OrbitAngle = OrbitAngle + (dt * 5)
+        local offset = Vector3.new(math.cos(OrbitAngle) * 15, 10, math.sin(OrbitAngle) * 15)
+        myHRP.CFrame = CFrame.new(tHRP.Position + offset, tHRP.Position)
+        for _, gun in ipairs(plr.Backpack:GetChildren()) do
+            if gun:IsA("Tool") and gun.Name ~= "Phone" then
+                gun.Parent = plr.Character
+                local rem = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Fire")
+                if rem then rem:FireServer(tHRP.Position) end
+                gun.Parent = plr.Backpack
+            end
+        end
+    end
+end)
+
+-- 1. [NEW] ULTRA DUAL-WIELD SWAP (RAPID)
+createToggle("ULTRA DUAL SWAP (RAPID)", function(v)
+    _G.DualSwapActive = v
+    task.spawn(function()
+        while _G.DualSwapActive do
+            RunService.Heartbeat:Wait()
+            if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end
+            local target = getClosestPlayer(999999)
+            if target and target.Character and target.Character:FindFirstChild("Head") then
+                local tHeadPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.1)
+                local finalPos = ApplyReflectAndPierce(tHeadPos)
+                local guns = {}
+                for _, item in ipairs(plr.Backpack:GetChildren()) do
+                    if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then 
+                        table.insert(guns, item) 
+                    end
+                end
+                for i = 1, #guns, 2 do
+                    if not _G.DualSwapActive then break end
+                    local gun1 = guns[i]
+                    local gun2 = guns[i+1]
+                    if gun1 then gun1.Parent = plr.Character end
+                    if gun2 then gun2.Parent = plr.Character end
+                    task.wait()
+                    if gun1 then
+                        local rem1 = gun1:FindFirstChild("shot") or gun1:FindFirstChild("RemoteEvent") or gun1:FindFirstChild("Fire")
+                        if rem1 then for r = 1, 15 do rem1:FireServer(finalPos) end end
+                    end
+                    if gun2 then
+                        local rem2 = gun2:FindFirstChild("shot") or gun2:FindFirstChild("RemoteEvent") or gun2:FindFirstChild("Fire")
+                        if rem2 then for r = 1, 15 do rem2:FireServer(finalPos) end end
+                    end
+                    if gun1 then gun1.Parent = plr.Backpack end
+                    if gun2 then gun2.Parent = plr.Backpack end
+                end
+            end
+        end
+    end)
+end)
+
+-- 2. ULTIMATE MASSACRE MODE
 createToggle("ULTIMATE MASSACRE MODE", function(v)
     _G.MassacreActive = v
     local shield = Instance.new("Part")
@@ -283,30 +424,21 @@ createToggle("ULTIMATE MASSACRE MODE", function(v)
             local target = getClosestPlayer(999999)
             if target and target.Character and target.Character:FindFirstChild("Head") then
                 local tHeadPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.14)
-                
-                -- [[ เพิ่มระบบ Reflect & Pierce ]]
                 local finalPos = ApplyReflectAndPierce(tHeadPos)
-                
                 myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(finalPos.X, myHRP.Position.Y, finalPos.Z))
                 
                 local guns = {}
                 for _, item in ipairs(plr.Backpack:GetChildren()) do
                     if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end
                 end
-                
                 for _, gun in ipairs(guns) do
                     if not _G.MassacreActive then break end
                     gun.Parent = plr.Character 
                     local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Remote") or gun:FindFirstChild("Fire")
-                    if remote then 
-                        for i = 1, 30 do 
-                            remote:FireServer(finalPos) -- ยิงด้วยพิกัดเจาะเกราะ
-                        end 
-                    end
+                    if remote then for i = 1, 30 do remote:FireServer(finalPos) end end
                     gun.Parent = plr.Backpack task.wait()
                 end
             else
-                -- แม้ไม่มีเป้าหมาย ระบบปัดป้องก็ยังทำงาน
                 ApplyReflectAndPierce(Vector3.new(0,0,0))
             end
         end
@@ -315,7 +447,7 @@ createToggle("ULTIMATE MASSACRE MODE", function(v)
     end)
 end)
 
--- 2. SLAUGHTER 2-TAP (ULTRA OPTIMIZED)
+-- 3. SLAUGHTER 2-TAP (ULTRA OPTIMIZED)
 createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v)
     _G.UltraTwoTap = v
     local shield = Instance.new("Part")
@@ -332,10 +464,8 @@ createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v)
         while _G.UltraTwoTap do
             RunService.Heartbeat:Wait()
             if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end
-            
             local myHRP = plr.Character.HumanoidRootPart
             local myHum = plr.Character:FindFirstChild("Humanoid")
-            
             myHRP.Anchored = true 
             shield.Parent = game.Workspace
             shield.CFrame = myHRP.CFrame
@@ -344,21 +474,13 @@ createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v)
             local target = getClosestPlayer(999999)
             if target and target.Character and target.Character:FindFirstChild("Head") then
                 local tHeadPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.12)
-                
-                -- [[ เพิ่มระบบ Reflect & Pierce ]]
                 local finalPos = ApplyReflectAndPierce(tHeadPos)
-                
                 myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(finalPos.X, myHRP.Position.Y, finalPos.Z))
-                
                 for _, gun in ipairs(plr.Backpack:GetChildren()) do
                     if not _G.UltraTwoTap then break end
                     if gun:IsA("Tool") and gun.Name ~= "Phone" and gun.Name ~= "Boombox" then
-                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Remote") or gun:FindFirstChild("Fire")
-                        if remote then
-                            for i = 1, 5 do
-                                remote:FireServer(finalPos) -- ยิงด้วยพิกัดเจาะเกราะ
-                            end
-                        end
+                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Fire")
+                        if remote then for i = 1, 5 do remote:FireServer(finalPos) end end
                     end
                 end
                 task.wait(0.02)
@@ -371,7 +493,7 @@ createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v)
     end)
 end)
 
--- 3. อื่นๆ
+-- 4. อื่นๆ (คงเดิม)
 createToggle("God Anti-Warp", function(v)
     antiWarpEnabled = v
     if v and plr.Character then lastValidPos = plr.Character.HumanoidRootPart.CFrame end
@@ -412,7 +534,7 @@ createToggle("Auto Buy Gun (Max 10)", function(state)
 end)
 
 RunService.Stepped:Connect(function()
-    if isForcingHolster and not _G.MassacreActive and not _G.UltraTwoTap and plr.Character then
+    if isForcingHolster and not _G.MassacreActive and not _G.UltraTwoTap and not _G.DualSwapActive and plr.Character then
         for _, t in ipairs(plr.Character:GetChildren()) do if t:IsA("Tool") then t.Parent = plr.Backpack end end
     end
 end)
@@ -420,4 +542,4 @@ end)
 Mini.MouseButton1Click:Connect(function() Main.Visible = false OpenCircle.Visible = true end)
 OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true OpenCircle.Visible = false end)
 
-StarterGui:SetCore("SendNotification", {Title = "HORROR BOSS", Text = "V3.6 Stable Loaded", Duration = 5})
+StarterGui:SetCore("SendNotification", {Title = "HORROR BOSS", Text = "V3.9 Fix Orbit UI", Duration = 5})
