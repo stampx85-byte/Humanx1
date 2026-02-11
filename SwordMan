@@ -1,0 +1,121 @@
+-- รันแอนิเมชันจาก URL พร้อมกับสคิปต์หลัก
+task.spawn(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/animation%20%202"))()
+end)
+
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local Debris = game:GetService("Debris")
+
+-- === [ชุดเดิมเป๊ะ 100% ห้ามเปลี่ยน] ===
+local function applyBloxOutfit()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local BloxRemote = ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
+    local outfitData = {
+        ["Accessories"] = {
+            {["AssetId"] = 78204675610437, ["AccessoryType"] = Enum.AccessoryType.Face},
+            {["AssetId"] = 17716418622, ["AccessoryType"] = Enum.AccessoryType.Hair},
+            {["AssetId"] = 17760458453, ["AccessoryType"] = Enum.AccessoryType.Shirt, ["IsLayered"] = true, ["Order"] = 8, ["Puffiness"] = 0.5}
+        },
+        ["Shirt"] = 121670814709921, ["Pants"] = 95582477599560,
+        ["Torso"] = 132977038357232, ["LeftArm"] = 138017862940846, ["RightArm"] = 140547807504692,
+        ["LeftLeg"] = 134444446333310, ["RightLeg"] = 76672609579386, 
+        ["HeadColor"] = Color3.fromRGB(0, 0, 0), ["TorsoColor"] = Color3.fromRGB(0, 0, 0)
+    }
+    BloxRemote:FireServer(outfitData)
+end
+
+-- === [บทพูดภาษาญี่ปุ่นเล่าเรื่องต้นกำเนิด] ===
+local quotes = {
+    "「古の血脈... 暗闇の中から目覚める」", -- สายเลือดโบราณ... ตื่นขึ้นจากความมืดมิด
+    "「復讐の刃が、再び月光に映る」",    -- คมดาบแห่งการล้างแค้น สะท้อนแสงจันทร์อีกครั้ง
+    "「死の準備はできていますか？」"      -- พร้อมรึยังสำหรับความตาย?
+}
+
+-- === [ระบบ Fast Respawn (เกิดที่เดิมทันที)] ===
+local lastCFrame = nil
+player.CharacterAdded:Connect(function(newChar)
+    local hrp = newChar:WaitForChild("HumanoidRootPart", 5)
+    if hrp and lastCFrame then
+        task.wait() -- รอแว็บเดียวเพื่อให้เอนจิ้นพร้อม
+        hrp.CFrame = lastCFrame
+    end
+    applyBloxOutfit()
+end)
+
+-- ตรวจสอบการ Reset/ตาย เพื่อบันทึกตำแหน่ง
+RunService.Heartbeat:Connect(function()
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid").Health > 0 then
+        lastCFrame = char.HumanoidRootPart.CFrame
+    end
+end)
+
+-- ลดเวลาการรอเกิด (Fast Reset)
+game:GetService("GuiService").SelectedObject = nil -- เคลียร์เผื่อค้าง
+settings().Physics.AllowSleep = false 
+
+-- === [มุมกล้องใหม่ Cinematic - ตัดการวาร์ปออก] ===
+local function playSamuraiIntro()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    
+    local cc = Instance.new("ColorCorrectionEffect", Lighting)
+    cc.Saturation = -0.4; cc.Contrast = 0.3; cc.TintColor = Color3.fromRGB(255, 245, 230)
+    Lighting.ExposureCompensation = 0.3
+    Debris:AddItem(cc, 15)
+
+    local screenGui = Instance.new("ScreenGui", player.PlayerGui)
+    screenGui.IgnoreGuiInset = true
+    local topBar = Instance.new("Frame", screenGui)
+    topBar.Size = UDim2.new(1, 0, 0.18, 0); topBar.BackgroundColor3 = Color3.new(0, 0, 0); topBar.Position = UDim2.new(0, 0, -0.2, 0)
+    local bottomBar = Instance.new("Frame", screenGui)
+    bottomBar.Size = UDim2.new(1, 0, 0.18, 0); bottomBar.BackgroundColor3 = Color3.new(0, 0, 0); bottomBar.Position = UDim2.new(0, 0, 1, 0)
+    local label = Instance.new("TextLabel", bottomBar)
+    label.Size = UDim2.new(1, 0, 0.8, 0); label.BackgroundTransparency = 1; label.TextColor3 = Color3.new(1, 1, 1); label.TextSize = 32; label.Font = Enum.Font.Antique; label.TextTransparency = 1
+    
+    TweenService:Create(topBar, TweenInfo.new(1.5), {Position = UDim2.new(0,0,0,0)}):Play()
+    TweenService:Create(bottomBar, TweenInfo.new(1.5), {Position = UDim2.new(0,0,0.82,0)}):Play()
+
+    camera.CameraType = Enum.CameraType.Scriptable
+    
+    task.spawn(function()
+        -- Scene 1: มุมต่ำ เน้นความเกรงขาม
+        camera.CFrame = CFrame.new(hrp.Position + hrp.CFrame.LookVector * 10 + Vector3.new(0, -1, 0), hrp.Position + Vector3.new(0, 2, 0))
+        label.Text = quotes[1]
+        TweenService:Create(label, TweenInfo.new(1), {TextTransparency = 0}):Play()
+        task.wait(4)
+        TweenService:Create(label, TweenInfo.new(1), {TextTransparency = 1}):Play()
+        
+        -- Scene 2: มุมเฉียงจากด้านบน (เล่าเรื่อง)
+        camera.CFrame = CFrame.new(hrp.Position + hrp.CFrame.RightVector * 8 + Vector3.new(0, 5, 0), hrp.Position)
+        label.Text = quotes[2]
+        TweenService:Create(label, TweenInfo.new(1), {TextTransparency = 0}):Play()
+        task.wait(4)
+        TweenService:Create(label, TweenInfo.new(1), {TextTransparency = 1}):Play()
+
+        -- Scene 3: ปิดจบแบบปะทะหน้ากล้อง (Final Focus)
+        camera.CFrame = CFrame.new(hrp.Position + hrp.CFrame.LookVector * 4 + Vector3.new(0, 1.5, 0), hrp.Position + Vector3.new(0, 1.5, 0))
+        label.Text = quotes[3]
+        TweenService:Create(label, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+        
+        -- เอฟเฟกต์ภาพสวยๆ (Zoom Slow)
+        TweenService:Create(camera, TweenInfo.new(3), {FieldOfView = 50}):Play()
+        
+        task.wait(3)
+        camera.CameraType = Enum.CameraType.Custom
+        camera.FieldOfView = 70
+        screenGui:Destroy()
+    end)
+end
+
+local function onSpawn()
+    applyBloxOutfit()
+    task.wait(0.5)
+    playSamuraiIntro()
+end
+
+if player.Character then onSpawn() end
