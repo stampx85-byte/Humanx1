@@ -1,0 +1,208 @@
+-- [[ DARK VELOCITY SYSTEM v1.0 ]] --
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+local Holder = Instance.new("Frame")
+local UIList = Instance.new("UIListLayout")
+
+-- Setup ScreenGui
+ScreenGui.Name = "DarkVelocity_UI"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Main Frame
+Main.Name = "Main"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0.5, -125, 0.5, -100)
+Main.Size = UDim2.new(0, 250, 0, 250)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = Main
+
+-- Title
+Title.Name = "Title"
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "VELOCITY SYSTEM"
+Title.TextColor3 = Color3.fromRGB(200, 0, 0)
+Title.TextSize = 18
+Title.Font = Enum.Font.SpecialElite
+
+-- Content Holder
+Holder.Name = "Holder"
+Holder.Parent = Main
+Holder.BackgroundTransparency = 1
+Holder.Position = UDim2.new(0, 10, 0, 45)
+Holder.Size = UDim2.new(1, -20, 1, -55)
+
+UIList.Parent = Holder
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+UIList.Padding = UDim.new(0, 10)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- Helper Function: Create Input & Button
+local function createInput(placeholder, btnText, callback)
+    local Frame = Instance.new("Frame")
+    local Box = Instance.new("TextBox")
+    local Btn = Instance.new("TextButton")
+    local BoxCorner = Instance.new("UICorner")
+    local BtnCorner = Instance.new("UICorner")
+
+    Frame.Size = UDim2.new(1, 0, 0, 35)
+    Frame.BackgroundTransparency = 1
+    Frame.Parent = Holder
+
+    Box.Size = UDim2.new(0.6, -5, 1, 0)
+    Box.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+    Box.Text = ""
+    Box.PlaceholderText = placeholder
+    Box.PlaceholderColor3 = Color3.fromRGB(100, 0, 0)
+    Box.TextColor3 = Color3.fromRGB(255, 50, 50)
+    Box.Font = Enum.Font.SpecialElite
+    Box.TextSize = 14
+    Box.Parent = Frame
+    BoxCorner.CornerRadius = UDim.new(0, 4)
+    BoxCorner.Parent = Box
+
+    Btn.Size = UDim2.new(0.4, 0, 1, 0)
+    Btn.Position = UDim2.new(0.6, 5, 0, 0)
+    Btn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    Btn.Text = btnText
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.Font = Enum.Font.SpecialElite
+    Btn.TextSize = 12
+    Btn.Parent = Frame
+    BtnCorner.CornerRadius = UDim.new(0, 4)
+    BtnCorner.Parent = Btn
+
+    Btn.MouseButton1Click:Connect(function()
+        callback(Box.Text)
+    end)
+end
+
+-- Create Toggle Button (For Noclip)
+local function createToggle(txt, callback)
+    local Btn = Instance.new("TextButton")
+    local Corner = Instance.new("UICorner")
+    local State = false
+
+    Btn.Size = UDim2.new(1, 0, 0, 35)
+    Btn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    Btn.Text = txt .. ": OFF"
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.Font = Enum.Font.SpecialElite
+    Btn.TextSize = 14
+    Btn.Parent = Holder
+    Corner.CornerRadius = UDim.new(0, 4)
+    Corner.Parent = Btn
+
+    Btn.MouseButton1Click:Connect(function()
+        State = not State
+        Btn.Text = txt .. ": " .. (State and "ON" or "OFF")
+        Btn.TextColor3 = State and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 255)
+        callback(State)
+    end)
+end
+
+-- [[ LOGIC SECTION ]] --
+
+-- WalkSpeed
+createInput("Speed Value", "SET SPEED", function(val)
+    local num = tonumber(val)
+    if num and lp.Character and lp.Character:FindFirstChild("Humanoid") then
+        lp.Character.Humanoid.WalkSpeed = num
+    end
+end)
+
+-- JumpPower
+createInput("Jump Value", "SET JUMP", function(val)
+    local num = tonumber(val)
+    if num and lp.Character and lp.Character:FindFirstChild("Humanoid") then
+        lp.Character.Humanoid.UseJumpPower = true
+        lp.Character.Humanoid.JumpPower = num
+    end
+end)
+
+-- Noclip
+local noclipConnection
+createToggle("NOCLIP", function(state)
+    if state then
+        noclipConnection = RunService.Stepped:Connect(function()
+            if lp.Character then
+                for _, part in pairs(lp.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        if noclipConnection then noclipConnection:Disconnect() end
+        if lp.Character then
+            for _, part in pairs(lp.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end)
+
+-- [[ MINIMIZE SYSTEM ]] --
+local MiniBtn = Instance.new("TextButton")
+MiniBtn.Parent = Main
+MiniBtn.Size = UDim2.new(0, 30, 0, 30)
+MiniBtn.Position = UDim2.new(1, -35, 0, 5)
+MiniBtn.BackgroundTransparency = 1
+MiniBtn.Text = "-"
+MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniBtn.TextSize = 30
+MiniBtn.Font = Enum.Font.SpecialElite
+
+local OpenCircle = Instance.new("ImageButton")
+OpenCircle.Parent = ScreenGui
+OpenCircle.Size = UDim2.new(0, 50, 0, 50)
+OpenCircle.Position = UDim2.new(0.05, 0, 0.5, -25)
+OpenCircle.Visible = false
+OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+OpenCircle.Image = "rbxassetid://99753024999347" -- ไอคอนเดิมที่คุณใช้
+OpenCircle.Active = true
+OpenCircle.Draggable = true
+Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0)
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Parent = OpenCircle
+Stroke.Thickness = 3
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Rainbow Effect
+task.spawn(function()
+    while true do
+        for i = 0, 1, 0.01 do
+            Stroke.Color = Color3.fromHSV(i, 1, 1)
+            task.wait(0.03)
+        end
+    end
+end)
+
+MiniBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenCircle.Visible = true
+end)
+
+OpenCircle.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenCircle.Visible = false
+end)
+
+print("Dark Velocity Loaded - Created for Dark Style")
