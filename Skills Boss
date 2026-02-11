@@ -493,7 +493,47 @@ createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v)
     end)
 end)
 
--- 4. อื่นๆ (คงเดิม)
+-- [ ADDED: 4. SPIRAL BARAGE (FLY ROUND SPIN) ]
+createToggle("SPIRAL BARAGE (FLY SPIN)", function(v)
+    _G.SpiralActive = v
+    local spiralAngle = 0
+    task.spawn(function()
+        while _G.SpiralActive do
+            RunService.Heartbeat:Wait()
+            if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end
+            local myHRP = plr.Character.HumanoidRootPart
+            
+            local target = getClosestPlayer(200)
+            local centerPos
+            
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                centerPos = target.Character.HumanoidRootPart.Position
+            else
+                centerPos = myHRP.Position + (myHRP.CFrame.LookVector * 15)
+            end
+
+            spiralAngle = spiralAngle + 0.15 
+            local radius = 12 
+            local height = 8 
+            
+            local offset = Vector3.new(math.cos(spiralAngle) * radius, height, math.sin(spiralAngle) * radius)
+            local targetCFrame = CFrame.new(centerPos + offset, centerPos) 
+            
+            myHRP.CFrame = targetCFrame
+            
+            for _, gun in ipairs(plr.Backpack:GetChildren()) do
+                if gun:IsA("Tool") and gun.Name ~= "Phone" then
+                    gun.Parent = plr.Character
+                    local rem = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire")
+                    if rem then rem:FireServer(centerPos) end 
+                    gun.Parent = plr.Backpack
+                end
+            end
+        end
+    end)
+end)
+
+-- 5. อื่นๆ (คงเดิม)
 createToggle("God Anti-Warp", function(v)
     antiWarpEnabled = v
     if v and plr.Character then lastValidPos = plr.Character.HumanoidRootPart.CFrame end
