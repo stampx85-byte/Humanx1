@@ -1,4 +1,4 @@
--- Horror Boss Executor V2.7 (Animation Tab & Bottom Bar Update)
+-- Horror Boss Executor V3.0 (Added BoomBox Only)
 local ScreenGui = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
 local UICorner = Instance.new("UICorner")
@@ -76,6 +76,26 @@ BottomLayout.Padding = UDim.new(0, 10)
 BottomLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 BottomLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
+-- UI Buttons Style Helper
+local function createQuickBtn(txt, parent)
+    local b = Instance.new("TextButton")
+    b.Parent = parent
+    b.Size = UDim2.new(0, 100, 0, 30)
+    b.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    b.BorderColor3 = Color3.fromRGB(255, 0, 0)
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 10
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    return b
+end
+
+-- [[ สร้างปุ่มใน Bottom Bar (หมวด Animation) ]]
+local R6Btn = createQuickBtn("R6 BOSS", BottomBar)
+local MarfiosoBtn = createQuickBtn("marfioso", BottomBar)
+local SwordManBtn = createQuickBtn("SwordMan", BottomBar) -- เพิ่มปุ่ม SwordMan ที่นี่
+
 -- [[ ปุ่มสองขีด (=) ด้านซ้ายบน ]]
 MenuLeftButton.Parent = Main
 MenuLeftButton.Size = UDim2.new(0, 30, 0, 30)
@@ -109,6 +129,14 @@ LeftLayout.Parent = SidebarLeft
 LeftLayout.Padding = UDim.new(0, 5)
 LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
+-- [[ สร้างปุ่มใน Sidebar Left ]]
+local IDAnimBtn = createQuickBtn("ID [Animation]", SidebarLeft)
+local NameCityBtn = createQuickBtn("Namecity", SidebarLeft)
+local SkillAuraBtn = createQuickBtn("SkillAura", SidebarLeft)
+local BodySizeBtn = createQuickBtn("BodySize", SidebarLeft)
+local SoundIDBtn = createQuickBtn("SoundID", SidebarLeft)
+local SpeedVuleBtn = createQuickBtn("SpeedVule", SidebarLeft)
+
 -- [[ แถบยาวด้านบน ]]
 TopBar.Parent = Main
 TopBar.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
@@ -136,31 +164,6 @@ ScriptWord.TextSize = 10
 ScriptWord.Font = Enum.Font.SpecialElite
 ScriptWord.TextXAlignment = Enum.TextXAlignment.Left
 
--- UI Buttons Style Helper
-local function createQuickBtn(txt, parent)
-    local b = Instance.new("TextButton")
-    b.Parent = parent
-    b.Size = UDim2.new(0, 100, 0, 30)
-    b.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
-    b.BorderColor3 = Color3.fromRGB(255, 0, 0)
-    b.Text = txt
-    b.TextColor3 = Color3.fromRGB(255, 255, 255)
-    b.Font = Enum.Font.SpecialElite
-    b.TextSize = 10
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
-    return b
-end
-
--- [[ สร้างปุ่มใน Bottom Bar ]]
-local R6Btn = createQuickBtn("R6 BOSS", BottomBar)
-local MarfiosoBtn = createQuickBtn("marfioso", BottomBar)
-
--- [[ สร้างปุ่มใน Sidebar Left ]]
-local IDAnimBtn = createQuickBtn("ID [Animation]", SidebarLeft)
-local NameCityBtn = createQuickBtn("Namecity", SidebarLeft)
-local SkillAuraBtn = createQuickBtn("SkillAura", SidebarLeft)
-local BodySizeBtn = createQuickBtn("BodySize", SidebarLeft)
-
 -- Sidebar Right
 Sidebar.Parent = Main
 Sidebar.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
@@ -174,6 +177,7 @@ SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 local ClickerBtn = createQuickBtn("Clicker Items", Sidebar)
 local XYZRemoteBtn = createQuickBtn("x y z Remote", Sidebar)
+local BoomBoxBtn = createQuickBtn("BoomBox", Sidebar) -- เพิ่มปุ่ม BoomBox ที่นี่
 
 -- TopBar Buttons
 local CityBtn = createQuickBtn("City [TH]", TopBar)
@@ -198,7 +202,7 @@ MenuButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 MenuButton.TextSize = 25
 MenuButton.Font = Enum.Font.SpecialElite
 
--- Title & Editor (Keeping original setup)
+-- Title & Editor
 Title.Parent = Main
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundTransparency = 1
@@ -253,7 +257,7 @@ UIList.Parent = Btns
 UIList.FillDirection = Enum.FillDirection.Horizontal
 UIList.Padding = UDim.new(0, 8)
 
-local function createBtn(txt, color)
+local function createBtn(txt)
     local b = Instance.new("TextButton")
     b.Parent = Btns
     b.Size = UDim2.new(0, 81, 1, 0)
@@ -266,9 +270,9 @@ local function createBtn(txt, color)
     return b
 end
 
-local run = createBtn("EXECUTE", Color3.fromRGB(255, 0, 0))
-local clr = createBtn("PURGE", Color3.fromRGB(150, 0, 0))
-local cpy = createBtn("DRAIN", Color3.fromRGB(150, 0, 0))
+local run = createBtn("EXECUTE")
+local clr = createBtn("PURGE")
+local cpy = createBtn("DRAIN")
 
 -- [[ Logic Section ]]
 
@@ -289,18 +293,17 @@ MiniButton.MouseButton1Click:Connect(function()
     OpenCircle.Visible = true
 end)
 
--- Mini Circle Setup (Updated Icon ID)
+-- Mini Circle Setup
 OpenCircle.Parent = ScreenGui
 OpenCircle.Size = UDim2.new(0, 60, 0, 60)
 OpenCircle.Position = UDim2.new(0.05, 0, 0.5, -30)
 OpenCircle.Visible = false
 OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
-OpenCircle.Image = "rbxassetid://99753024999347" -- ไอคอนใหม่ที่คุณเลือก
+OpenCircle.Image = "rbxassetid://99753024999347"
 OpenCircle.Active = true
 OpenCircle.Draggable = true
 Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0)
 
--- [[ ส่วนที่เพิ่มใหม่: ระบบขอบรุ้งสำหรับไอคอนย่อจอ ]]
 local RainbowStroke = Instance.new("UIStroke")
 RainbowStroke.Parent = OpenCircle
 RainbowStroke.Thickness = 3
@@ -327,13 +330,17 @@ run.MouseButton1Click:Connect(function()
 end)
 clr.MouseButton1Click:Connect(function() Editor.Text = "" end)
 
--- Animation Tab Scripts
+-- Animation Tab Scripts (Bottom Bar)
 R6Btn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/AdminScript"))()
 end)
 
 MarfiosoBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/marfioso"))()
+end)
+
+SwordManBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/SwordMan"))()
 end)
 
 -- Sidebar Left Scripts
@@ -353,6 +360,27 @@ BodySizeBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Bodyscript"))()
 end)
 
+SoundIDBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/SoundDark"))()
+end)
+
+SpeedVuleBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/SpeedVule"))()
+end)
+
+-- Sidebar Right Scripts
+ClickerBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%81%E0%B8%94%E0%B8%A3%E0%B8%B0%E0%B8%A2%E0%B8%B0%E0%B9%84%E0%B8%81%E0%B8%A5"))()
+end)
+
+XYZRemoteBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%9E%E0%B8%B4%E0%B8%81%E0%B8%B1%E0%B8%94%E0%B8%82%E0%B8%AD%E0%B8%87"))()
+end)
+
+BoomBoxBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/BoomBox"))()
+end)
+
 -- Other Scripts
 CityBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kill%20Aura%20all"))()
@@ -360,12 +388,4 @@ end)
 
 GlueBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Glue%20piece%20all"))()
-end)
-
-ClickerBtn.MouseButton1Click:Connect(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%81%E0%B8%94%E0%B8%A3%E0%B8%B0%E0%B8%A2%E0%B8%B0%E0%B9%84%E0%B8%81%E0%B8%A5"))()
-end)
-
-XYZRemoteBtn.MouseButton1Click:Connect(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%9E%E0%B8%B4%E0%B8%81%E0%B8%B1%E0%B8%94%E0%B8%82%E0%B8%AD%E0%B8%87"))()
 end)
