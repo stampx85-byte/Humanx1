@@ -1,0 +1,226 @@
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+-- [ Setup ScreenGui ]
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RedCode_AudioV8_Draggable"
+ScreenGui.Parent = CoreGui
+ScreenGui.IgnoreGuiInset = true
+
+-- [ 🔥 ฟังก์ชันลากที่แก้ใหม่ (ลื่นและลากติดแน่นอน) ]
+local function MakeDraggable(gui)
+    local dragging, dragInput, dragStart, startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        -- ใช้ Tween เพื่อความสมูท
+        TweenService:Create(gui, TweenInfo.new(0.1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        }):Play()
+    end
+
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+-- [ Main Frame ]
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 500, 0, 250)
+Main.Position = UDim2.new(0.5, -250, 0.5, -125)
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.BorderSizePixel = 0
+Main.Active = true -- สำคัญเพื่อให้ลากได้
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
+
+-- [ Title & Buttons ]
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "AUDIO STEALER SYSTEM V8"
+Title.TextColor3 = Color3.fromRGB(200, 0, 0)
+Title.TextSize = 16
+Title.Font = Enum.Font.SpecialElite
+Title.BackgroundTransparency = 1
+
+local MiniBtn = Instance.new("TextButton", Main)
+MiniBtn.Size = UDim2.new(0, 30, 0, 30)
+MiniBtn.Position = UDim2.new(1, -35, 0, 0)
+MiniBtn.Text = "-"
+MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniBtn.TextSize = 25
+MiniBtn.Font = Enum.Font.SpecialElite
+MiniBtn.BackgroundTransparency = 1
+
+-- [ Profile Section (Left) ]
+local Sidebar = Instance.new("Frame", Main)
+Sidebar.Size = UDim2.new(0, 110, 1, -40)
+Sidebar.Position = UDim2.new(0.02, 0, 0.15, 0)
+Sidebar.BackgroundTransparency = 1
+
+local CharImg = Instance.new("ImageLabel", Sidebar)
+CharImg.Size = UDim2.new(1, 0, 0, 100)
+CharImg.Image = Players:GetUserThumbnailAsync(LP.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+CharImg.BackgroundTransparency = 1
+CharImg.ScaleType = Enum.ScaleType.Fit
+
+local CharName = Instance.new("TextLabel", Sidebar)
+CharName.Size = UDim2.new(1, 0, 0, 20)
+CharName.Position = UDim2.new(0, 0, 0, 105)
+CharName.Text = LP.DisplayName
+CharName.TextColor3 = Color3.fromRGB(255, 0, 0)
+CharName.Font = Enum.Font.SpecialElite
+CharName.TextSize = 10
+CharName.BackgroundTransparency = 1
+
+-- [ Scrolling Area (Middle) ]
+local ScrollFrame = Instance.new("ScrollingFrame", Main)
+ScrollFrame.Size = UDim2.new(0, 260, 0, 150)
+ScrollFrame.Position = UDim2.new(0.26, 0, 0.15, 0)
+ScrollFrame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+ScrollFrame.BorderColor3 = Color3.fromRGB(100, 0, 0)
+ScrollFrame.ScrollBarThickness = 3
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local UIList = Instance.new("UIListLayout", ScrollFrame)
+UIList.Padding = UDim.new(0, 5)
+
+-- [ Bottom Buttons ]
+local BtnHolder = Instance.new("Frame", Main)
+BtnHolder.Size = UDim2.new(0, 260, 0, 30)
+BtnHolder.Position = UDim2.new(0.26, 0, 0.82, 0)
+BtnHolder.BackgroundTransparency = 1
+
+local function CreateBottom(txt, xPos, color)
+    local b = Instance.new("TextButton", BtnHolder)
+    b.Size = UDim2.new(0, 82, 1, 0)
+    b.Position = UDim2.new(0, xPos, 0, 0)
+    b.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.Code
+    b.TextSize = 11
+    Instance.new("UIStroke", b).Color = color
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    return b
+end
+
+local ExecuteBtn = CreateBottom("SCAN ID", 0, Color3.fromRGB(255,0,0))
+local PurgeBtn = CreateBottom("PURGE", 89, Color3.fromRGB(150,0,0))
+local CopyAllBtn = CreateBottom("DRAIN", 178, Color3.fromRGB(150,0,0))
+
+-- [ Card Logic ]
+local function CreateStealCard(targetPlayer, audioId)
+    local Card = Instance.new("Frame", ScrollFrame)
+    Card.Size = UDim2.new(1, -10, 0, 50)
+    Card.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    Instance.new("UICorner", Card)
+
+    local TargetImg = Instance.new("ImageLabel", Card)
+    TargetImg.Size = UDim2.new(0, 40, 0, 40)
+    TargetImg.Position = UDim2.new(0, 5, 0, 5)
+    TargetImg.Image = Players:GetUserThumbnailAsync(targetPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+    TargetImg.BackgroundTransparency = 1
+    Instance.new("UICorner", TargetImg).CornerRadius = UDim.new(1, 0)
+
+    local Info = Instance.new("TextLabel", Card)
+    Info.Size = UDim2.new(1, -100, 1, 0)
+    Info.Position = UDim2.new(0, 50, 0, 0)
+    Info.Text = targetPlayer.DisplayName .. "\nID: " .. audioId
+    Info.TextColor3 = Color3.new(1, 1, 1)
+    Info.TextSize = 10
+    Info.Font = Enum.Font.Code
+    Info.TextXAlignment = Enum.TextXAlignment.Left
+    Info.BackgroundTransparency = 1
+
+    local Copy = Instance.new("TextButton", Card)
+    Copy.Size = UDim2.new(0, 45, 0, 30)
+    Copy.Position = UDim2.new(1, -50, 0, 10)
+    Copy.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+    Copy.Text = "COPY"
+    Copy.TextColor3 = Color3.new(1, 1, 1)
+    Copy.Font = Enum.Font.SpecialElite
+    Copy.TextSize = 10
+    Instance.new("UICorner", Copy)
+
+    Copy.MouseButton1Click:Connect(function()
+        setclipboard(tostring(audioId))
+        Copy.Text = "DONE"
+        task.wait(1)
+        Copy.Text = "COPY"
+    end)
+    
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
+end
+
+-- [ Penetrate Scan ]
+local function Scan()
+    for _, v in pairs(ScrollFrame:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character then
+            for _, s in pairs(p.Character:GetDescendants()) do
+                if s:IsA("Sound") then
+                    local id = s.SoundId:match("%d+")
+                    if id and #id >= 6 then CreateStealCard(p, id) end
+                end
+            end
+        end
+    end
+end
+
+ExecuteBtn.MouseButton1Click:Connect(Scan)
+PurgeBtn.MouseButton1Click:Connect(function() 
+    for _, v in pairs(ScrollFrame:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end 
+end)
+
+-- [ Minimize Logic ]
+local OpenCircle = Instance.new("ImageButton", ScreenGui)
+OpenCircle.Size = UDim2.new(0, 60, 0, 60)
+OpenCircle.Position = UDim2.new(0.05, 0, 0.5, -30)
+OpenCircle.Visible = false
+OpenCircle.Image = "rbxassetid://14579989646"
+OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+OpenCircle.Active = true -- สำคัญเพื่อให้ลากได้
+Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", OpenCircle).Color = Color3.fromRGB(255, 0, 0)
+
+MiniBtn.MouseButton1Click:Connect(function() 
+    Main.Visible = false
+    OpenCircle.Visible = true 
+end)
+
+OpenCircle.MouseButton1Click:Connect(function() 
+    Main.Visible = true
+    OpenCircle.Visible = false 
+end)
+
+-- [ 🔥 เรียกใช้ฟังก์ชันลาก ]
+MakeDraggable(Main)
+MakeDraggable(OpenCircle)
+
+Scan()
