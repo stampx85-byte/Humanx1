@@ -1,0 +1,226 @@
+-- [[ BOOMBOX RAINBOW HORROR EDITION - V6.0 ULTIMATE ]] --
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+
+local MegaColors = {
+    "Bright red", "Bright blue", "Bright yellow", "Bright green", "Bright violet", "Bright orange",
+    "Electric blue", "Hot pink", "Lime green", "Deep orange", "Cyan", "Magenta", "Gold", "Royal purple",
+    "New Yeller", "Really red", "Really blue", "Neon orange", "Alder", "Pastel blue", "Pastel violet",
+    "Toothpaste", "Parsley green", "Sand blue", "Medium blue", "Lapis", "Smoky grey", "Ghost grey",
+    "Carnation pink", "Mauve", "Sunrise", "Sunset", "Deep blue", "Navy blue", "Teal", "Camo",
+    "Dark green", "Pine Cone", "Olive", "Br. yellowish orange", "Bright bluish green", "CGA brown",
+    "Dark orange", "Deep orange", "Electric blue", "Eggplant", "Fog", "Grime", "Institutional white",
+    "Linen", "Light reddish violet", "Mulberry", "Persimmon", "Pistachio", "Rust", "Sand red",
+    "Shamrock", "Steel blue", "Terra Cotta", "Tropical blue"
+}
+
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local UIStroke = Instance.new("UIStroke")
+local Title = Instance.new("TextLabel")
+local MonitorFrame = Instance.new("ScrollingFrame")
+local StatusLog = Instance.new("TextBox")
+local BtnsFrame = Instance.new("Frame")
+local UIList = Instance.new("UIListLayout")
+
+-- Profile Area
+local CharFrame = Instance.new("Frame")
+local CharImage = Instance.new("ImageLabel")
+local CharName = Instance.new("TextLabel")
+
+-- Controls
+local MiniButton = Instance.new("TextButton") 
+local OpenCircle = Instance.new("ImageButton") 
+
+-- Setup Main UI
+ScreenGui.Parent = game.CoreGui
+Main.Name = "RainbowHorror_V6"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0.5, -200, 0.5, -100)
+Main.Size = UDim2.new(0, 400, 0, 200)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = Main
+
+UIStroke.Thickness = 2
+UIStroke.Color = Color3.fromRGB(255, 0, 0)
+UIStroke.Parent = Main
+
+-- Title
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "RAINBOW BOOMBOX - HORROR EDITION"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 16
+Title.Font = Enum.Font.SpecialElite
+
+-- Profile Section (Left)
+CharFrame.Parent = Main
+CharFrame.BackgroundTransparency = 1
+CharFrame.Position = UDim2.new(0.03, 0, 0.2, 0)
+CharFrame.Size = UDim2.new(0, 90, 0, 120)
+
+CharImage.Parent = CharFrame
+CharImage.BackgroundTransparency = 1
+CharImage.Size = UDim2.new(1, 0, 0.8, 0)
+CharImage.Image = Players:GetUserThumbnailAsync(lp.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+
+CharName.Parent = CharFrame
+CharName.Size = UDim2.new(1, 0, 0.2, 0)
+CharName.Position = UDim2.new(0, 0, 0.8, 2)
+CharName.BackgroundTransparency = 1
+CharName.Text = lp.DisplayName:upper()
+CharName.TextColor3 = Color3.fromRGB(200, 0, 0)
+CharName.Font = Enum.Font.Code
+CharName.TextSize = 10
+
+-- Monitor Area (Right)
+MonitorFrame.Parent = Main
+MonitorFrame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+MonitorFrame.BorderSizePixel = 0
+MonitorFrame.Position = UDim2.new(0.28, 0, 0.2, 0)
+MonitorFrame.Size = UDim2.new(0, 275, 0, 110)
+MonitorFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
+MonitorFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+MonitorFrame.ScrollBarThickness = 2
+
+StatusLog.Parent = MonitorFrame
+StatusLog.BackgroundTransparency = 1
+StatusLog.Size = UDim2.new(1, -10, 1, 0)
+StatusLog.Position = UDim2.new(0, 5, 0, 5)
+StatusLog.Text = ">> SYSTEM READY\n>> WAITING FOR INJECTION..."
+StatusLog.TextColor3 = Color3.fromRGB(255, 50, 50)
+StatusLog.TextSize = 12
+StatusLog.Font = Enum.Font.Code
+StatusLog.MultiLine = true
+StatusLog.TextEditable = false
+StatusLog.TextXAlignment = Enum.TextXAlignment.Left
+StatusLog.TextYAlignment = Enum.TextYAlignment.Top
+
+-- Buttons Container
+BtnsFrame.Parent = Main
+BtnsFrame.BackgroundTransparency = 1
+BtnsFrame.Position = UDim2.new(0.28, 0, 0.8, 0)
+BtnsFrame.Size = UDim2.new(0, 275, 0, 30)
+
+UIList.Parent = BtnsFrame
+UIList.FillDirection = Enum.FillDirection.Horizontal
+UIList.Padding = UDim.new(0, 10)
+
+-- Button Creator
+local function createBtn(txt, color)
+    local b = Instance.new("TextButton")
+    b.Parent = BtnsFrame
+    b.Size = UDim2.new(0, 132, 1, 0)
+    b.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 12
+    local bc = Instance.new("UICorner", b)
+    bc.CornerRadius = UDim.new(0, 4)
+    local bs = Instance.new("UIStroke", b)
+    bs.Color = color
+    bs.Thickness = 1
+    return b
+end
+
+local startBtn = createBtn("START INJECT", Color3.fromRGB(255, 0, 0))
+local stopBtn = createBtn("STOP SYSTEM", Color3.fromRGB(150, 0, 0))
+
+-- Close/Minimize Button
+MiniButton.Parent = Main
+MiniButton.Size = UDim2.new(0, 30, 0, 30)
+MiniButton.Position = UDim2.new(1, -35, 0, 5)
+MiniButton.BackgroundTransparency = 1
+MiniButton.Text = "X"
+MiniButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniButton.TextSize = 20
+MiniButton.Font = Enum.Font.SpecialElite
+
+-- Mini Circle Setup (สำหรับตอนย่อ)
+OpenCircle.Parent = ScreenGui
+OpenCircle.Size = UDim2.new(0, 60, 0, 60)
+OpenCircle.Position = UDim2.new(0, 20, 0.5, -30)
+OpenCircle.Visible = false
+OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+OpenCircle.Image = "rbxassetid://99753024999347"
+OpenCircle.Active = true
+OpenCircle.Draggable = true
+Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0)
+local CircleStroke = Instance.new("UIStroke", OpenCircle)
+CircleStroke.Thickness = 3
+
+-- Rainbow Effect for Circle
+task.spawn(function()
+    while true do
+        for i = 0, 1, 0.01 do
+            CircleStroke.Color = Color3.fromHSV(i, 1, 1)
+            task.wait(0.03)
+        end
+    end
+end)
+
+-- [[ LOGIC ]] --
+
+local isRunning = false
+local loopThread
+
+startBtn.MouseButton1Click:Connect(function()
+    if isRunning then return end
+    isRunning = true
+    StatusLog.Text = ">> INITIALIZING RAINBOW...\n>> INJECTING DATA..."
+    
+    loopThread = task.spawn(function()
+        while isRunning do
+            for i, colorName in pairs(MegaColors) do
+                if not isRunning then break end
+                
+                pcall(function()
+                    workspace.DRadio_Script.Color:FireServer(BrickColor.new(colorName))
+                end)
+                
+                StatusLog.Text = ">> STATUS: RUNNING\n>> COLOR: "..colorName:upper().."\n>> PROGRESS: ["..i.."/60]"
+                
+                -- Horror Shake Effect
+                if i % 5 == 0 then
+                    Main.Position = Main.Position + UDim2.new(0, math.random(-1, 1), 0, math.random(-1, 1))
+                end
+                
+                task.wait(0.07)
+            end
+        end
+    end)
+end)
+
+stopBtn.MouseButton1Click:Connect(function()
+    isRunning = false
+    if loopThread then task.cancel(loopThread) end
+    StatusLog.Text = ">> SYSTEM TERMINATED\n>> STATUS: STANDBY"
+end)
+
+MiniButton.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenCircle.Visible = true
+end)
+
+OpenCircle.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenCircle.Visible = false
+end)
+
+-- Tag ด้านล่าง
+local Tag = Instance.new("TextLabel", Main)
+Tag.Size = UDim2.new(0, 100, 0, 20)
+Tag.Position = UDim2.new(0.02, 0, 0.9, 0)
+Tag.BackgroundTransparency = 1
+Tag.Text = "HORROR RAINBOW V6"
+Tag.TextColor3 = Color3.fromRGB(100, 0, 0)
+Tag.Font = Enum.Font.SpecialElite
+Tag.TextSize = 8
