@@ -26,7 +26,7 @@ end)
 setreadonly(mt, true) 
 
 -- [[ VIP & ADMIN LIST ]] 
-local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828","llukaku991","LeoSingha508","Ruce066","16xd5664","klkjkukoo","85IIQ","maidbuzs6_199","Yoojin889","burnserika"} 
+local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828","llukaku991","LeoSingha508","Ruce066","16xd5664","klkjkukoo","85IIQ","maidbuzs6_199","Yoojin889","burnserika","maidbuzs6_199"} 
 local isVIP = false 
 for _, name in ipairs(allowedNames) do if plr.Name == name then isVIP = true break end end 
 
@@ -215,6 +215,13 @@ local TargetPlayer = nil
 local OrbitAngle = 0 
 local ClickToShootEnabled = false
 
+-- [ HIGHLIGHT SYSTEM ]
+local SelectionHighlight = Instance.new("Highlight")
+SelectionHighlight.FillColor = Color3.fromRGB(255, 0, 0)
+SelectionHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+SelectionHighlight.FillTransparency = 0.5
+SelectionHighlight.Name = "ClickSelectTarget"
+
 local function UpdateRightList() 
     for _, v in ipairs(RightList:GetChildren()) do if v:IsA("Frame") or v:IsA("TextButton") then v:Destroy() end end 
     local RefBtn = Instance.new("TextButton", RightList) 
@@ -329,14 +336,28 @@ end
 -- [ FEATURES LOGIC ] 
 --------------------------------------------------------- 
 
--- [ NEW: CLICK TO SHOOT LOGIC (NO WARP) ]
+-- [ UPDATED: CLICK TO SHOOT WITH HIGHLIGHT & EASY SELECT ]
+RunService.RenderStepped:Connect(function()
+    if ClickToShootEnabled then
+        local target = mouse.Target
+        if target and target.Parent and target.Parent:FindFirstChild("Humanoid") then
+            SelectionHighlight.Parent = target.Parent
+            SelectionHighlight.Enabled = true
+        else
+            SelectionHighlight.Enabled = false
+        end
+    else
+        SelectionHighlight.Enabled = false
+    end
+end)
+
 mouse.Button1Down:Connect(function()
     if ClickToShootEnabled then
         local target = mouse.Target
         if target and target.Parent and target.Parent:FindFirstChild("Humanoid") then
             local clickedPlr = game.Players:GetPlayerFromCharacter(target.Parent)
             if clickedPlr and clickedPlr ~= plr and clickedPlr.Character and clickedPlr.Character:FindFirstChild("Head") then
-                -- รัวกระสุนใส่ทันทีที่คลิก (ไม่วาร์ป)
+                -- ยิงใส่ทันที
                 local tHeadPos = clickedPlr.Character.Head.Position + (clickedPlr.Character.Head.Velocity * 0.12)
                 local finalPos = ApplyReflectAndPierce(tHeadPos)
                 for _, gun in ipairs(plr.Backpack:GetChildren()) do
@@ -369,7 +390,7 @@ RunService.RenderStepped:Connect(function(dt)
     end 
 end) 
 
--- 1. [NEW] ULTRA DUAL-WIELD SWAP (RAPID) 
+-- 1. ULTRA DUAL-WIELD SWAP (RAPID) 
 createToggle("ULTRA DUAL SWAP (RAPID)", function(v) 
     _G.DualSwapActive = v 
     task.spawn(function() 
@@ -500,7 +521,7 @@ createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v)
     end) 
 end) 
 
--- [ ADDED: 4. SPIRAL BARAGE (FLY ROUND SPIN) ] 
+-- 4. SPIRAL BARAGE (FLY ROUND SPIN) 
 createToggle("SPIRAL BARAGE (FLY SPIN)", function(v) 
     _G.SpiralActive = v 
     local spiralAngle = 0 
@@ -534,10 +555,10 @@ createToggle("SPIRAL BARAGE (FLY SPIN)", function(v)
     end) 
 end) 
 
--- 5. [NEW] CLICK TO SHOOT TOGGLE
-createToggle("Click Avatar To Shoot", function(v)
-    ClickToShootEnabled = v
-end)
+-- 5. CLICK TO SHOOT TOGGLE 
+createToggle("Click Avatar To Shoot", function(v) 
+    ClickToShootEnabled = v 
+end) 
 
 -- 6. อื่นๆ (คงเดิม) 
 createToggle("God Anti-Warp", function(v) 
@@ -588,4 +609,4 @@ end)
 Mini.MouseButton1Click:Connect(function() Main.Visible = false OpenCircle.Visible = true end) 
 OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true OpenCircle.Visible = false end) 
 
-StarterGui:SetCore("SendNotification", {Title = "HORROR BOSS", Text = "V4.1 Click-Shoot Added", Duration = 5})
+StarterGui:SetCore("SendNotification", {Title = "HORROR BOSS", Text = "V4.2 Highlight Target Active", Duration = 5})
