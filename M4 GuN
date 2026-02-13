@@ -1,0 +1,258 @@
+-- [[ Horror Gun Mod V1.0 - EXTREME EDITION (M4 DUP & ULTRA SPEED) ]] --
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- [ Configuration ]
+_G.RapidFire = false
+_G.SilentAim = false
+_G.NoAnim = false
+_G.FastReload = false
+_G.HeadshotFocus = false
+
+-- [[ AUTO BUY & DUP M4 SYSTEM ]] --
+local autoDupM4 = true 
+local isForcingHolster = true 
+
+local function needsMoreM4(itemName)
+    local count = 0
+    for _, v in ipairs(lp.Backpack:GetChildren()) do if v.Name == itemName then count = count + 1 end end
+    if lp.Character then
+        for _, v in ipairs(lp.Character:GetChildren()) do if v.Name == itemName then count = count + 1 end end
+    end
+    -- แก้ไข: ให้หยุดซื้อ/ดูบ เมื่อมีครบ 2 อันตามสั่ง
+    return count < 2
+end
+
+local function findAndClickDup(targetPos)
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") then
+            local part = v.Parent
+            if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then
+                fireclickdetector(v)
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- Force Holster Loop
+task.spawn(function()
+    RunService.Stepped:Connect(function()
+        if isForcingHolster and lp.Character then
+            for _, tool in ipairs(lp.Character:GetChildren()) do
+                if tool:IsA("Tool") then tool.Parent = lp.Backpack end
+            end
+        end
+    end)
+end)
+
+-- M4 Dup Loop (หยุดเมื่อครบ 2)
+task.spawn(function()
+    local toolStorage = game:GetService("ReplicatedStorage"):WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+    while true do
+        if autoDupM4 and needsMoreM4("M4") then
+            for i = 1, 2 do -- ซื้อแค่ 2 อัน
+                if not autoDupM4 or not needsMoreM4("M4") then break end
+                if findAndClickDup(Vector3.new(420.69, 167.69, 253.48)) then 
+                    task.wait(0.1)
+                    toolStorage:FireServer("Save", "M4")
+                end
+            end
+            task.wait(0.5)
+            for i = 1, 2 do 
+                if not autoDupM4 then break end
+                toolStorage:FireServer("Get", "M4")
+                task.wait(0.05)
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- [[ UI CREATION ]] --
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local SidebarLeft = Instance.new("Frame")
+local MiniButton = Instance.new("TextButton")
+local OpenCircle = Instance.new("ImageButton")
+
+ScreenGui.Parent = game.CoreGui
+Main.Name = "HorrorGunMod_Extreme"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0.5, -200, 0.5, -125)
+Main.Size = UDim2.new(0, 400, 0, 250)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "GUN MOD EXTREME [TH]"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 20
+Title.Font = Enum.Font.SpecialElite
+
+SidebarLeft.Parent = Main
+SidebarLeft.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+SidebarLeft.Position = UDim2.new(0, 10, 0, 50)
+SidebarLeft.Size = UDim2.new(0, 100, 0, 180)
+Instance.new("UICorner", SidebarLeft)
+
+local CharImage = Instance.new("ImageLabel", SidebarLeft)
+CharImage.Size = UDim2.new(1, 0, 0.7, 0)
+CharImage.BackgroundTransparency = 1
+CharImage.Image = Players:GetUserThumbnailAsync(lp.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+
+local CharName = Instance.new("TextLabel", SidebarLeft)
+CharName.Size = UDim2.new(1, 0, 0.3, 0)
+CharName.Position = UDim2.new(0, 0, 0.7, 0)
+CharName.BackgroundTransparency = 1
+CharName.Text = lp.DisplayName
+CharName.TextColor3 = Color3.fromRGB(200, 0, 0)
+CharName.Font = Enum.Font.SpecialElite
+CharName.TextSize = 10
+
+local ButtonList = Instance.new("ScrollingFrame", Main)
+ButtonList.Position = UDim2.new(0, 120, 0, 50)
+ButtonList.Size = UDim2.new(0, 260, 0, 180)
+ButtonList.BackgroundTransparency = 1
+ButtonList.ScrollBarThickness = 2
+ButtonList.CanvasSize = UDim2.new(0, 0, 2, 0)
+
+local UIList = Instance.new("UIListLayout", ButtonList)
+UIList.Padding = UDim.new(0, 10)
+
+local function createToggleBtn(baseName, startState, callback)
+    local btn = Instance.new("TextButton")
+    local currentState = startState
+    local function updateText()
+        local status = currentState and "[ON]" or "[OFF]"
+        local color = currentState and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+        btn.Text = baseName .. " " .. status
+        btn.TextColor3 = color
+    end
+    btn.Name = baseName
+    btn.Parent = ButtonList
+    btn.Size = UDim2.new(0.95, 0, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    btn.BorderSizePixel = 1
+    btn.BorderColor3 = Color3.fromRGB(150, 0, 0)
+    btn.Font = Enum.Font.SpecialElite
+    btn.TextSize = 14
+    Instance.new("UICorner", btn)
+    updateText()
+    btn.MouseButton1Click:Connect(function()
+        currentState = not currentState
+        updateText()
+        callback(currentState)
+    end)
+    return btn
+end
+
+-- [[ LOGIC FUNCTIONS ]] --
+
+local function BuyM4()
+    local targetPos = Vector3.new(420.69, 167.69, 253.48)
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") then
+            local part = v.Parent
+            if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then
+                fireclickdetector(v)
+            end
+        end
+    end
+end
+
+local function GetClosestTarget()
+    local target = nil
+    local dist = 1000 
+    for _, v in ipairs(Players:GetPlayers()) do
+        if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+            local head = v.Character:FindFirstChild("Head")
+            local hrp = v.Character.HumanoidRootPart
+            local d = (lp.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+            if d < dist then
+                dist = d
+                target = (_G.HeadshotFocus and head) and head.Position or hrp.Position
+            end
+        end
+    end
+    return target
+end
+
+-- Extreme Dual Shooting Loop (รัวหมดแม็กในรอบเดียว)
+task.spawn(function()
+    while true do
+        RunService.Heartbeat:Wait()
+        local guns = {}
+        for _, v in ipairs(lp.Backpack:GetChildren()) do if v.Name == "M4" then table.insert(guns, v) end end
+        for _, v in ipairs(lp.Character:GetChildren()) do if v.Name == "M4" then table.insert(guns, v) end end
+
+        if #guns > 0 and _G.RapidFire then
+            for i = 1, math.min(#guns, 2) do guns[i].Parent = lp.Character end
+            local aimPos = _G.SilentAim and GetClosestTarget() or lp:GetMouse().Hit.p
+
+            for _, gun in ipairs(guns) do
+                if gun.Parent == lp.Character and gun:FindFirstChild("ShootEvent") then
+                    if _G.FastReload then
+                        local config = gun:FindFirstChild("Configuration")
+                        local ammo = config and config:FindFirstChild("CurrentAmmo")
+                        if ammo and ammo.Value <= 0 and gun:FindFirstChild("ReloadEvent") then gun.ReloadEvent:FireServer() end
+                    end
+                    -- เร่งความเร็วการยิง: ส่งคำสั่งรวดเดียว 15 นัด (หมดแม็ก) ต่อ 1 รอบ
+                    for i = 1, 15 do 
+                        gun.ShootEvent:FireServer(aimPos)
+                    end
+                end
+            end
+            if _G.NoAnim then
+                local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+                if hum then for _, track in pairs(hum:GetPlayingAnimationTracks()) do track:Stop() end end
+            end
+        end
+    end
+end)
+
+-- [[ ASSIGN BUTTONS ]] --
+local buyBtn = Instance.new("TextButton", ButtonList)
+buyBtn.Size = UDim2.new(0.95, 0, 0, 40)
+buyBtn.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+buyBtn.Text = "🛒 BUY M4 WEAPON"
+buyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+buyBtn.Font = Enum.Font.SpecialElite
+buyBtn.TextSize = 14
+Instance.new("UICorner", buyBtn)
+buyBtn.MouseButton1Click:Connect(function() BuyM4() end)
+
+createToggleBtn("♻️ AUTO DUP 2 EA", autoDupM4, function(state) autoDupM4 = state end)
+createToggleBtn("🔥 ULTRA RAPID (MAX)", _G.RapidFire, function(state) _G.RapidFire = state end)
+createToggleBtn("🎯 AIM LOCK", _G.SilentAim, function(state) _G.SilentAim = state end)
+createToggleBtn("💀 HEADSHOT", _G.HeadshotFocus, function(state) _G.HeadshotFocus = state end)
+createToggleBtn("⚡ FAST RELOAD", _G.FastReload, function(state) _G.FastReload = state end)
+createToggleBtn("🚫 NO ANIM", _G.NoAnim, function(state) _G.NoAnim = state end)
+
+MiniButton.Parent = Main
+MiniButton.Size = UDim2.new(0, 30, 0, 30)
+MiniButton.Position = UDim2.new(1, -35, 0, 5)
+MiniButton.BackgroundTransparency = 1
+MiniButton.Text = "-"
+MiniButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniButton.TextSize = 30
+MiniButton.MouseButton1Click:Connect(function() Main.Visible = false OpenCircle.Visible = true end)
+
+OpenCircle.Parent = ScreenGui
+OpenCircle.Size = UDim2.new(0, 60, 0, 60)
+OpenCircle.Position = UDim2.new(0.1, 0, 0.5, 0)
+OpenCircle.Image = "rbxassetid://14579989646"
+OpenCircle.Visible = false
+OpenCircle.Draggable = true
+OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true OpenCircle.Visible = false end)
+
+print("M4 Extreme Burst & Dup x2 Loaded!")
