@@ -15,12 +15,15 @@ mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod() 
     local args = {...} 
     if tostring(method) == "Kick" or tostring(method) == "kick" then 
-        warn("Anti-Kick: Blocked a kick attempt!") 
+        warn("ป้องกันการเตะ: บล็อคการ Kick สำเร็จ!") 
         return nil 
     end 
     if tostring(method) == "FireServer" and self.Name == "MainEvent" then 
         if args[1] == "TeleportDetect" or args[1] == "WalkSpeed" then return nil end 
     end 
+    if tostring(method) == "FireServer" and self.Name == "MainEvent" and args[1] == "Hit" then
+        if args[2] and args[2].Parent == plr.Character then return nil end 
+    end
     return oldNamecall(self, unpack(args)) 
 end) 
 setreadonly(mt, true) 
@@ -31,21 +34,22 @@ local isVIP = false
 for _, name in ipairs(allowedNames) do if plr.Name == name then isVIP = true break end end 
 
 if not isVIP then 
-    StarterGui:SetCore("SendNotification", {Title = "Access Denied", Text = "User is not in VIP list.", Duration = 10}) 
+    StarterGui:SetCore("SendNotification", {Title = "เข้าถึงไม่ได้", Text = "คุณไม่มีชื่ออยู่ในรายการ VIP", Duration = 10}) 
     return 
 end 
 
 --------------------------------------------------------- 
--- [ NEW: REFLECT & PIERCE LOGIC ] 
+-- [ REFLECT, PIERCE & ENHANCED BULLET SHIELD ] 
 --------------------------------------------------------- 
 local function ApplyReflectAndPierce(targetPos) 
     for _, obj in ipairs(workspace:GetChildren()) do 
-        if obj:IsA("BasePart") and (obj.Name:lower():find("bullet") or obj.Name:lower():find("projectile")) then 
+        if obj:IsA("BasePart") and (obj.Name:lower():find("bullet") or obj.Name:lower():find("projectile") or obj.Name:lower():find("ammo")) then 
             if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
                 local dist = (obj.Position - plr.Character.HumanoidRootPart.Position).Magnitude 
-                if dist < 18 then 
-                    obj.Velocity = -obj.Velocity * 2 
+                if dist < 25 then 
+                    obj.Velocity = -obj.Velocity * 3 
                     obj.CanCollide = false 
+                    obj.Size = Vector3.new(0,0,0) 
                 end 
             end 
         end 
@@ -121,6 +125,29 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10) 
 UICorner.Parent = Main 
 
+-- [ SIDEBAR SKILL MENU ]
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "SkillSidebar"
+Sidebar.Parent = Main
+Sidebar.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Sidebar.Position = UDim2.new(-0.35, -5, 0, 0)
+Sidebar.Size = UDim2.new(0, 160, 1, 0)
+Sidebar.Visible = false 
+local SideStroke = Instance.new("UIStroke", Sidebar)
+SideStroke.Color = Color3.fromRGB(200, 0, 0)
+SideStroke.Thickness = 2
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
+
+local SideScroll = Instance.new("ScrollingFrame", Sidebar)
+SideScroll.Size = UDim2.new(1, -10, 1, -20)
+SideScroll.Position = UDim2.new(0, 5, 0, 10)
+SideScroll.BackgroundTransparency = 1
+SideScroll.CanvasSize = UDim2.new(0, 0, 1.2, 0) 
+SideScroll.ScrollBarThickness = 2
+local SideLayout = Instance.new("UIListLayout", SideScroll)
+SideLayout.Padding = UDim.new(0, 8)
+SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
 local AvatarIcon = Instance.new("ImageLabel") 
 AvatarIcon.Parent = Main 
 AvatarIcon.BackgroundColor3 = Color3.fromRGB(15, 0, 0) 
@@ -140,7 +167,7 @@ ScriptTag.BackgroundTransparency = 1
 ScriptTag.Position = UDim2.new(0.68, 0, 0.84, 0) 
 ScriptTag.Size = UDim2.new(0, 140, 0, 25) 
 ScriptTag.Font = Enum.Font.SpecialElite 
-ScriptTag.Text = "Script Word [TH]" 
+ScriptTag.Text = "สคริปต์ภาษาไทย [OP]" 
 ScriptTag.TextColor3 = Color3.fromRGB(255, 0, 0) 
 ScriptTag.TextSize = 16 
 ScriptTag.TextXAlignment = Enum.TextXAlignment.Right 
@@ -214,20 +241,154 @@ local lastValidPos = nil
 local TargetPlayer = nil 
 local OrbitAngle = 0 
 local ClickToShootEnabled = false
+local isBursting = false 
 
--- [ HIGHLIGHT SYSTEM ]
 local SelectionHighlight = Instance.new("Highlight")
 SelectionHighlight.FillColor = Color3.fromRGB(255, 0, 0)
 SelectionHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
 SelectionHighlight.FillTransparency = 0.5
 SelectionHighlight.Name = "ClickSelectTarget"
 
+local function isFriend(otherPlr) 
+    return plr:IsFriendsWith(otherPlr.UserId) 
+end 
+
+local function getClosestPlayer(range) 
+    local closest, dist = nil, range 
+    for _, p in ipairs(game.Players:GetPlayers()) do 
+        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") and p.Character.Humanoid.Health > 0 and not isFriend(p) then 
+            local currentDist = (plr.Character.Head.Position - p.Character.Head.Position).Magnitude 
+            if currentDist < dist then 
+                dist = currentDist 
+                closest = p 
+            end 
+        end 
+    end 
+    return closest 
+end 
+
+local function skillFire(pos)
+    for _, gun in ipairs(plr.Backpack:GetChildren()) do 
+        if gun:IsA("Tool") and gun.Name ~= "Phone" then 
+            local rem = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire") 
+            if rem then for i=1,10 do rem:FireServer(pos) end end 
+        end 
+    end
+end
+
+--------------------------------------------------------- 
+-- [ NEW SKILLS IMPLEMENTATION ] 
+--------------------------------------------------------- 
+
+-- 1. ABYSSAL CHAIN
+local function Skill_AbyssalChain()
+    if isBursting or not plr.Character then return end
+    isBursting = true
+    local target = getClosestPlayer(400)
+    if not target then isBursting = false return end
+    local tHrp = target.Character.HumanoidRootPart
+    local hrp = plr.Character.HumanoidRootPart
+    
+    local startTime = tick()
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        if tick() - startTime > 4 or not isBursting then conn:Disconnect() isBursting = false return end
+        local angle = tick() * 25
+        local offset = Vector3.new(math.cos(angle)*6, 0, math.sin(angle)*6)
+        hrp.CFrame = CFrame.new(tHrp.Position + offset, tHrp.Position)
+        skillFire(tHrp.Position)
+    end)
+end
+
+-- 2. VOID VORTEX ORBIT
+local function Skill_VoidVortex()
+    if isBursting or not plr.Character then return end
+    isBursting = true
+    local target = getClosestPlayer(400)
+    if not target then isBursting = false return end
+    local tHrp = target.Character.HumanoidRootPart
+    local hrp = plr.Character.HumanoidRootPart
+    
+    local startTime = tick()
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        if tick() - startTime > 4 or not isBursting then conn:Disconnect() isBursting = false return end
+        local t = tick() * 15
+        local offset = Vector3.new(math.cos(t)*8, math.sin(t*0.5)*10, math.sin(t)*8)
+        hrp.CFrame = CFrame.new(tHrp.Position + offset, tHrp.Position)
+        skillFire(tHrp.Position)
+    end)
+end
+
+-- 3. INFINITE BLINK ASSAULT
+local function Skill_InfiniteBlink()
+    if isBursting or not plr.Character then return end
+    isBursting = true
+    local target = getClosestPlayer(500)
+    if not target then isBursting = false return end
+    local tHrp = target.Character.HumanoidRootPart
+    local hrp = plr.Character.HumanoidRootPart
+
+    task.spawn(function()
+        for i = 1, 30 do
+            if not isBursting then break end
+            local randomOffset = Vector3.new(math.random(-12,12), math.random(-2,10), math.random(-12,12))
+            hrp.CFrame = CFrame.new(tHrp.Position + randomOffset, tHrp.Position)
+            skillFire(tHrp.Position)
+            task.wait(0.08)
+        end
+        isBursting = false
+    end)
+end
+
+-- 4. CELESTIAL CRASH ORBIT
+local function Skill_CelestialCrash()
+    if isBursting or not plr.Character then return end
+    isBursting = true
+    local target = getClosestPlayer(500)
+    if not target then isBursting = false return end
+    local tHrp = target.Character.HumanoidRootPart
+    local hrp = plr.Character.HumanoidRootPart
+
+    local startTime = tick()
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        local elapsed = tick() - startTime
+        if elapsed > 4 or not isBursting then conn:Disconnect() isBursting = false return end
+        local radius = 20 - (elapsed * 4) 
+        local angle = tick() * 30
+        local offset = Vector3.new(math.cos(angle)*radius, 15 - (elapsed * 3), math.sin(angle)*radius)
+        hrp.CFrame = CFrame.new(tHrp.Position + offset, tHrp.Position)
+        skillFire(tHrp.Position)
+    end)
+end
+
+local function createSkillBtn(name, callback, color)
+    local btn = Instance.new("TextButton", SideScroll)
+    btn.Size = UDim2.new(1, -10, 0, 35)
+    btn.BackgroundColor3 = color or Color3.fromRGB(50, 0, 0)
+    btn.Text = name; btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SpecialElite; btn.TextSize = 12
+    Instance.new("UICorner", btn)
+    btn.MouseButton1Click:Connect(callback)
+end
+
+-- สร้างปุ่มสกิลภาษาไทย
+createSkillBtn("โซ่บรรลัยกัลป์", Skill_AbyssalChain, Color3.fromRGB(0, 100, 150))
+createSkillBtn("พายุมืดมรณะ", Skill_VoidVortex, Color3.fromRGB(120, 0, 180))
+createSkillBtn("วาร์ปสังหารต่อเนื่อง", Skill_InfiniteBlink, Color3.fromRGB(200, 0, 0))
+createSkillBtn("โคจรสวรรค์พินาศ", Skill_CelestialCrash, Color3.fromRGB(200, 150, 0))
+
+--------------------------------------------------------- 
+-- [ CORE SYSTEMS ] 
+--------------------------------------------------------- 
+
 local function UpdateRightList() 
     for _, v in ipairs(RightList:GetChildren()) do if v:IsA("Frame") or v:IsA("TextButton") then v:Destroy() end end 
     local RefBtn = Instance.new("TextButton", RightList) 
     RefBtn.Size = UDim2.new(1, -10, 0, 30) 
     RefBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0) 
-    RefBtn.Text = "REFRESH LIST" 
+    RefBtn.Text = "รีเฟรชรายชื่อ" 
     RefBtn.TextColor3 = Color3.fromRGB(255, 255, 255) 
     RefBtn.Font = Enum.Font.GothamBold 
     Instance.new("UICorner", RefBtn) 
@@ -254,11 +415,11 @@ local function UpdateRightList()
                 if TargetPlayer == p then 
                     TargetPlayer = nil 
                     UpdateRightList() 
-                    StarterGui:SetCore("SendNotification", {Title = "Target", Text = "Target Cleared", Duration = 2}) 
+                    StarterGui:SetCore("SendNotification", {Title = "เป้าหมาย", Text = "ยกเลิกเป้าหมายแล้ว", Duration = 2}) 
                 else 
                     TargetPlayer = p 
                     UpdateRightList() 
-                    StarterGui:SetCore("SendNotification", {Title = "Target", Text = "Target: "..p.DisplayName, Duration = 2}) 
+                    StarterGui:SetCore("SendNotification", {Title = "เป้าหมาย", Text = "ล็อคเป้า: "..p.DisplayName, Duration = 2}) 
                 end 
             end) 
         end 
@@ -267,6 +428,7 @@ local function UpdateRightList()
 end 
 
 MenuToggle.MouseButton1Click:Connect(function() 
+    Sidebar.Visible = not Sidebar.Visible 
     RightList.Visible = not RightList.Visible 
     if RightList.Visible then UpdateRightList() end 
 end) 
@@ -294,29 +456,11 @@ local function findAndClick(targetPos)
     return false 
 end 
 
-local function isFriend(otherPlr) 
-    return plr:IsFriendsWith(otherPlr.UserId) 
-end 
-
-local function getClosestPlayer(range) 
-    local closest, dist = nil, range 
-    for _, p in ipairs(game.Players:GetPlayers()) do 
-        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") and p.Character.Humanoid.Health > 0 and not isFriend(p) then 
-            local currentDist = plr:DistanceFromCharacter(p.Character.Head.Position) 
-            if currentDist < dist then 
-                dist = currentDist 
-                closest = p 
-            end 
-        end 
-    end 
-    return closest 
-end 
-
 local function createToggle(name, callback) 
     local btn = Instance.new("TextButton") 
     btn.Size = UDim2.new(0.9, 0, 0, 35) 
     btn.BackgroundColor3 = Color3.fromRGB(25, 0, 0) 
-    btn.Text = name .. ": OFF" 
+    btn.Text = name .. ": ปิด" 
     btn.TextColor3 = Color3.fromRGB(180, 180, 180) 
     btn.Font = Enum.Font.SpecialElite 
     btn.TextSize = 12 
@@ -325,7 +469,7 @@ local function createToggle(name, callback)
     local active = false 
     btn.MouseButton1Click:Connect(function() 
         active = not active 
-        btn.Text = name .. (active and ": ON" or ": OFF") 
+        btn.Text = name .. (active and ": เปิด" or ": ปิด") 
         btn.TextColor3 = active and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(180, 180, 180) 
         btn.BackgroundColor3 = active and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(25, 0, 0) 
         callback(active) 
@@ -336,7 +480,6 @@ end
 -- [ FEATURES LOGIC ] 
 --------------------------------------------------------- 
 
--- [ UPDATED: CLICK TO SHOOT WITH HIGHLIGHT & EASY SELECT ]
 RunService.RenderStepped:Connect(function()
     if ClickToShootEnabled then
         local target = mouse.Target
@@ -349,6 +492,7 @@ RunService.RenderStepped:Connect(function()
     else
         SelectionHighlight.Enabled = false
     end
+    ApplyReflectAndPierce(Vector3.new(0,0,0))
 end)
 
 mouse.Button1Down:Connect(function()
@@ -357,7 +501,6 @@ mouse.Button1Down:Connect(function()
         if target and target.Parent and target.Parent:FindFirstChild("Humanoid") then
             local clickedPlr = game.Players:GetPlayerFromCharacter(target.Parent)
             if clickedPlr and clickedPlr ~= plr and clickedPlr.Character and clickedPlr.Character:FindFirstChild("Head") then
-                -- ยิงใส่ทันที
                 local tHeadPos = clickedPlr.Character.Head.Position + (clickedPlr.Character.Head.Velocity * 0.12)
                 local finalPos = ApplyReflectAndPierce(tHeadPos)
                 for _, gun in ipairs(plr.Backpack:GetChildren()) do
@@ -371,7 +514,6 @@ mouse.Button1Down:Connect(function()
     end
 end)
 
--- [ ORBIT & AUTO FIRE LOOP ] 
 RunService.RenderStepped:Connect(function(dt) 
     if TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
         local tHRP = TargetPlayer.Character.HumanoidRootPart 
@@ -390,8 +532,7 @@ RunService.RenderStepped:Connect(function(dt)
     end 
 end) 
 
--- 1. ULTRA DUAL-WIELD SWAP (RAPID) 
-createToggle("ULTRA DUAL SWAP (RAPID)", function(v) 
+createToggle("สลับปืนยิงรัว (Dual)", function(v) 
     _G.DualSwapActive = v 
     task.spawn(function() 
         while _G.DualSwapActive do 
@@ -403,25 +544,16 @@ createToggle("ULTRA DUAL SWAP (RAPID)", function(v)
                 local finalPos = ApplyReflectAndPierce(tHeadPos) 
                 local guns = {} 
                 for _, item in ipairs(plr.Backpack:GetChildren()) do 
-                    if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then 
-                        table.insert(guns, item) 
-                    end 
+                    if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
                 end 
                 for i = 1, #guns, 2 do 
                     if not _G.DualSwapActive then break end 
-                    local gun1 = guns[i] 
-                    local gun2 = guns[i+1] 
+                    local gun1, gun2 = guns[i], guns[i+1] 
                     if gun1 then gun1.Parent = plr.Character end 
                     if gun2 then gun2.Parent = plr.Character end 
                     task.wait() 
-                    if gun1 then 
-                        local rem1 = gun1:FindFirstChild("shot") or gun1:FindFirstChild("RemoteEvent") or gun1:FindFirstChild("Fire") 
-                        if rem1 then for r = 1, 15 do rem1:FireServer(finalPos) end end 
-                    end 
-                    if gun2 then 
-                        local rem2 = gun2:FindFirstChild("shot") or gun2:FindFirstChild("RemoteEvent") or gun2:FindFirstChild("Fire") 
-                        if rem2 then for r = 1, 15 do rem2:FireServer(finalPos) end end 
-                    end 
+                    if gun1 then local r = gun1:FindFirstChild("shot") or gun1:FindFirstChild("Fire") if r then for x=1,15 do r:FireServer(finalPos) end end end 
+                    if gun2 then local r = gun2:FindFirstChild("shot") or gun2:FindFirstChild("Fire") if r then for x=1,15 do r:FireServer(finalPos) end end end 
                     if gun1 then gun1.Parent = plr.Backpack end 
                     if gun2 then gun2.Parent = plr.Backpack end 
                 end 
@@ -430,138 +562,132 @@ createToggle("ULTRA DUAL SWAP (RAPID)", function(v)
     end) 
 end) 
 
--- 2. ULTIMATE MASSACRE MODE 
-createToggle("ULTIMATE MASSACRE MODE", function(v) 
+-- [[ เริ่มส่วนที่เพิ่มใหม่: สลับปืนยิงรัวสายฟ้า (MAX SPEED) ]]
+createToggle("สลับปืนยิงรัว (สายฟ้า)", function(v) 
+    _G.HyperSwapActive = v 
+    task.spawn(function() 
+        while _G.HyperSwapActive do 
+            RunService.Stepped:Wait() -- ใช้ความเร็วสูงสุดของเฟรมเรต
+            if not plr.Character then continue end 
+            local target = getClosestPlayer(99999) 
+            if target and target.Character and target.Character:FindFirstChild("Head") then 
+                local tPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.12)
+                local finalPos = ApplyReflectAndPierce(tPos)
+                
+                local guns = {} 
+                for _, item in ipairs(plr.Backpack:GetChildren()) do 
+                    if item:IsA("Tool") and item.Name ~= "Phone" then table.insert(guns, item) end 
+                end 
+                
+                for i = 1, #guns do 
+                    if not _G.HyperSwapActive then break end 
+                    local currentGun = guns[i]
+                    currentGun.Parent = plr.Character 
+                    local r = currentGun:FindFirstChild("shot") or currentGun:FindFirstChild("Fire") 
+                    if r then 
+                        -- ยิงรัว 20 นัดต่อการสลับ 1 ครั้งแบบไม่มี Delay
+                        for x = 1, 20 do r:FireServer(finalPos) end 
+                    end 
+                    currentGun.Parent = plr.Backpack 
+                    -- ไม่ใส่ task.wait() เพื่อความเร็วสูงสุดในการสลับกระบอกถัดไป
+                end 
+            end 
+        end 
+    end) 
+end) 
+-- [[ จบส่วนที่เพิ่มใหม่ ]]
+
+createToggle("โหมดสังหารหมู่ (Massacre)", function(v) 
     _G.MassacreActive = v 
     local shield = Instance.new("Part") 
-    shield.Name = "MassacreShield" 
-    shield.Shape = Enum.PartType.Ball 
-    shield.Transparency = 0.7 
-    shield.Color = Color3.fromRGB(255, 0, 0) 
-    shield.CanCollide = false 
-    shield.Anchored = true 
-    shield.Material = Enum.Material.ForceField 
-    shield.Size = Vector3.new(15, 15, 15) 
+    shield.Name = "MassacreShield"; shield.Shape = Enum.PartType.Ball; shield.Transparency = 0.7; shield.Color = Color3.fromRGB(255, 0, 0); shield.CanCollide = false; shield.Anchored = true; shield.Material = Enum.Material.ForceField; shield.Size = Vector3.new(15, 15, 15) 
     task.spawn(function() 
         while _G.MassacreActive do 
             RunService.Heartbeat:Wait() 
             if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end 
             local myHRP = plr.Character.HumanoidRootPart 
             local myHum = plr.Character:FindFirstChild("Humanoid") 
-            myHRP.Anchored = true 
-            shield.Parent = game.Workspace 
-            shield.CFrame = myHRP.CFrame 
-            if myHum then myHum.MaxHealth = math.huge myHum.Health = math.huge end 
+            myHRP.Anchored = true; shield.Parent = workspace; shield.CFrame = myHRP.CFrame 
+            if myHum then myHum.MaxHealth = math.huge; myHum.Health = math.huge end 
             local target = getClosestPlayer(999999) 
             if target and target.Character and target.Character:FindFirstChild("Head") then 
-                local tHeadPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.14) 
-                local finalPos = ApplyReflectAndPierce(tHeadPos) 
+                local finalPos = ApplyReflectAndPierce(target.Character.Head.Position + (target.Character.Head.Velocity * 0.14)) 
                 myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(finalPos.X, myHRP.Position.Y, finalPos.Z)) 
-                local guns = {} 
-                for _, item in ipairs(plr.Backpack:GetChildren()) do 
-                    if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
-                end 
-                for _, gun in ipairs(guns) do 
+                for _, gun in ipairs(plr.Backpack:GetChildren()) do 
                     if not _G.MassacreActive then break end 
                     gun.Parent = plr.Character 
-                    local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Remote") or gun:FindFirstChild("Fire") 
+                    local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire") 
                     if remote then for i = 1, 30 do remote:FireServer(finalPos) end end 
                     gun.Parent = plr.Backpack task.wait() 
                 end 
-            else 
-                ApplyReflectAndPierce(Vector3.new(0,0,0)) 
             end 
         end 
-        shield.Parent = nil 
-        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then plr.Character.HumanoidRootPart.Anchored = false end 
+        shield.Parent = nil; if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then plr.Character.HumanoidRootPart.Anchored = false end 
     end) 
 end) 
 
--- 3. SLAUGHTER 2-TAP (ULTRA OPTIMIZED) 
-createToggle("SLAUGHTER 2-TAP (ULTRA)", function(v) 
+createToggle("ยิง 2 นัดตาย (Slaughter)", function(v) 
     _G.UltraTwoTap = v 
-    local shield = Instance.new("Part") 
-    shield.Name = "UltraShield" 
-    shield.Shape = Enum.PartType.Ball 
-    shield.Transparency = 0.6 
-    shield.Color = Color3.fromRGB(30, 0, 0) 
-    shield.CanCollide = false 
-    shield.Anchored = true 
-    shield.Material = Enum.Material.ForceField 
-    shield.Size = Vector3.new(18, 18, 18) 
     task.spawn(function() 
         while _G.UltraTwoTap do 
             RunService.Heartbeat:Wait() 
             if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end 
-            local myHRP = plr.Character.HumanoidRootPart 
-            local myHum = plr.Character:FindFirstChild("Humanoid") 
-            myHRP.Anchored = true 
-            shield.Parent = game.Workspace 
-            shield.CFrame = myHRP.CFrame 
-            if myHum then myHum.MaxHealth = math.huge myHum.Health = math.huge end 
+            plr.Character.HumanoidRootPart.Anchored = true 
             local target = getClosestPlayer(999999) 
             if target and target.Character and target.Character:FindFirstChild("Head") then 
-                local tHeadPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.12) 
-                local finalPos = ApplyReflectAndPierce(tHeadPos) 
-                myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(finalPos.X, myHRP.Position.Y, finalPos.Z)) 
+                local finalPos = ApplyReflectAndPierce(target.Character.Head.Position + (target.Character.Head.Velocity * 0.12)) 
                 for _, gun in ipairs(plr.Backpack:GetChildren()) do 
-                    if not _G.UltraTwoTap then break end 
-                    if gun:IsA("Tool") and gun.Name ~= "Phone" and gun.Name ~= "Boombox" then 
-                        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Fire") 
-                        if remote then for i = 1, 5 do remote:FireServer(finalPos) end end 
-                    end 
+                    local r = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire") 
+                    if r then for i = 1, 5 do r:FireServer(finalPos) end end 
                 end 
                 task.wait(0.02) 
-            else 
-                ApplyReflectAndPierce(Vector3.new(0,0,0)) 
             end 
         end 
-        shield.Parent = nil 
         if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then plr.Character.HumanoidRootPart.Anchored = false end 
     end) 
 end) 
 
--- 4. SPIRAL BARAGE (FLY ROUND SPIN) 
-createToggle("SPIRAL BARAGE (FLY SPIN)", function(v) 
+createToggle("บินหมุนยิงรัว (Spiral)", function(v) 
     _G.SpiralActive = v 
-    local spiralAngle = 0 
+    local sa = 0 
     task.spawn(function() 
         while _G.SpiralActive do 
             RunService.Heartbeat:Wait() 
-            if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end 
-            local myHRP = plr.Character.HumanoidRootPart 
+            sa = sa + 0.15 
             local target = getClosestPlayer(200) 
-            local centerPos 
-            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then 
-                centerPos = target.Character.HumanoidRootPart.Position 
-            else 
-                centerPos = myHRP.Position + (myHRP.CFrame.LookVector * 15) 
-            end 
-            spiralAngle = spiralAngle + 0.15 
-            local radius = 12 
-            local height = 8 
-            local offset = Vector3.new(math.cos(spiralAngle) * radius, height, math.sin(spiralAngle) * radius) 
-            local targetCFrame = CFrame.new(centerPos + offset, centerPos) 
-            myHRP.CFrame = targetCFrame 
-            for _, gun in ipairs(plr.Backpack:GetChildren()) do 
-                if gun:IsA("Tool") and gun.Name ~= "Phone" then 
-                    gun.Parent = plr.Character 
-                    local rem = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire") 
-                    if rem then rem:FireServer(centerPos) end 
-                    gun.Parent = plr.Backpack 
-                end 
-            end 
+            local cp = target and target.Character.HumanoidRootPart.Position or plr.Character.HumanoidRootPart.Position + (plr.Character.HumanoidRootPart.CFrame.LookVector * 15) 
+            plr.Character.HumanoidRootPart.CFrame = CFrame.new(cp + Vector3.new(math.cos(sa)*12, 8, math.sin(sa)*12), cp) 
+            skillFire(cp) 
         end 
     end) 
 end) 
 
--- 5. CLICK TO SHOOT TOGGLE 
-createToggle("Click Avatar To Shoot", function(v) 
-    ClickToShootEnabled = v 
-end) 
+createToggle("คลิกที่คนเพื่อยิง", function(v) ClickToShootEnabled = v end) 
 
--- 6. อื่นๆ (คงเดิม) 
-createToggle("God Anti-Warp", function(v) 
+createToggle("กันล้ม/ลุกออโต้", function(v)
+    _G.AntiRagdoll = v
+    task.spawn(function()
+        while _G.AntiRagdoll do
+            task.wait(0.1)
+            local char = plr.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    if hum:GetState() == Enum.HumanoidStateType.Ragdoll or hum:GetState() == Enum.HumanoidStateType.FallingDown then
+                        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    end
+                end
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BallSocketConstraint") or part:IsA("HingeConstraint") or part.Name == "RagdollConstraint" then
+                        part:Destroy()
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+createToggle("ป้องกันการวาร์ป", function(v) 
     antiWarpEnabled = v 
     if v and plr.Character then lastValidPos = plr.Character.HumanoidRootPart.CFrame end 
     task.spawn(function() 
@@ -569,7 +695,6 @@ createToggle("God Anti-Warp", function(v)
             RunService.Heartbeat:Wait() 
             local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") 
             if hrp then 
-                if hrp.Anchored and not _G.MassacreActive and not _G.UltraTwoTap then hrp.Anchored = false end 
                 if lastValidPos and (hrp.Position - lastValidPos.Position).Magnitude > 50 then 
                     hrp.CFrame = lastValidPos 
                     ReplicatedStorage.GetItemBack:FireServer() 
@@ -579,21 +704,15 @@ createToggle("God Anti-Warp", function(v)
     end) 
 end) 
 
-createToggle("Auto Buy Gun (Max 10)", function(state) 
-    _G.AutoBuyGun = state 
-    isForcingHolster = state 
+createToggle("ซื้อปืนออโต้ (สูงสุด 10)", function(state) 
+    _G.AutoBuyGun = state; isForcingHolster = state 
     task.spawn(function() 
         local toolStorage = ReplicatedStorage:WaitForChild("ToolStorage"):WaitForChild("ToolsStorage") 
         while _G.AutoBuyGun do 
             if needsMore("Gun") then 
-                for i = 1, 10 do 
-                    if not _G.AutoBuyGun then break end 
-                    if findAndClick(Vector3.new(-76.84, 162.67, 231.24)) then 
-                        task.wait(0.1) toolStorage:FireServer("Save", "Gun") 
-                    end 
-                end 
+                for i = 1, 10 do if findAndClick(Vector3.new(-76.84, 162.67, 231.24)) then task.wait(0.1) toolStorage:FireServer("Save", "Gun") end end 
                 task.wait(0.5) 
-                for i = 1, 10 do if not _G.AutoBuyGun then break end toolStorage:FireServer("Get", "Gun") task.wait(0.05) end 
+                for i = 1, 10 do toolStorage:FireServer("Get", "Gun") task.wait(0.05) end 
             end 
             task.wait(1) 
         end 
@@ -601,7 +720,7 @@ createToggle("Auto Buy Gun (Max 10)", function(state)
 end) 
 
 RunService.Stepped:Connect(function() 
-    if isForcingHolster and not _G.MassacreActive and not _G.UltraTwoTap and not _G.DualSwapActive and plr.Character then 
+    if isForcingHolster and not _G.MassacreActive and not _G.UltraTwoTap and not _G.DualSwapActive and not _G.HyperSwapActive and plr.Character then 
         for _, t in ipairs(plr.Character:GetChildren()) do if t:IsA("Tool") then t.Parent = plr.Backpack end end 
     end 
 end) 
@@ -609,4 +728,4 @@ end)
 Mini.MouseButton1Click:Connect(function() Main.Visible = false OpenCircle.Visible = true end) 
 OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true OpenCircle.Visible = false end) 
 
-StarterGui:SetCore("SendNotification", {Title = "HORROR BOSS", Text = "V4.2 Highlight Target Active", Duration = 5})
+StarterGui:SetCore("SendNotification", {Title = "HORROR BOSS", Text = "อัปเดตระบบสลับปืนสายฟ้าแล้ว!", Duration = 5})
