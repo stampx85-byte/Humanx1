@@ -1,0 +1,316 @@
+-- Horror Boss Donation V6 (Final Fixed Sidebar)
+local plr = game.Players.LocalPlayer
+
+function missing(t, f, fallback)
+    if type(f) == t then return f end
+    return fallback
+end
+    
+cloneref = missing("function", cloneref, function(...) return ... end)
+    
+local Services = setmetatable({}, {
+  __index = function(_, name)
+      return cloneref(game:GetService(name))
+  end
+})
+    
+local Players = Services.Players
+local RunService = Services.RunService
+local StarterGui = Services.StarterGui
+    
+if game.PlaceId == 4503309821 then
+    local function onCharacterAdded(p)
+        StarterGui:SetCore("SendNotification",{
+          Title="Credit : Human",
+          Text="Anti Crash has been active",
+          Duration=10
+        })
+        local strgui = game:WaitForChild("StarterGui")
+        local plrgui = p:WaitForChild("PlayerGui")
+        
+        local strAncm = strgui:WaitForChild("Announcement")
+        local plrAncm = plrgui:WaitForChild("Announcement")
+        plrAncm:Destroy()
+        plrgui.ChildAdded:Connect(function(gui)
+            if gui.Name == "Announcement" then
+                gui:Destroy()
+            end
+        end)
+    end  
+    
+    plr.CharacterAdded:Connect(onCharacterAdded)
+    if plr or plr.Character then onCharacterAdded(plr) end
+end
+
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local Sidebar = Instance.new("ScrollingFrame")
+local UIList = Instance.new("UIListLayout")
+local Title = Instance.new("TextLabel")
+
+ScreenGui.Parent = game.CoreGui
+Main.Name = "HorrorDonation_SpeedEdition"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.Position = UDim2.new(0.5, -180, 0.5, -135)
+Main.Size = UDim2.new(0, 380, 0, 270)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+
+-- Mini Button
+local MiniBtn = Instance.new("TextButton")
+MiniBtn.Name = "MinimizeIcon"
+MiniBtn.Parent = ScreenGui
+MiniBtn.Size = UDim2.new(0, 50, 0, 50)
+MiniBtn.Position = UDim2.new(0, 10, 0, 10)
+MiniBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+MiniBtn.Text = "S" 
+MiniBtn.TextColor3 = Color3.new(1, 1, 1)
+MiniBtn.TextSize = 25
+MiniBtn.Font = Enum.Font.SpecialElite
+MiniBtn.Visible = false
+MiniBtn.Draggable = true
+Instance.new("UICorner", MiniBtn).CornerRadius = UDim.new(1, 0)
+
+local MiniMain = Instance.new("TextButton")
+MiniMain.Parent = Main
+MiniMain.Size = UDim2.new(0, 30, 0, 30)
+MiniMain.Position = UDim2.new(1, -60, 0, 0)
+MiniMain.BackgroundTransparency = 1
+MiniMain.Text = "-"
+MiniMain.TextColor3 = Color3.fromRGB(255, 255, 255)
+MiniMain.TextSize = 25
+MiniMain.Font = Enum.Font.SpecialElite
+
+MiniMain.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    MiniBtn.Visible = true
+end)
+
+MiniBtn.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    MiniBtn.Visible = false
+end)
+
+-- Sidebar & Layout
+Sidebar.Parent = Main
+Sidebar.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Sidebar.Position = UDim2.new(0, 5, 0, 40)
+Sidebar.Size = UDim2.new(0, 120, 0, 220)
+Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
+Sidebar.ScrollBarThickness = 2
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 4)
+
+UIList.Parent = Sidebar
+UIList.Padding = UDim.new(0, 4)
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "DONATION SPEED CONTROL"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 16
+Title.Font = Enum.Font.SpecialElite
+
+-- Preview & Avatar
+local AvatarImg = Instance.new("ImageLabel")
+AvatarImg.Parent = Main
+AvatarImg.Size = UDim2.new(0, 50, 0, 50)
+AvatarImg.Position = UDim2.new(0, 135, 0, 45)
+AvatarImg.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
+
+local TargetLabel = Instance.new("TextLabel")
+TargetLabel.Parent = Main
+TargetLabel.Position = UDim2.new(0, 195, 0, 55)
+TargetLabel.Size = UDim2.new(0, 170, 0, 20)
+TargetLabel.BackgroundTransparency = 1
+TargetLabel.Text = "Select a Player"
+TargetLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetLabel.Font = Enum.Font.Code
+TargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Inputs
+local function createField(label, pos, default)
+    local t = Instance.new("TextLabel")
+    t.Parent = Main
+    t.Text = label
+    t.Position = pos
+    t.Size = UDim2.new(0, 100, 0, 20)
+    t.TextColor3 = Color3.fromRGB(150, 0, 0)
+    t.BackgroundTransparency = 1
+    t.Font = Enum.Font.Code
+    t.TextSize = 10
+    t.TextXAlignment = Enum.TextXAlignment.Left
+
+    local i = Instance.new("TextBox")
+    i.Parent = Main
+    i.Position = pos + UDim2.new(0, 0, 0, 18)
+    i.Size = UDim2.new(0, 110, 0, 25)
+    i.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+    i.Text = default
+    i.TextColor3 = Color3.fromRGB(255, 255, 255)
+    i.Font = Enum.Font.Code
+    Instance.new("UICorner", i).CornerRadius = UDim.new(0, 4)
+    return i
+end
+
+local AmountInput = createField("Amount:", UDim2.new(0, 135, 0, 100), "0.0001")
+local SpeedInput = createField("Wait Time (Sec):", UDim2.new(0, 255, 0, 100), "0.05")
+
+local Status = Instance.new("TextLabel")
+Status.Parent = Main
+Status.Size = UDim2.new(0, 235, 0, 20)
+Status.Position = UDim2.new(0, 135, 0, 145)
+Status.BackgroundTransparency = 1
+Status.Text = "Status: Idle"
+Status.TextColor3 = Color3.fromRGB(100, 100, 100)
+Status.Font = Enum.Font.Code
+Status.TextSize = 12
+
+-- Buttons
+local isAuto = false
+local isAllMap = false
+
+local function createBtn(txt, pos, color)
+    local b = Instance.new("TextButton")
+    b.Parent = Main
+    b.Size = UDim2.new(0, 110, 0, 35)
+    b.Position = pos
+    b.BackgroundColor3 = color
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 11
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    return b
+end
+
+local ToggleBtn = createBtn("START AUTO", UDim2.new(0, 135, 0, 175), Color3.fromRGB(80, 0, 0))
+local AllBtn = createBtn("AUTO ALL MAP", UDim2.new(0, 255, 0, 175), Color3.fromRGB(40, 0, 0))
+local InstantBtn = createBtn("INSTANT 10M", UDim2.new(0, 135, 0, 215), Color3.fromRGB(150, 0, 0))
+
+-- Update Sidebar Function
+local function updateList()
+    for _, child in pairs(Sidebar:GetChildren()) do 
+        if not child:IsA("UIListLayout") then child:Destroy() end 
+    end
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        local PlayerBtn = Instance.new("TextButton")
+        PlayerBtn.Parent = Sidebar
+        PlayerBtn.Size = UDim2.new(1, -10, 0, 35) -- กว้างพอดีกรอบ
+        PlayerBtn.BackgroundColor3 = Color3.fromRGB(35, 0, 0)
+        PlayerBtn.Text = p.DisplayName
+        PlayerBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+        PlayerBtn.Font = Enum.Font.SourceSansBold
+        PlayerBtn.TextSize = 14
+        PlayerBtn.TextXAlignment = Enum.TextXAlignment.Left
+        
+        -- Padding เพื่อดันชื่อไปทางขวาไม่ให้ทับรูป
+        local Padding = Instance.new("UIPadding")
+        Padding.Parent = PlayerBtn
+        Padding.PaddingLeft = UDim.new(0, 40)
+        
+        Instance.new("UICorner", PlayerBtn).CornerRadius = UDim.new(0, 6)
+
+        local SmallIcon = Instance.new("ImageLabel")
+        SmallIcon.Parent = PlayerBtn
+        SmallIcon.Size = UDim2.new(0, 28, 0, 28)
+        SmallIcon.Position = UDim2.new(0, -35, 0.5, -14) -- จัดให้ไอคอนอยู่หน้า Padding
+        SmallIcon.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+        SmallIcon.Image = game.Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+        Instance.new("UICorner", SmallIcon).CornerRadius = UDim.new(1, 0)
+
+        PlayerBtn.MouseButton1Click:Connect(function()
+            TargetLabel.Text = p.DisplayName
+            TargetLabel.Name = p.Name 
+            AvatarImg.Image = game.Players:GetUserThumbnailAsync(p.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+        end)
+    end
+    Sidebar.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + 10)
+end
+
+updateList()
+game.Players.PlayerAdded:Connect(updateList)
+game.Players.PlayerRemoving:Connect(updateList)
+
+-- Remote Event
+local Remote = game:GetService("ReplicatedStorage").DonateEvent
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    if isAuto then
+        isAuto = false
+        ToggleBtn.Text = "START AUTO"
+        Status.Text = "Status: Stopped"
+    else
+        local target = TargetLabel.Name 
+        local val = tonumber(AmountInput.Text)
+        local speed = tonumber(SpeedInput.Text) or 0.05
+        if TargetLabel.Text ~= "Select a Player" and val then
+            isAuto = true
+            ToggleBtn.Text = "STOP AUTO"
+            task.spawn(function()
+                while isAuto do
+                    Remote:FireServer(target, val)
+                    task.wait(speed)
+                end
+            end)
+        end
+    end
+end)
+
+AllBtn.MouseButton1Click:Connect(function()
+    if isAllMap then
+        isAllMap = false
+        AllBtn.Text = "AUTO ALL MAP"
+    else
+        local val = tonumber(AmountInput.Text)
+        local speed = tonumber(SpeedInput.Text) or 0.05
+        if val then
+            isAllMap = true
+            AllBtn.Text = "STOP ALL MAP"
+            task.spawn(function()
+                while isAllMap do
+                    for _, p in pairs(game.Players:GetPlayers()) do
+                        if not isAllMap then break end
+                        if p ~= game.Players.LocalPlayer then
+                            Status.Text = "Donating to: " .. p.DisplayName
+                            Remote:FireServer(p.Name, val)
+                            task.wait(speed)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+InstantBtn.MouseButton1Click:Connect(function()
+    local target = TargetLabel.Name 
+    local val = tonumber(AmountInput.Text)
+    if TargetLabel.Text ~= "Select a Player" and val then
+        Status.Text = "Status: BLASTING 10M..."
+        task.spawn(function()
+            for i = 1, 10000000 do
+                Remote:FireServer(target, val)
+                if i % 1000 == 0 then task.wait() end 
+            end
+            Status.Text = "Status: 10M Done"
+        end)
+    end
+end)
+
+local Close = Instance.new("TextButton")
+Close.Parent = Main
+Close.Size = UDim2.new(0, 30, 0, 30)
+Close.Position = UDim2.new(1, -30, 0, 0)
+Close.BackgroundTransparency = 1
+Close.Text = "X"
+Close.TextColor3 = Color3.fromRGB(255, 0, 0)
+Close.TextSize = 18
+Close.Font = Enum.Font.SpecialElite
+Close.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
