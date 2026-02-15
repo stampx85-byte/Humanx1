@@ -17,7 +17,7 @@ local VIP_DATA = {
     ["85IIQ"] = "VIP",
     ["Yoojin889"] = "VIP",
     ["burnserika"] = "VIP",
-    ["Poppeiie99"] = "VIP" -- เพิ่มชื่อเรียบร้อยครับ
+    ["poppeiie99"] = "VIP" -- เพิ่มชื่อเรียบร้อยครับ
 }
 
 -- [[ FUNCTION: GLOBAL NOTIFICATION (Top Right) ]]
