@@ -827,7 +827,23 @@ local function findAndClick(targetPos)
             end
         end
     end
-    if closestClick then fireclickdetector(closestClick) return true end
+    
+    if closestClick then 
+        -- แก้ไขให้รองรับคอมพิวเตอร์ (PC)
+        if fireclickdetector then
+            fireclickdetector(closestClick) 
+        else
+            -- ถ้าไม่มี fireclickdetector (กรณีรันบน Executor PC บางตัว) ให้ใช้ระบบ TP แตะแทน
+            local char = plr.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local oldPos = char.HumanoidRootPart.CFrame
+                char.HumanoidRootPart.CFrame = closestClick.Parent.CFrame
+                task.wait(0.1)
+                char.HumanoidRootPart.CFrame = oldPos
+            end
+        end
+        return true 
+    end
     return false
 end
 
