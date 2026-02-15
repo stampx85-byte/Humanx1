@@ -1,4 +1,4 @@
--- Horror Boss Executor V3.0 (Added BoomBox Only)
+-- Horror Boss Executor V3.0 (Added KJ Animation)
 local ScreenGui = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
 local UICorner = Instance.new("UICorner")
@@ -28,8 +28,8 @@ local S_Button = Instance.new("TextButton")
 local Sidebar = Instance.new("Frame")
 local SidebarLeft = Instance.new("Frame") 
 local TopBar = Instance.new("Frame") 
-local BottomBar = Instance.new("Frame") -- แถบใหม่ด้านล่าง
-local AnimToggleButton = Instance.new("TextButton") -- ปุ่ม Animation ขวาล่าง
+local BottomBar = Instance.new("Frame") 
+local AnimToggleButton = Instance.new("TextButton") 
 
 local SideLayout = Instance.new("UIListLayout")
 local OpenCircle = Instance.new("ImageButton") 
@@ -49,7 +49,7 @@ Main.Draggable = true
 UICorner.CornerRadius = UDim.new(0, 6)
 UICorner.Parent = Main
 
--- [[ ปุ่ม Animation (วงกลมขวาล่างตามรูป) ]]
+-- [[ ปุ่ม Animation ]]
 AnimToggleButton.Parent = Main
 AnimToggleButton.Size = UDim2.new(0, 80, 0, 30)
 AnimToggleButton.Position = UDim2.new(1, -90, 1, -40)
@@ -80,7 +80,7 @@ BottomLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 local function createQuickBtn(txt, parent)
     local b = Instance.new("TextButton")
     b.Parent = parent
-    b.Size = UDim2.new(0, 100, 0, 30)
+    b.Size = UDim2.new(0, 85, 0, 30) -- ปรับขนาดเล็กน้อยเพื่อให้พอดีกับหลายปุ่ม
     b.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
     b.BorderColor3 = Color3.fromRGB(255, 0, 0)
     b.Text = txt
@@ -91,12 +91,13 @@ local function createQuickBtn(txt, parent)
     return b
 end
 
--- [[ สร้างปุ่มใน Bottom Bar (หมวด Animation) ]]
+-- [[ ปุ่มใน Bottom Bar (หมวด Animation) ]]
 local R6Btn = createQuickBtn("R6 BOSS", BottomBar)
 local MarfiosoBtn = createQuickBtn("marfioso", BottomBar)
-local SwordManBtn = createQuickBtn("SwordMan", BottomBar) -- เพิ่มปุ่ม SwordMan ที่นี่
+local SwordManBtn = createQuickBtn("SwordMan", BottomBar)
+local KJBtn = createQuickBtn("KJ", BottomBar) -- เพิ่มปุ่ม KJ ที่นี่
 
--- [[ ปุ่มสองขีด (=) ด้านซ้ายบน ]]
+-- [[ ปุ่มเมนูต่างๆ ]]
 MenuLeftButton.Parent = Main
 MenuLeftButton.Size = UDim2.new(0, 30, 0, 30)
 MenuLeftButton.Position = UDim2.new(0, 5, 0, 0)
@@ -106,7 +107,6 @@ MenuLeftButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 MenuLeftButton.TextSize = 25
 MenuLeftButton.Font = Enum.Font.SpecialElite
 
--- [[ ปุ่ม S ]]
 S_Button.Parent = Main
 S_Button.Size = UDim2.new(0, 30, 0, 30)
 S_Button.Position = UDim2.new(0, 35, 0, 0)
@@ -116,7 +116,7 @@ S_Button.TextColor3 = Color3.fromRGB(255, 0, 0)
 S_Button.TextSize = 22
 S_Button.Font = Enum.Font.SpecialElite
 
--- [[ แถบสี่เหลี่ยมด้านซ้าย ]]
+-- [[ Sidebar Left ]]
 SidebarLeft.Parent = Main
 SidebarLeft.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
 SidebarLeft.Position = UDim2.new(0, -125, 0, 0)
@@ -129,7 +129,6 @@ LeftLayout.Parent = SidebarLeft
 LeftLayout.Padding = UDim.new(0, 5)
 LeftLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
--- [[ สร้างปุ่มใน Sidebar Left ]]
 local IDAnimBtn = createQuickBtn("ID [Animation]", SidebarLeft)
 local NameCityBtn = createQuickBtn("Namecity", SidebarLeft)
 local SkillAuraBtn = createQuickBtn("SkillAura", SidebarLeft)
@@ -137,7 +136,7 @@ local BodySizeBtn = createQuickBtn("BodySize", SidebarLeft)
 local SoundIDBtn = createQuickBtn("SoundID", SidebarLeft)
 local SpeedVuleBtn = createQuickBtn("SpeedVule", SidebarLeft)
 
--- [[ แถบยาวด้านบน ]]
+-- [[ Top Bar ]]
 TopBar.Parent = Main
 TopBar.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
 TopBar.Position = UDim2.new(0, 0, 0, -45)
@@ -151,6 +150,9 @@ TopLayout.FillDirection = Enum.FillDirection.Horizontal
 TopLayout.Padding = UDim.new(0, 10)
 TopLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 TopLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local CityBtn = createQuickBtn("City [TH]", TopBar)
+local GlueBtn = createQuickBtn("GluePiece", TopBar)
 
 -- Script Word [TH]
 ScriptWord.Name = "ScriptWordTag"
@@ -177,13 +179,9 @@ SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 local ClickerBtn = createQuickBtn("Clicker Items", Sidebar)
 local XYZRemoteBtn = createQuickBtn("x y z Remote", Sidebar)
-local BoomBoxBtn = createQuickBtn("BoomBox", Sidebar) -- เพิ่มปุ่ม BoomBox ที่นี่
+local BoomBoxBtn = createQuickBtn("BoomBox", Sidebar)
 
--- TopBar Buttons
-local CityBtn = createQuickBtn("City [TH]", TopBar)
-local GlueBtn = createQuickBtn("GluePiece", TopBar)
-
--- Main Controls
+-- Main Controls (Minimize/Menu)
 MiniButton.Parent = Main
 MiniButton.Size = UDim2.new(0, 30, 0, 30)
 MiniButton.Position = UDim2.new(1, -65, 0, 0) 
@@ -341,6 +339,11 @@ end)
 
 SwordManBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/SwordMan"))()
+end)
+
+-- เพิ่มสคริปต์ KJ ที่นี่
+KJBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/KJ%20SELTYE"))()
 end)
 
 -- Sidebar Left Scripts
