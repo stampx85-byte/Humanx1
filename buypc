@@ -31,37 +31,55 @@ UIList.Parent = Holder
 UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 UIList.Padding = UDim.new(0, 10)
 
--- [ Logic สำหรับ PC ]
+-- [[ ปรับปรุงระบบคลิกสำหรับ PC ]]
 local plr = game.Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local function pcClickBuy(targetPos)
     local closestClick = nil
+    -- ค้นหา ClickDetector ในรัศมีของตู้
     for _, v in ipairs(workspace:GetDescendants()) do
         if v:IsA("ClickDetector") then
             local part = v.Parent
             if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then
-                closestClick = v break
+                closestClick = v 
+                break
             end
         end
     end
+
     if closestClick then
-        if fireclickdetector then fireclickdetector(closestClick) end
-        local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+        -- 1. พยายามใช้ฟังก์ชันของ Executor เพื่อคลิก (ถ้ามี)
+        if fireclickdetector then 
+            fireclickdetector(closestClick) 
+        end
+        
+        -- 2. ระบบ "Force Click" สำหรับคอม (ย้ายไปแตะของจริงเสี้ยววินาที)
+        local char = plr.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
         if hrp then
-            local oldPos = hrp.CFrame
+            local oldCF = hrp.CFrame
+            -- วาร์ปไปที่ตำแหน่งปุ่มซื้อโดยตรง
             hrp.CFrame = closestClick.Parent.CFrame
-            task.wait(0.05)
-            hrp.CFrame = oldPos
+            task.wait(0.07) -- จังหวะรอการสัมผัส (สัมผัสตู้)
+            
+            -- จำลองการส่งสัญญาณคลิกเข้า Server (เผื่อ fireclick ไม่ติด)
+            if closestClick.Parent:FindFirstChild("TouchInterest") then
+                firetouchinterest(hrp, closestClick.Parent, 0)
+                task.wait()
+                firetouchinterest(hrp, closestClick.Parent, 1)
+            end
+            
+            hrp.CFrame = oldCF -- วาร์ปกลับจุดเดิม
         end
     end
 end
 
 local function runAutoProcess(btn, itemName, pos)
     local ts = ReplicatedStorage:WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
-    local savedCount = 0 -- นับจำนวนที่เซฟลงตู้สำเร็จ
+    local savedCount = 0 
     
-    -- บังคับเก็บของลงเป้ (สำคัญมาก)
+    -- ระบบ Auto Holster บังคับเก็บของ (เพื่อให้ Save ติดตลอด)
     local conn = game:GetService("RunService").Heartbeat:Connect(function()
         if plr.Character then
             for _, t in ipairs(plr.Character:GetChildren()) do
@@ -72,34 +90,33 @@ local function runAutoProcess(btn, itemName, pos)
 
     -- [[ ลูปซื้อและเซฟจนกว่าจะครบ 10 ]]
     while savedCount < 10 do
-        btn.Text = "BUYING & SAVING: " .. savedCount .. "/10"
+        btn.Text = "BUYING: " .. savedCount .. "/10"
         btn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
         
-        pcClickBuy(pos) -- วาร์ปไปซื้อ
-        task.wait(0.2)
+        pcClickBuy(pos) -- รันระบบคลิก PC
+        task.wait(0.25) -- รอของเข้าตัว
         
-        -- ตรวจสอบว่ามีของในเป้เพื่อเซฟไหม
         local tool = plr.Backpack:FindFirstChild(itemName)
         if tool then
-            ts:FireServer("Save", itemName) -- เซฟลงตู้
+            ts:FireServer("Save", itemName) -- ส่งของเข้าตู้
             savedCount = savedCount + 1
-            task.wait(0.2)
+            task.wait(0.15)
         end
     end
 
-    -- [[ หยุดซื้อแล้วดึงเข้าตัวทั้งหมด ]]
-    btn.Text = "EXTRACTING ALL..."
-    btn.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
+    -- [[ เมื่อครบ 10 แล้ว ดึงเข้าตัวรวดเดียว ]]
+    btn.Text = "FINISHING..."
+    btn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
     
     for i = 1, 10 do
-        ts:FireServer("Get", itemName) -- ดึงออกมา
+        ts:FireServer("Get", itemName)
         task.wait(0.05)
     end
 
-    conn:Disconnect() -- หยุดระบบเก็บของ Auto
-    btn.Text = "SUCCESS (10 ITEMS)"
+    conn:Disconnect() -- ปิดระบบ Auto Holster
+    btn.Text = "COMPLETE (10 ITEMS)"
     task.wait(2)
-    btn.Text = "DUP " .. itemName
+    btn.Text = "AUTO DUP " .. itemName
     btn.BackgroundColor3 = Color3.fromRGB(35, 0, 0)
 end
 
@@ -108,6 +125,8 @@ local function createBuyBtn(name, itemName, pos)
     local btn = Instance.new("TextButton", Holder)
     btn.Size = UDim2.new(0.9, 0, 0, 45)
     btn.BackgroundColor3 = Color3.fromRGB(35, 0, 0)
+    btn.BorderSizePixel = 1
+    btn.BorderColor3 = Color3.fromRGB(255, 0, 0)
     btn.Text = "AUTO DUP " .. name
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SpecialElite
@@ -115,13 +134,13 @@ local function createBuyBtn(name, itemName, pos)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 
     btn.MouseButton1Click:Connect(function()
-        if not btn.Text:find(":") then -- กันกดซ้ำ
+        if not btn.Text:find(":") and not btn.Text:find("...") then 
             runAutoProcess(btn, itemName, pos)
         end
     end)
 end
 
--- สร้างปุ่มใช้งาน
+-- สร้างปุ่ม
 createBuyBtn("GUN", "Gun", Vector3.new(-76.84, 162.67, 231.24))
 createBuyBtn("PHONE", "Phone", Vector3.new(89.44, 176.45, 269.08))
 createBuyBtn("BOOMBOX", "Boombox", Vector3.new(89.44, 176.45, 256.52))
