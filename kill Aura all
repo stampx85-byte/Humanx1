@@ -379,7 +379,7 @@ local function RunMainScript()
         ["85IIQ"] = true,
         ["Yoojin889"] = true,
         ["burnserika"] = true,
-        ["Poppeiie99"] = true -- เพิ่มชื่อใน VIP_LIST เรียบร้อยครับ
+        ["poppeiie99"] = true -- เพิ่มชื่อใน VIP_LIST เรียบร้อยครับ
     }
     local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
     local HAS_COMMAND_POWER, ACTIVE_USERS, VOID_TARGETS = {}, {}, {}
