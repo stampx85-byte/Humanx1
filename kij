@@ -291,4 +291,5 @@ player.CharacterAdded:Connect(function(char)
     task.wait(1)
     cooldowns[SKILL_1_NAME] = false
     cooldowns[SKILL_2_NAME] = false
-    RunCustomAnimation
+    RunCustomAnimation(char)
+end)
