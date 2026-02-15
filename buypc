@@ -1,0 +1,136 @@
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local Holder = Instance.new("Frame")
+local UIList = Instance.new("UIListLayout")
+
+-- Setup UI (Horror Style)
+ScreenGui.Parent = game.CoreGui
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Position = UDim2.new(0.5, -110, 0.5, -125)
+Main.Size = UDim2.new(0, 220, 0, 260)
+Main.Active = true
+Main.Draggable = true 
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "PC AUTO BUY & EXTRACT"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 14
+Title.Font = Enum.Font.SpecialElite
+
+Holder.Parent = Main
+Holder.BackgroundTransparency = 1
+Holder.Position = UDim2.new(0, 0, 0, 45)
+Holder.Size = UDim2.new(1, 0, 1, -50)
+
+UIList.Parent = Holder
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIList.Padding = UDim.new(0, 10)
+
+-- [ Logic สำหรับ PC ]
+local plr = game.Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local function pcClickBuy(targetPos)
+    local closestClick = nil
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") then
+            local part = v.Parent
+            if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then
+                closestClick = v break
+            end
+        end
+    end
+    if closestClick then
+        if fireclickdetector then fireclickdetector(closestClick) end
+        local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local oldPos = hrp.CFrame
+            hrp.CFrame = closestClick.Parent.CFrame
+            task.wait(0.05)
+            hrp.CFrame = oldPos
+        end
+    end
+end
+
+local function runAutoProcess(btn, itemName, pos)
+    local ts = ReplicatedStorage:WaitForChild("ToolStorage"):WaitForChild("ToolsStorage")
+    local savedCount = 0 -- นับจำนวนที่เซฟลงตู้สำเร็จ
+    
+    -- บังคับเก็บของลงเป้ (สำคัญมาก)
+    local conn = game:GetService("RunService").Heartbeat:Connect(function()
+        if plr.Character then
+            for _, t in ipairs(plr.Character:GetChildren()) do
+                if t:IsA("Tool") then t.Parent = plr.Backpack end
+            end
+        end
+    end)
+
+    -- [[ ลูปซื้อและเซฟจนกว่าจะครบ 10 ]]
+    while savedCount < 10 do
+        btn.Text = "BUYING & SAVING: " .. savedCount .. "/10"
+        btn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+        
+        pcClickBuy(pos) -- วาร์ปไปซื้อ
+        task.wait(0.2)
+        
+        -- ตรวจสอบว่ามีของในเป้เพื่อเซฟไหม
+        local tool = plr.Backpack:FindFirstChild(itemName)
+        if tool then
+            ts:FireServer("Save", itemName) -- เซฟลงตู้
+            savedCount = savedCount + 1
+            task.wait(0.2)
+        end
+    end
+
+    -- [[ หยุดซื้อแล้วดึงเข้าตัวทั้งหมด ]]
+    btn.Text = "EXTRACTING ALL..."
+    btn.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
+    
+    for i = 1, 10 do
+        ts:FireServer("Get", itemName) -- ดึงออกมา
+        task.wait(0.05)
+    end
+
+    conn:Disconnect() -- หยุดระบบเก็บของ Auto
+    btn.Text = "SUCCESS (10 ITEMS)"
+    task.wait(2)
+    btn.Text = "DUP " .. itemName
+    btn.BackgroundColor3 = Color3.fromRGB(35, 0, 0)
+end
+
+-- [ Function สร้างปุ่ม ]
+local function createBuyBtn(name, itemName, pos)
+    local btn = Instance.new("TextButton", Holder)
+    btn.Size = UDim2.new(0.9, 0, 0, 45)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 0, 0)
+    btn.Text = "AUTO DUP " .. name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SpecialElite
+    btn.TextSize = 13
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+
+    btn.MouseButton1Click:Connect(function()
+        if not btn.Text:find(":") then -- กันกดซ้ำ
+            runAutoProcess(btn, itemName, pos)
+        end
+    end)
+end
+
+-- สร้างปุ่มใช้งาน
+createBuyBtn("GUN", "Gun", Vector3.new(-76.84, 162.67, 231.24))
+createBuyBtn("PHONE", "Phone", Vector3.new(89.44, 176.45, 269.08))
+createBuyBtn("BOOMBOX", "Boombox", Vector3.new(89.44, 176.45, 256.52))
+
+-- ปุ่มปิด
+local Close = Instance.new("TextButton", Main)
+Close.Size = UDim2.new(0, 20, 0, 20)
+Close.Position = UDim2.new(1, -25, 0, 5)
+Close.BackgroundTransparency = 1
+Close.Text = "X"
+Close.TextColor3 = Color3.fromRGB(255, 0, 0)
+Close.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
