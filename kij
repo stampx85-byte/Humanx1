@@ -1,5 +1,4 @@
--- [[ ⚡ KJ DUAL TOOL SYSTEM (STRICT ORIGINAL LOGIC) ⚡ ]]
--- Script updated by Gemini AI (Adjusted Position to Front)
+-- [[ ⚡ KJ TRIPLE TOOL SYSTEM (FIXED MOVEMENT AFTER SPAWN) ⚡ ]]
 
 local player = game:GetService("Players").LocalPlayer
 local RunService = game:GetService("RunService")
@@ -9,6 +8,9 @@ local Camera = workspace.CurrentCamera
 
 -- === [ ระบบ Cinematic UI ] ===
 local function CreateCinematicUI()
+    local existing = PlayerGui:FindFirstChild("CinematicUI")
+    if existing then existing:Destroy() end
+
     local sg = Instance.new("ScreenGui")
     sg.Name = "CinematicUI"
     sg.IgnoreGuiInset = true
@@ -48,7 +50,10 @@ local function PlayCinematic(text)
     bottomBar:TweenPosition(UDim2.new(0, 0, 0.85, 0), "Out", "Quad", 0.5, true)
     task.wait(0.5)
     subtitle.Text = ""
-    for i = 1, #text do subtitle.Text = string.sub(text, 1, i) task.wait(0.04) end
+    for i = 1, #text do 
+        subtitle.Text = string.sub(text, 1, i) 
+        task.wait(0.04) 
+    end
     task.wait(1.5)
     subtitle.Text = ""
     topBar:TweenPosition(UDim2.new(0, 0, -0.15, 0), "In", "Quad", 0.5, true)
@@ -57,25 +62,28 @@ end
 
 -- === [ ระบบเสียง ] ===
 local function PlayMusic(id) 
-    workspace.DRadio_Script.Event:FireServer(tostring(id)) 
+    pcall(function() workspace.DRadio_Script.Event:FireServer(tostring(id)) end)
 end
 
 local function StopMusic() 
-    workspace.DRadio_Script.STOPEvent:FireServer() 
+    pcall(function() workspace.DRadio_Script.STOPEvent:FireServer() end)
 end
 
 -- === [ โครงสร้างหลัก ] ===
 local SKILL_1_NAME = "20-20-20 DROPKICK"
 local SKILL_2_NAME = "UNLIMITED FLEX WORKS"
-local cooldowns = {[SKILL_1_NAME] = false, [SKILL_2_NAME] = false}
+local SKILL_3_NAME = "STOIC BOMB"
 
 local function StartCooldownUI(toolName, duration)
-    local backpack = player:WaitForChild("Backpack")
-    local tool = backpack:FindFirstChild(toolName) or (player.Character and player.Character:FindFirstChild(toolName))
+    local tool = player.Backpack:FindFirstChild(toolName) or (player.Character and player.Character:FindFirstChild(toolName))
     if tool then
         task.spawn(function()
-            for i = duration, 1, -1 do tool.Name = toolName .. " (" .. i .. "s)" task.wait(1) end
-            tool.Name = toolName
+            for i = duration, 1, -1 do 
+                if not tool.Parent then break end
+                tool.Name = toolName .. " (" .. i .. "s)" 
+                task.wait(1) 
+            end
+            if tool.Parent then tool.Name = toolName end
         end)
     end
 end
@@ -84,6 +92,7 @@ local function CreateAttackTool(name, onAttackCallback)
     local backpack = player:WaitForChild("Backpack")
     local oldTool = backpack:FindFirstChild(name) or (player.Character and player.Character:FindFirstChild(name))
     if oldTool then oldTool:Destroy() end
+    
     local tool = Instance.new("Tool")
     tool.Name = name
     tool.RequiresHandle = false
@@ -93,6 +102,7 @@ local function CreateAttackTool(name, onAttackCallback)
 end
 
 local function FireUltraBlast(targetHRP)
+    if not targetHRP or not targetHRP.Parent then return end
     local guns = {}
     for _, item in ipairs(player.Backpack:GetChildren()) do
         if item:IsA("Tool") and not string.find(item.Name, "KJ") and item.Name ~= SKILL_2_NAME and item.Name ~= "Phone" then table.insert(guns, item) end
@@ -102,27 +112,37 @@ local function FireUltraBlast(targetHRP)
     end
     for _, gun in ipairs(guns) do
         local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire")
-        if remote and targetHRP and targetHRP.Parent then
-            for i = 1, 5 do remote:FireServer(targetHRP.Position) end
+        if remote then
+            for i = 1, 3 do remote:FireServer(targetHRP.Position) end
         end
     end
 end
 
 function RunCustomAnimation(Char)
     if not Char then return end
-    if Char:WaitForChild("Animate", 5) then Char.Animate.Disabled = true end
-    local Humanoid = Char:WaitForChild("Humanoid")
-    local HRP = Char:WaitForChild("HumanoidRootPart")
-    local RootJoint = HRP:FindFirstChild("RootJoint", true)
-    local currentAnimTrack = nil
-    local actionTrack = nil
+    local Humanoid = Char:WaitForChild("Humanoid", 10)
+    local HRP = Char:WaitForChild("HumanoidRootPart", 10)
+    if not Humanoid or not HRP then return end
+    
+    -- แก้ไข: ปลดล็อกสถานะทันทีเมื่อฟังก์ชันเริ่มทำงาน
+    if Char:FindFirstChild("Animate") then Char.Animate.Disabled = true end
+    HRP.Anchored = false
+    Humanoid.WalkSpeed = 16
+
     local isRushing = false
     local isPerformingUltimate = false
-    
+    local isStoicActive = false
+    local actionTrack = nil
+    local currentAnimTrack = nil
+    local lastState = "Idle"
+    local cooldowns = {[SKILL_1_NAME] = false, [SKILL_2_NAME] = false, [SKILL_3_NAME] = false}
+
+    local RootJoint = HRP:FindFirstChild("RootJoint", true)
     local RootCF = CFrame.fromEulerAnglesXYZ(-math.pi/2, 0, math.pi)
+
     local flexConn = RunService.RenderStepped:Connect(function()
-        if not HRP or not HRP.Parent or not RootJoint then return end
-        if (not actionTrack or not actionTrack.IsPlaying) and not isPerformingUltimate then
+        if not HRP.Parent or not RootJoint then return end
+        if (not actionTrack or not actionTrack.IsPlaying) and not isPerformingUltimate and not isStoicActive then
             local moveSpeed = Humanoid.MoveDirection.Magnitude
             local sine = tick() * 12
             if moveSpeed > 0.1 then
@@ -143,21 +163,21 @@ function RunCustomAnimation(Char)
         run = {{id = "rbxassetid://82741102191749"}},
         rush_run = {{id = "rbxassetid://101871663749983"}}, 
         dropkick = {{id = "rbxassetid://133566007754001"}},
-        ultimate = {{id = "rbxassetid://139302979952874"}} 
+        ultimate = {{id = "rbxassetid://139302979952874"}},
+        stoic = {{id = "rbxassetid://135199228472469"}}
     }
 
-    local function configureAnimationSet(name, fileList, targetTable)
-        targetTable[name] = {count = 0}
+    for name, fileList in pairs(animNames) do
+        animTable[name] = {count = 0}
         for idx, anim in pairs(fileList) do
-            targetTable[name][idx] = {anim = Instance.new("Animation")}
-            targetTable[name][idx].anim.AnimationId = anim.id
-            targetTable[name].count += 1
+            animTable[name][idx] = {anim = Instance.new("Animation")}
+            animTable[name][idx].anim.AnimationId = anim.id
+            animTable[name].count += 1
         end
     end
-    for name, fileList in pairs(animNames) do configureAnimationSet(name, fileList, animTable) end
 
     local function playAnim(name, loop, speed)
-        if not animTable[name] then return end
+        if not animTable[name] or not Humanoid then return end
         if currentAnimTrack then currentAnimTrack:Stop(0.1) end
         local idx = math.random(1, animTable[name].count)
         currentAnimTrack = Humanoid:LoadAnimation(animTable[name][idx].anim)
@@ -167,33 +187,53 @@ function RunCustomAnimation(Char)
         return currentAnimTrack
     end
 
-    -- [ ท่าที่ 1: DROPKICK (Auto-Run + Specific Sounds) ]
+    -- === [ Skill Functions ] ===
+    
+    local function performStoicBomb()
+        if cooldowns[SKILL_3_NAME] or isRushing or isPerformingUltimate or isStoicActive then return end
+        cooldowns[SKILL_3_NAME] = true
+        isStoicActive = true
+        StartCooldownUI(SKILL_3_NAME, 15)
+        PlayMusic("104398439636356")
+        
+        local originalPos = HRP.Position
+        local floatPart = Instance.new("BodyVelocity")
+        floatPart.Velocity = Vector3.new(0, 0, 0)
+        floatPart.MaxForce = Vector3.new(0, math.huge, 0)
+        floatPart.Parent = HRP
+
+        HRP.CFrame = HRP.CFrame * CFrame.new(0, 100, 0)
+        TweenService:Create(HRP, TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = CFrame.new(originalPos + Vector3.new(0, 6, 0))}):Play()
+
+        local stoicTrack = playAnim("stoic", true)
+        task.wait(9.5) 
+        
+        if stoicTrack then stoicTrack:Stop(0.5) end
+        floatPart:Destroy()
+        StopMusic()
+        isStoicActive = false
+        Humanoid.WalkSpeed = 16
+        playAnim("idle", true)
+        task.delay(5.5, function() cooldowns[SKILL_3_NAME] = false end)
+    end
+
     local function performRushAttack()
-        if cooldowns[SKILL_1_NAME] or isRushing or (actionTrack and actionTrack.IsPlaying) or isPerformingUltimate then return end
+        if cooldowns[SKILL_1_NAME] or isRushing or isPerformingUltimate or isStoicActive then return end
         cooldowns[SKILL_1_NAME] = true
-        StartCooldownUI(SKILL_1_NAME, 8) 
-        
-        PlayMusic("17729337538")
         isRushing = true
+        StartCooldownUI(SKILL_1_NAME, 8) 
+        PlayMusic("17729337538")
         
-        if currentAnimTrack then currentAnimTrack:Stop(0.1) end
-        local rushTrack = Humanoid:LoadAnimation(animTable["rush_run"][1].anim)
-        rushTrack.Looped = true
-        rushTrack:Play(0.1)
-        rushTrack:AdjustSpeed(2.2)
-        
+        local rushTrack = playAnim("rush_run", true, 2.2)
         local autoMoveConn
         autoMoveConn = RunService.Heartbeat:Connect(function()
-            if isRushing then 
+            if isRushing and HRP.Parent then 
                 Humanoid:Move(Vector3.new(0, 0, -1), true) 
                 Humanoid.WalkSpeed = 150
-                local camLook = Camera.CFrame.LookVector
-                HRP.CFrame = CFrame.lookAt(HRP.Position, HRP.Position + Vector3.new(camLook.X, 0, camLook.Z))
-            else 
-                if autoMoveConn then autoMoveConn:Disconnect() end 
-            end
+                HRP.CFrame = CFrame.lookAt(HRP.Position, HRP.Position + Vector3.new(Camera.CFrame.LookVector.X, 0, Camera.CFrame.LookVector.Z))
+            else autoMoveConn:Disconnect() end
         end)
-        
+
         local touchConn
         touchConn = HRP.Touched:Connect(function(hit)
             local targetChar = hit.Parent
@@ -201,25 +241,18 @@ function RunCustomAnimation(Char)
             local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
             if targetHum and targetHRP and targetChar ~= Char and isRushing then
                 isRushing = false
-                if touchConn then touchConn:Disconnect() end
-                if autoMoveConn then autoMoveConn:Disconnect() end
+                touchConn:Disconnect()
                 rushTrack:Stop()
-                
                 PlayMusic("92231886696392")
-                
                 actionTrack = Humanoid:LoadAnimation(animTable["dropkick"][1].anim)
-                actionTrack.Looped = false
-                actionTrack:Play(0.01)
-                -- [ความเร็ว] ปรับตามที่ระบุไว้ก่อนหน้า
-                actionTrack:AdjustSpeed(1.2)
+                actionTrack:Play(0.1)
                 
                 local followConn
                 followConn = RunService.RenderStepped:Connect(function()
-                    if actionTrack and actionTrack.IsPlaying and targetHRP and targetHRP.Parent then
+                    if actionTrack and actionTrack.IsPlaying and targetHRP.Parent then
                         Humanoid.WalkSpeed = 0
-                        -- [ตำแหน่ง] เปลี่ยนจากไปด้านหลังมาไว้ที่ "ด้านหน้า" ของเป้าหมาย
                         HRP.CFrame = CFrame.lookAt(targetHRP.Position + (targetHRP.CFrame.LookVector * 3.5), targetHRP.Position)
-                    else if followConn then followConn:Disconnect() end end
+                    else followConn:Disconnect() end
                 end)
                 
                 task.spawn(function()
@@ -228,7 +261,6 @@ function RunCustomAnimation(Char)
                         task.wait(0.05)
                     end
                 end)
-                
                 actionTrack.Stopped:Connect(function() 
                     Humanoid.WalkSpeed = 16 
                     playAnim("idle", true) 
@@ -240,61 +272,56 @@ function RunCustomAnimation(Char)
         task.delay(8, function() 
             if isRushing then 
                 isRushing = false 
-                if touchConn then touchConn:Disconnect() end 
-                if autoMoveConn then autoMoveConn:Disconnect() end
-                rushTrack:Stop() 
+                if rushTrack then rushTrack:Stop() end
                 Humanoid.WalkSpeed = 16 
                 playAnim("idle", true) 
                 StopMusic() 
             end 
+            task.wait(1)
+            cooldowns[SKILL_1_NAME] = false
         end)
-        task.delay(9, function() cooldowns[SKILL_1_NAME] = false end)
     end
 
-    -- [ ท่าที่ 2: UNLIMITED FLEX WORKS คงเดิม ]
     local function performUltimate()
-        if isPerformingUltimate or cooldowns[SKILL_2_NAME] or isRushing or (actionTrack and actionTrack.IsPlaying) then return end
+        if isPerformingUltimate or cooldowns[SKILL_2_NAME] or isRushing or isStoicActive then return end
         cooldowns[SKILL_2_NAME] = true
         isPerformingUltimate = true
         StartCooldownUI(SKILL_2_NAME, 20)
-        if currentAnimTrack then currentAnimTrack:Stop(0.1) end
         Humanoid.WalkSpeed = 0
+        
         local atkTrack = Humanoid:LoadAnimation(animTable["ultimate"][1].anim)
-        atkTrack.Looped = false
         atkTrack:Play(0.1)
-        local camConn
-        task.spawn(function()
-            Camera.CameraType = Enum.CameraType.Scriptable
-            camConn = RunService.RenderStepped:Connect(function()
-                if not isPerformingUltimate then if camConn then camConn:Disconnect() end Camera.CameraType = Enum.CameraType.Custom return end
+        
+        local camConn = RunService.RenderStepped:Connect(function()
+            if isPerformingUltimate and HRP.Parent then
                 local head = Char:FindFirstChild("Head")
+                Camera.CameraType = Enum.CameraType.Scriptable
                 if head then
-                    local offset = (HRP.CFrame.LookVector * 6) + Vector3.new(0, 1.5, 0)
-                    local camPos = HRP.Position + offset
-                    local shake = Vector3.new(math.random(-10,10)/100, math.random(-10,10)/100, math.random(-10,10)/100)
-                    Camera.CFrame = CFrame.new(camPos + shake, head.Position)
+                    local camPos = HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 1.5, 0)
+                    Camera.CFrame = CFrame.new(camPos + Vector3.new(math.random(-1,1)/10, math.random(-1,1)/10, math.random(-1,1)/10), head.Position)
                 end
-            end)
+            else
+                Camera.CameraType = Enum.CameraType.Custom
+            end
         end)
+
         atkTrack.Stopped:Connect(function()
             task.spawn(function()
-                local duration = 20
-                local startTime = tick()
                 local loopTrack = Humanoid:LoadAnimation(animTable["ultimate"][1].anim)
                 loopTrack:Play(0.2)
                 loopTrack:AdjustSpeed(0.5)
-                while tick() - startTime < duration and isPerformingUltimate do
+                local start = tick()
+                while tick() - start < 20 and isPerformingUltimate and Humanoid.Health > 0 do
                     for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
-                        if p ~= player and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-                            local targetHRP = p.Character:FindFirstChild("HumanoidRootPart")
-                            if targetHRP then FireUltraBlast(targetHRP) end
+                        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then 
+                            FireUltraBlast(p.Character.HumanoidRootPart) 
                         end
                     end
-                    task.wait(0.05)
+                    task.wait(0.1)
                 end
                 loopTrack:Stop(0.5)
                 isPerformingUltimate = false
-                if camConn then camConn:Disconnect() end
+                camConn:Disconnect()
                 Camera.CameraType = Enum.CameraType.Custom
                 Humanoid.WalkSpeed = 16
                 playAnim("idle", true)
@@ -304,25 +331,61 @@ function RunCustomAnimation(Char)
         task.delay(20, function() cooldowns[SKILL_2_NAME] = false end)
     end
 
+    -- === [ Setup ] ===
     CreateAttackTool(SKILL_1_NAME, performRushAttack)
     CreateAttackTool(SKILL_2_NAME, performUltimate)
+    CreateAttackTool(SKILL_3_NAME, performStoicBomb)
 
-    local lastState = "None"
     Humanoid.Running:Connect(function(speed)
-        if isRushing or (actionTrack and actionTrack.IsPlaying) or isPerformingUltimate then lastState = "Action" return end
-        if speed > 2 then if lastState ~= "Running" then lastState = "Running" playAnim("run", true, 1.2) end
-        else if lastState ~= "Idle" then lastState = "Idle" playAnim("idle", true) end end
+        if isRushing or (actionTrack and actionTrack.IsPlaying) or isPerformingUltimate or isStoicActive then return end
+        if speed > 2 then 
+            if lastState ~= "Running" then lastState = "Running" playAnim("run", true, 1.2) end
+        else 
+            if lastState ~= "Idle" then lastState = "Idle" playAnim("idle", true) end 
+        end
     end)
 
-    local spawnTrack = playAnim("spawn", false)
-    task.spawn(function() PlayCinematic("The legend has awakened.") end)
-    if spawnTrack then spawnTrack.Stopped:Connect(function() if not isRushing and not isPerformingUltimate then lastState = "Idle" playAnim("idle", true) end end) end
+    -- [ Clean up on Death ]
+    Humanoid.Died:Connect(function()
+        flexConn:Disconnect()
+        isRushing = false
+        isPerformingUltimate = false
+        isStoicActive = false
+        HRP.Anchored = false -- ป้องกันการเกิดค้าง
+        StopMusic()
+        Camera.CameraType = Enum.CameraType.Custom
+    end)
+
+    -- [ Spawn Logic ]
+    task.spawn(function()
+        Humanoid.WalkSpeed = 0
+        HRP.Anchored = true
+        PlayMusic("71777785208891")
+        local st = playAnim("spawn", false)
+        
+        -- เล่น Cinematic
+        task.spawn(function()
+            PlayCinematic("The legend has awakened.")
+        end)
+        
+        -- แก้ไข: รอจนจบหรือถ้าบัคให้ข้าม
+        if st then 
+            st.Ended:Wait() 
+        else
+            task.wait(3) -- Fallback ถ้าโหลดอนิเมชั่นไม่สำเร็จ
+        end
+        
+        -- แก้ไข: บังคับปลดล็อกที่นี่แน่นอน
+        HRP.Anchored = false
+        Humanoid.WalkSpeed = 16
+        playAnim("idle", true)
+        StopMusic()
+    end)
 end
 
+-- Initial Start
 if player.Character then task.spawn(function() RunCustomAnimation(player.Character) end) end
 player.CharacterAdded:Connect(function(char)
-    task.wait(1)
-    cooldowns[SKILL_1_NAME] = false
-    cooldowns[SKILL_2_NAME] = false
+    task.wait(0.5) -- รอให้ Character โหลดสมบูรณ์เล็กน้อย
     RunCustomAnimation(char)
 end)
