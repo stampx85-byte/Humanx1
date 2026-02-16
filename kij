@@ -360,7 +360,7 @@ function RunCustomAnimation(Char)
     task.spawn(function()
         Humanoid.WalkSpeed = 0
         HRP.Anchored = true
-        PlayMusic("71777785208891")
+        PlayMusic("111572591472056")
         local st = playAnim("spawn", false)
         
         -- เล่น Cinematic
