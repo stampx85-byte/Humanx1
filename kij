@@ -164,7 +164,7 @@ function RunCustomAnimation(Char)
         rush_run = {{id = "rbxassetid://101871663749983"}}, 
         dropkick = {{id = "rbxassetid://133566007754001"}},
         ultimate = {{id = "rbxassetid://139302979952874"}},
-        stoic = {{id = "rbxassetid://135199228472469"}}
+        stoic = {{id = "rbxassetid://110863385954626"}}
     }
 
     for name, fileList in pairs(animNames) do
