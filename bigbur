@@ -15,11 +15,11 @@ end
 
 -- === [ รายชื่อคำพูด ] ===
 local sansQuotes = {
-    "ขึ้นรถกับอ้ายบ่น้องสาว",
-    "มาเด้ออ้ายขับรถบิ้กไบ",
-    "มาขี่รถกับอ้ายมา",
-    "อ้ายกะรวยน้อ",
-    "อ้ายมาขายคําบ่ได้มาขายม้า"
+    "มาม่าครับม่ามา",
+    "10-20บาทมีให้เด้อ",
+    "จัดไปวัยรุ่น",
+    "กินมาม่ากันเถอะ",
+    "มีเศษเงินไหมนิ?"
 }
 
 -- === [ ระบบ NameTag สีรุ้ง ] ===
@@ -46,7 +46,7 @@ local function SansSpeak(text)
     end
 end
 
--- === [ ระบบเปลี่ยนชุด (ใส่เพิ่มแค่ไอเทม Sans ชิ้นเดียว) ] ===
+-- === [ ระบบเปลี่ยนชุด (แก้ไขเฉพาะส่วนการดึง Accessory เพื่อให้โหลดครบ) ] ===
 local function applyOutfitWithOriginal()
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoid = character:WaitForChild("Humanoid")
@@ -55,27 +55,18 @@ local function applyOutfitWithOriginal()
     if not BloxbizRemotes then return end
     local BloxRemote = BloxbizRemotes:WaitForChild("CatalogOnApplyOutfit")
 
-    -- ดึงชุดปัจจุบันทั้งหมดของผู้เล่น (รวมผม หมวก และเสื้อผ้า)
     local desc = humanoid:GetAppliedDescription()
-    local currentAccessories = {}
     
-    -- เก็บ Accessory เดิมของผู้เล่นไว้ทั้งหมด
-    for _, acc in pairs(desc:GetAccessories(false)) do
-        table.insert(currentAccessories, {
-            ["AssetId"] = acc.AssetId,
-            ["AccessoryType"] = acc.AccessoryType,
-            ["IsLayered"] = acc.IsLayered or false
-        })
-    end
+    -- แก้ไข: ใช้ GetAccessories(true) เพื่อให้ดึงข้อมูล Layered Clothing และ Accessory เดิมได้แม่นยำขึ้น
+    local currentAccessories = desc:GetAccessories(true) 
 
-    -- ใส่เพิ่มแค่ไอเทม Sans เข้าไปในลิสต์
+    -- ใส่เพิ่มแค่ไอเทม Sans เข้าไปในลิสต์เหมือนเดิม
     table.insert(currentAccessories, {
         ["AssetId"] = 18280123011, 
         ["AccessoryType"] = Enum.AccessoryType.Waist,
         ["IsLayered"] = false
     })
 
-    -- สร้างข้อมูลชุดใหม่โดยใช้ทุกอย่างของผู้เล่นเหมือนเดิม 100%
     local outfitData = {
         ["Accessories"] = currentAccessories,
         ["Shirt"] = desc.Shirt,
@@ -105,7 +96,7 @@ local function applyOutfitWithOriginal()
     BloxRemote:FireServer(outfitData)
 end
 
--- === [ ระบบท่าทางและแอนิเมชั่น ] ===
+-- === [ ระบบท่าทางและแอนิเมชั่น (คงเดิม) ] ===
 function RunCustomAnimation(Char)
     if not Char then return end
     local Humanoid = Char:WaitForChild("Humanoid", 10)
