@@ -1,76 +1,182 @@
--- [[ ⚡ GASTER BLASTER SYSTEM (BONE ATTACK VERSION) ⚡ ]]
+-- [[ ⚡ GASTER BLASTER SYSTEM + SKY PIERCER + BONE AURA ⚡ ]]
 
 local player = game:GetService("Players").LocalPlayer
 local RunService = game:GetService("RunService")
 local PlayerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
 
 -- === [ ระบบเสียง ] ===
+local MAIN_MUSIC = "79436130367249" 
+
 local function PlayMusic(id) 
     pcall(function() workspace.DRadio_Script.Event:FireServer(tostring(id)) end)
 end
 
-local function StopMusic() 
-    pcall(function() workspace.DRadio_Script.STOPEvent:FireServer() end)
+-- === [ ระบบบทพูดและ NameTag สีรุ้ง ] ===
+local sansQuotes = {
+    "it's a beautiful day outside.",
+    "birds are singing, flowers are blooming...",
+    "on days like these, kids like you...",
+    "S H O U L D  B E  B U R N I N G  I N  H E L L .",
+    "do you wanna have a bad time?",
+    "gettttttt dunked on!!!",
+    "just give up. i did.",
+    "it's time to stop."
+}
+
+local currentDisplayText = "SANS"
+
+task.spawn(function()
+    local hue = 0
+    while true do
+        hue = hue + 0.01
+        local rainbowColor = Color3.fromHSV(hue % 1, 0.7, 1)
+        pcall(function()
+            game:GetService("ReplicatedStorage").NameTagRemoteEvent:FireServer(currentDisplayText, rainbowColor, 13)
+        end)
+        task.wait(0.05)
+    end
+end)
+
+local function SansSpeak(text)
+    local fullText = tostring(text)
+    for i = 1, #fullText do
+        currentDisplayText = string.sub(fullText, 1, i)
+        task.wait(0.05)
+    end
+end
+
+-- === [ ระบบ Bone Aura (กระดูกลอยรอบตัว) ] ===
+local function CreateBoneAura(character)
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    local bones = {}
+    local BONE_COUNT = 8 -- จำนวนกระดูก
+    
+    -- สร้างกระดูก
+    for i = 1, BONE_COUNT do
+        local bone = Instance.new("Part")
+        bone.Name = "OrbitBone"
+        bone.Size = Vector3.new(0.5, 3, 0.5)
+        bone.BrickColor = BrickColor.new("White")
+        bone.Material = Enum.Material.Neon
+        bone.CanCollide = false
+        bone.Anchored = true
+        bone.Parent = character
+        table.insert(bones, bone)
+    end
+
+    -- ลูปควบคุมการหมุนอิสระ
+    local auraConn
+    auraConn = RunService.Heartbeat:Connect(function()
+        if not character.Parent or not hrp.Parent then 
+            auraConn:Disconnect()
+            return 
+        end
+        
+        local t = tick()
+        for i, bone in ipairs(bones) do
+            local angle = (i / BONE_COUNT) * math.pi * 2 + (t * 2) -- ความเร็วหมุน
+            local offset = Vector3.new(math.cos(angle) * 6, math.sin(t * 3 + i) * 1, math.sin(angle) * 6)
+            
+            -- ปรับตำแหน่งและหมุนตัวกระดูกแบบอิสระ
+            bone.CFrame = CFrame.new(hrp.Position + offset) 
+                * CFrame.Angles(t + i, t * 0.5, math.rad(45)) 
+        end
+    end)
+end
+
+-- === [ ฟังก์ชันช่วยหาเป้าหมายและยิงปืน ] ===
+local function GetNearestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not myHRP then return nil end
+
+    for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
+            local distance = (myHRP.Position - p.Character.HumanoidRootPart.Position).Magnitude
+            if distance < 60 then 
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = p.Character.HumanoidRootPart
+                end
+            end
+        end
+    end
+    return closestPlayer
+end
+
+local function FireAllGuns(targetPos)
+    local guns = {}
+    for _, item in ipairs(player.Backpack:GetChildren()) do
+        if item:IsA("Tool") and not string.find(item.Name, "KJ") and not string.find(item.Name, "GASTER") and not string.find(item.Name, "SKY") then table.insert(guns, item) end
+    end
+    for _, item in ipairs(player.Character:GetChildren()) do
+        if item:IsA("Tool") and not string.find(item.Name, "KJ") and not string.find(item.Name, "GASTER") and not string.find(item.Name, "SKY") then table.insert(guns, item) end
+    end
+    
+    for _, gun in ipairs(guns) do
+        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire")
+        if remote then remote:FireServer(targetPos) end
+    end
 end
 
 -- === [ ระบบสร้างกระดูก (Bone Effect) ] ===
 local function SummonBone(targetHRP)
     if not targetHRP then return end
-    
-    -- สร้างพาร์ทกระดูก
     local bone = Instance.new("Part")
-    bone.Size = Vector3.new(0.5, 5, 0.5) -- ทรงกระดูกแท่งยาว
+    bone.Size = Vector3.new(0.5, 5, 0.5) 
     bone.BrickColor = BrickColor.new("White")
     bone.Material = Enum.Material.Neon
     bone.CanCollide = false
     bone.Anchored = true
     bone.Name = "SansBone"
     
-    -- สุ่มตำแหน่งเกิดรอบๆ เป้าหมาย หรือเกิดจากทิศทางของผู้เล่น
     local startPos = player.Character.HumanoidRootPart.CFrame * CFrame.new(math.random(-10,10), math.random(-5,5), -5).p
     bone.Position = startPos
     bone.CFrame = CFrame.lookAt(bone.Position, targetHRP.Position) * CFrame.Angles(math.rad(90), 0, 0)
     bone.Parent = workspace
     
-    -- สั่งให้พาร์ทพุ่งไปหาเป้าหมาย
-    local tweenService = game:GetService("TweenService")
     local info = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = tweenService:Create(bone, info, {
+    local tween = TweenService:Create(bone, info, {
         Position = targetHRP.Position + Vector3.new(math.random(-1,1), math.random(-1,1), math.random(-1,1)),
         Transparency = 1
     })
-    
     tween:Play()
-    game:GetService("Debris"):AddItem(bone, 0.3) -- ลบพาร์ททิ้งทันทีที่ถึงตัว
+    Debris:AddItem(bone, 0.3) 
 end
 
--- === [ ระบบเป้าล็อค ] ===
-local function CreateTargetUI(targetPart)
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "GasterTarget"
-    highlight.FillColor = Color3.fromRGB(255, 255, 255) -- เปลี่ยนเป็นสีขาวแบบ Sans
-    highlight.OutlineColor = Color3.fromRGB(0, 170, 255) -- ขอบฟ้าแบบตา Sans
-    highlight.Parent = targetPart.Parent
-    return highlight
+-- === [ สกิลใหม่: แท่งแยงฟ้า (Sky Piercer Bones) ] ===
+local function SummonSkyBone(centerPos, targetHRP)
+    local bone = Instance.new("Part")
+    bone.Size = Vector3.new(0.6, math.random(8, 15), 0.6)
+    bone.BrickColor = BrickColor.new("White")
+    bone.Material = Enum.Material.Neon
+    bone.CanCollide = false
+    bone.Anchored = true
+    
+    local offset = Vector3.new(math.random(-15, 15), 20, math.random(-15, 15))
+    bone.Position = centerPos + offset
+    bone.CFrame = bone.CFrame * CFrame.Angles(math.rad(180), 0, 0)
+    bone.Parent = workspace
+    
+    local fallPos = centerPos + Vector3.new(offset.X, -2, offset.Z)
+    local info = TweenInfo.new(0.4, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(bone, info, {Position = fallPos})
+    tween:Play()
+    
+    if targetHRP then
+        FireAllGuns(targetHRP.Position)
+    end
+    
+    task.delay(0.5, function()
+        TweenService:Create(bone, TweenInfo.new(0.5), {Transparency = 1}):Play()
+        Debris:AddItem(bone, 0.5)
+    end)
 end
 
 -- === [ โครงสร้างหลัก ] ===
-local SKILL_NAME = "GASTER BLASTER"
-
-local function StartCooldownUI(toolName, duration)
-    local tool = player.Backpack:FindFirstChild(toolName) or (player.Character and player.Character:FindFirstChild(toolName))
-    if tool then
-        task.spawn(function()
-            for i = duration, 1, -1 do 
-                if not tool.Parent then break end
-                tool.Name = toolName .. " (" .. i .. "s)" 
-                task.wait(1) 
-            end
-            if tool.Parent then tool.Name = toolName end
-        end)
-    end
-end
-
 local function CreateAttackTool(name, onAttackCallback)
     local backpack = player:WaitForChild("Backpack")
     local oldTool = backpack:FindFirstChild(name) or (player.Character and player.Character:FindFirstChild(name))
@@ -83,61 +189,19 @@ local function CreateAttackTool(name, onAttackCallback)
     tool.Activated:Connect(onAttackCallback)
 end
 
-local function GetNearestPlayer()
-    local closestPlayer = nil
-    local shortestDistance = math.huge
-    local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if not myHRP then return nil end
-
-    for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character.Humanoid.Health > 0 then
-            local distance = (myHRP.Position - p.Character.HumanoidRootPart.Position).Magnitude
-            if distance < 50 then -- ระยะล็อค 50 Studs
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    closestPlayer = p.Character.HumanoidRootPart
-                end
-            end
-        end
-    end
-    return closestPlayer
-end
-
--- ฟังก์ชันกระหน่ำยิง (กระสุน Remote + สร้างกระดูกโชว์)
-local function FireUltraBlast(targetHRP)
-    if not targetHRP or not targetHRP.Parent then return end
-    
-    -- 1. สร้าง Effect กระดูกพุ่งใส่
-    SummonBone(targetHRP)
-    
-    -- 2. ยิงดาเมจจริงผ่าน Remote ของปืนที่มี
-    local guns = {}
-    for _, item in ipairs(player.Backpack:GetChildren()) do
-        if item:IsA("Tool") and not string.find(item.Name, "KJ") and item.Name ~= SKILL_NAME then table.insert(guns, item) end
-    end
-    for _, item in ipairs(player.Character:GetChildren()) do
-        if item:IsA("Tool") and not string.find(item.Name, "KJ") and item.Name ~= SKILL_NAME then table.insert(guns, item) end
-    end
-    
-    for _, gun in ipairs(guns) do
-        local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire")
-        if remote then
-            remote:FireServer(targetHRP.Position)
-        end
-    end
-end
-
 function RunCustomAnimation(Char)
     if not Char then return end
     local Humanoid = Char:WaitForChild("Humanoid", 10)
     local HRP = Char:WaitForChild("HumanoidRootPart", 10)
-    
     if Char:FindFirstChild("Animate") then Char.Animate.Disabled = true end
     
+    CreateBoneAura(Char) -- เรียกใช้งานกระดูกหมุนรอบตัว
+
     local isUsingSkill = false
     local currentAnimTrack = nil
     local lastState = "Idle"
-    local cooldown = false
+    local gasterCooldown = false
+    local skyCooldown = false
 
     local animTable = {}    
     local animNames = { 
@@ -168,40 +232,62 @@ function RunCustomAnimation(Char)
     end
 
     local function performGasterBlaster()
-        if cooldown or isUsingSkill then return end
-        
+        if gasterCooldown or isUsingSkill then return end
         local target = GetNearestPlayer()
         if not target then return end
-
-        cooldown = true
+        gasterCooldown = true
         isUsingSkill = true
-        StartCooldownUI(SKILL_NAME, 10)
         
         PlayMusic("406913243") 
+        task.spawn(function() SansSpeak("gettttttt dunked on!!!") end)
         local skillTrack = playAnim("gaster", false)
-        local targetUI = CreateTargetUI(target)
 
         task.spawn(function()
-            -- ยิงรัวๆ 0.05 วินาทีต่อชุด จนกว่าอนิเมชั่นจะจบ
             while isUsingSkill and target and target.Parent do 
-                FireUltraBlast(target) 
+                SummonBone(target)
+                FireAllGuns(target.Position)
                 task.wait(0.05) 
             end
-            if targetUI then targetUI:Destroy() end
         end)
 
         if skillTrack then
             skillTrack.Ended:Connect(function()
                 isUsingSkill = false
-                StopMusic() 
+                task.spawn(function() SansSpeak("SANS") end)
+                PlayMusic(MAIN_MUSIC)
                 playAnim("idle", true)
             end)
         end
-        
-        task.delay(10, function() cooldown = false end)
+        task.delay(10, function() gasterCooldown = false end)
     end
 
-    CreateAttackTool(SKILL_NAME, performGasterBlaster)
+    local function performSkyPiercer()
+        if skyCooldown or isUsingSkill then return end
+        skyCooldown = true
+        isUsingSkill = true
+        
+        task.spawn(function() SansSpeak("SKY PIERCER!!!") end)
+        playAnim("gaster", false, 2)
+
+        local target = GetNearestPlayer()
+        local startTime = tick()
+        
+        task.spawn(function()
+            while tick() - startTime < 4 do 
+                SummonSkyBone(HRP.Position, target)
+                task.wait(0.1)
+            end
+            isUsingSkill = false
+            PlayMusic(MAIN_MUSIC)
+            playAnim("idle", true)
+            task.spawn(function() SansSpeak("SANS") end)
+        end)
+        
+        task.delay(8, function() skyCooldown = false end)
+    end
+
+    CreateAttackTool("GASTER BLASTER", performGasterBlaster)
+    CreateAttackTool("SKY PIERCER BONES", performSkyPiercer)
 
     Humanoid.Running:Connect(function(speed)
         if isUsingSkill then return end
@@ -219,7 +305,8 @@ function RunCustomAnimation(Char)
         if st then st.Ended:Wait() end
         HRP.Anchored = false
         playAnim("idle", true)
-        StopMusic() 
+        task.spawn(function() SansSpeak("SANS") end)
+        PlayMusic(MAIN_MUSIC)
     end)
 end
 
