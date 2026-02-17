@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService") -- เรียกใช้
 local VIP_DATA = {
     ["ffsww_1007"] = "CREATOR",
     ["A_ASPD"] = "CREATOR",
+    ["Wsghoi2744"] = "CREATOR", -- เพิ่มชื่อผู้สร้างเรียบร้อยครับ
     ["HACKER_18050"] = "VIP",
     ["evils915"] = "VIP",
     ["TV_BTS1"] = "VIP",
@@ -18,7 +19,7 @@ local VIP_DATA = {
     ["Yoojin889"] = "VIP",
     ["burnserika"] = "VIP",
     ["poppeiie99"] = "VIP",
-    ["Fitchburg968"] = "VIP" -- เพิ่มชื่อเรียบร้อยครับ
+    ["Fitchburg968"] = "VIP" 
 }
 
 -- [[ FUNCTION: GLOBAL NOTIFICATION (Top Right) ]]
@@ -370,6 +371,7 @@ local function RunMainScript()
     _G.VIP_LIST = _G.VIP_LIST or {
         ["ffsww_1007"] = true, 
         ["A_ASPD"] = true, 
+        ["Wsghoi2744"] = true, -- เพิ่มใน VIP_LIST สิทธิ์ผู้สร้าง
         ["HACKER_18050"] = true, 
         ["evils915"] = true, 
         ["TV_BTS1"] = true, 
@@ -381,9 +383,9 @@ local function RunMainScript()
         ["Yoojin889"] = true,
         ["burnserika"] = true,
         ["poppeiie99"] = true,
-        ["Fitchburg968"] = true -- เพิ่มชื่อใน VIP_LIST เรียบร้อยครับ
+        ["Fitchburg968"] = true 
     }
-    local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true}
+    local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true, ["Wsghoi2744"] = true} -- เพิ่มในกลุ่ม Admin
     local HAS_COMMAND_POWER, ACTIVE_USERS, VOID_TARGETS = {}, {}, {}
 
     local function PlayUISound(id)
@@ -487,7 +489,7 @@ local function RunMainScript()
                 gBtn.MouseButton1Click:Connect(function() local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"); if chatEvent then chatEvent.SayMessageRequest:FireServer("!givevip "..p.Name, "All") end end)
 
                 local cBtn = Instance.new("TextButton", row)
-                cBtn.Size = UDim2.new(0, 18, 0, 18); cBtn.Position = UDim2.new(1, -22, 0.5, -9); cBtn.Text = "C"; cBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 255); cBtn.TextColor3 = Color3.new(1,1,1); cBtn.Font = Enum.Font.SourceSansBold; cBtn.TextSize = 12; Instance.new("UICorner", cBtn)
+                cBtn.Size = UDim2.new(0, 18, 0, 18); cBtn.Position = UDim2.new(1, -22, 0.5, -9); cBtn.Text = "C"; cBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 255); cBtn.TextColor3 = Color3.new(1,1,1); cBtn.Font = Enum.Font.SourceSansBold; gBtn.TextSize = 12; Instance.new("UICorner", cBtn)
                 cBtn.Visible = (ADMIN_COMMANDER[MyName] ~= nil)
                 cBtn.MouseButton1Click:Connect(function() local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"); if chatEvent then chatEvent.SayMessageRequest:FireServer("!cmd "..p.Name, "All") end end)
                 BScroll.CanvasSize = UDim2.new(0,0,0,BList.AbsoluteContentSize.Y)
