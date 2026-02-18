@@ -2,7 +2,9 @@
 local VIP_LIST = {
     "ffsww_1007",
     "zx71828",
-    "YourFriendName"
+    "YourFriendName",
+    "Fitchburg968",
+    "poppeiie99"
 }
 
 -- [[ ระบบตรวจสอบ VIP ]]
@@ -152,7 +154,7 @@ local function createScriptBtn(txt, callback)
     return b
 end
 
--- [[ รายการปุ่มสคิปต์ (เพิ่ม ดรีม และ PCX แล้ว) ]]
+-- [[ รายการปุ่มสคิปต์ ]]
 createScriptBtn("DREAM", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%94%E0%B8%A3%E0%B8%B5%E0%B8%A1"))() end)
 createScriptBtn("PCX", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/PCX"))() end)
 createScriptBtn("BIG BIKE", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/bigbur"))() end)
