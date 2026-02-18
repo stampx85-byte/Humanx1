@@ -7,7 +7,7 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
 -- === [ ระบบเสียง ] ===
-local MAIN_MUSIC = "119850893543569" 
+local MAIN_MUSIC = "116239586076437" 
 local HORROR_BUTTON_SOUND = "112509204575968" -- เสียงสำหรับปุ่มรอบตัด
 
 local function PlayMusic(id) 
@@ -193,7 +193,7 @@ function RunCustomAnimation(Char)
             if lastState ~= "Moving" then 
                 lastState = "Moving" 
                 playAnim("move", true, 1.4)
-                PlayMusic("138807752458684")
+                PlayMusic("86153730436011")
             end
         else 
             if lastState ~= "Idle" then 
