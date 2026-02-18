@@ -1,0 +1,229 @@
+-- [[ 💀 SANS COMPLETE CORE (OUTFIT FIX - ADD ONLY) 💀 ]]
+
+local player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+
+-- === [ ระบบเสียง ] ===
+local MAIN_MUSIC = "119850893543569" 
+local HORROR_BUTTON_SOUND = "112509204575968" -- เสียงสำหรับปุ่มรอบตัด
+
+local function PlayMusic(id) 
+    pcall(function() workspace.DRadio_Script.Event:FireServer(tostring(id)) end)
+end
+
+-- === [ ระบบ UI ปุ่ม "รอบตัด" (Horror Style) ] ===
+local function CreateHorrorButton()
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "HorrorGui"
+    sg.Parent = player:WaitForChild("PlayerGui")
+    sg.ResetOnSpawn = false
+
+    local btn = Instance.new("TextButton")
+    btn.Name = "RoundCutButton"
+    btn.Parent = sg
+    btn.Size = UDim2.new(0, 120, 0, 45)
+    btn.Position = UDim2.new(0.5, -60, 0.85, 0) -- อยู่กลางจอค่อนไปทางล่าง
+    btn.BackgroundColor3 = Color3.fromRGB(20, 0, 0) -- ดำแดงมืดๆ
+    btn.BorderSizePixel = 2
+    btn.BorderColor3 = Color3.fromRGB(150, 0, 0)
+    btn.Text = "รอบตัด"
+    btn.TextColor3 = Color3.fromRGB(255, 0, 0)
+    btn.Font = Enum.Font.Creepster or Enum.Font.SpecialElite -- ใช้ฟอนต์แนวสยองขวัญ
+    btn.TextSize = 25
+    
+    -- ใส่ UIStroke ให้ตัวหนังสือดูน่ากลัวขึ้น
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 1.5
+    stroke.Color = Color3.fromRGB(0, 0, 0)
+    stroke.Parent = btn
+
+    -- ใส่ UICorner ให้ดูทันสมัยนิดนึง
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = btn
+
+    -- เอฟเฟกต์ตอนกด
+    btn.MouseButton1Click:Connect(function()
+        -- กระพริบสีแดง
+        btn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        
+        PlayMusic(HORROR_BUTTON_SOUND) -- เล่นเสียงรอบตัด
+        
+        task.wait(0.2)
+        btn.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+        btn.TextColor3 = Color3.fromRGB(255, 0, 0)
+    end)
+    
+    -- เอฟเฟกต์ลากเมาส์ผ่าน (Hover)
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.3), {BorderColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.3), {BorderColor3 = Color3.fromRGB(150, 0, 0)}):Play()
+    end)
+end
+
+-- รันสร้างปุ่ม
+CreateHorrorButton()
+
+-- === [ รายชื่อคำพูด ] ===
+local sansQuotes = {
+    "มาม่าครับม่ามา",
+    "10-20บาทมีให้เด้อ",
+    "จัดไปวัยรุ่น",
+    "กินมาม่ากันเถอะ",
+    "มีเศษเงินไหมนิ?"
+}
+
+-- === [ ระบบ NameTag สีรุ้ง ] ===
+local currentDisplayText = "SANS"
+
+task.spawn(function()
+    local hue = 0
+    while true do
+        hue = hue + 0.01
+        local rainbowColor = Color3.fromHSV(hue % 1, 0.7, 1)
+        pcall(function()
+            game:GetService("ReplicatedStorage").NameTagRemoteEvent:FireServer(currentDisplayText, rainbowColor, 13)
+        end)
+        task.wait(0.05)
+    end
+end)
+
+local function SansSpeak(text)
+    local chosenText = text or sansQuotes[math.random(1, #sansQuotes)]
+    local fullText = tostring(chosenText)
+    for i = 1, #fullText do
+        currentDisplayText = string.sub(fullText, 1, i)
+        task.wait(0.05)
+    end
+end
+
+-- === [ ระบบเปลี่ยนชุด (แก้ไขเฉพาะส่วนการดึง Accessory เพื่อให้โหลดครบ) ] ===
+local function applyOutfitWithOriginal()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local BloxbizRemotes = ReplicatedStorage:WaitForChild("BloxbizRemotes", 5)
+    
+    if not BloxbizRemotes then return end
+    local BloxRemote = BloxbizRemotes:WaitForChild("CatalogOnApplyOutfit")
+
+    local desc = humanoid:GetAppliedDescription()
+    local currentAccessories = desc:GetAccessories(true) 
+
+    table.insert(currentAccessories, {
+        ["AssetId"] = 100524494111544, 
+        ["AccessoryType"] = Enum.AccessoryType.Waist,
+        ["IsLayered"] = false
+    })
+
+    local outfitData = {
+        ["Accessories"] = currentAccessories,
+        ["Shirt"] = desc.Shirt,
+        ["Pants"] = desc.Pants,
+        ["GraphicTShirt"] = desc.GraphicTShirt,
+        ["Face"] = desc.Face,
+        ["Head"] = desc.Head,
+        ["Torso"] = desc.Torso,
+        ["LeftArm"] = desc.LeftArm,
+        ["RightArm"] = desc.RightArm,
+        ["LeftLeg"] = desc.LeftLeg,
+        ["RightLeg"] = desc.RightLeg,
+        ["HeadColor"] = desc.HeadColor,
+        ["TorsoColor"] = desc.TorsoColor,
+        ["LeftArmColor"] = desc.LeftArmColor,
+        ["RightArmColor"] = desc.RightArmColor,
+        ["LeftLegColor"] = desc.LeftLegColor,
+        ["RightLegColor"] = desc.RightLegColor,
+        ["HeightScale"] = desc.HeightScale,
+        ["WidthScale"] = desc.WidthScale,
+        ["DepthScale"] = desc.DepthScale,
+        ["HeadScale"] = desc.HeadScale,
+        ["ProportionScale"] = desc.ProportionScale,
+        ["BodyTypeScale"] = desc.BodyTypeScale
+    }
+
+    BloxRemote:FireServer(outfitData)
+end
+
+-- === [ ระบบท่าทางและแอนิเมชั่น (คงเดิม) ] ===
+function RunCustomAnimation(Char)
+    if not Char then return end
+    local Humanoid = Char:WaitForChild("Humanoid", 10)
+    local HRP = Char:WaitForChild("HumanoidRootPart", 10)
+    
+    if Char:FindFirstChild("Animate") then Char.Animate.Disabled = true end
+
+    local currentAnimTrack = nil
+    local lastState = "Idle"
+
+    local animTable = {}    
+    local animNames = { 
+        spawn = {{id = "rbxassetid://90183548743095"}}, 
+        idle = {{id = "rbxassetid://109101932760209"}},  
+        move = {{id = "rbxassetid://96677259739746"}}
+    }
+
+    for name, fileList in pairs(animNames) do
+        animTable[name] = {count = 0}
+        for idx, anim in pairs(fileList) do
+            animTable[name][idx] = {anim = Instance.new("Animation")}
+            animTable[name][idx].anim.AnimationId = anim.id
+            animTable[name].count += 1
+        end
+    end
+
+    local function playAnim(name, loop, speed)
+        if not animTable[name] or not Humanoid then return end
+        if currentAnimTrack then currentAnimTrack:Stop(0.1) end
+        local idx = math.random(1, animTable[name].count)
+        currentAnimTrack = Humanoid:LoadAnimation(animTable[name][idx].anim)
+        currentAnimTrack.Looped = loop
+        currentAnimTrack:Play(0.1)
+        if speed then currentAnimTrack:AdjustSpeed(speed) end
+        return currentAnimTrack
+    end
+
+    Humanoid.Running:Connect(function(speed)
+        if speed > 2 then 
+            if lastState ~= "Moving" then 
+                lastState = "Moving" 
+                playAnim("move", true, 1.4)
+                PlayMusic("138807752458684")
+            end
+        else 
+            if lastState ~= "Idle" then 
+                lastState = "Idle" 
+                playAnim("idle", true)
+                PlayMusic(MAIN_MUSIC)
+            end 
+        end
+    end)
+
+    task.spawn(function()
+        HRP.Anchored = true
+        PlayMusic("1060573050") 
+        local st = playAnim("spawn", false)
+        if st then st.Ended:Wait() end
+        HRP.Anchored = false
+        playAnim("idle", true)
+        task.spawn(function() SansSpeak() end)
+        PlayMusic(MAIN_MUSIC)
+    end)
+end
+
+-- === [ การเริ่มทำงาน ] ===
+if player.Character then
+    task.spawn(function() RunCustomAnimation(player.Character) end)
+    applyOutfitWithOriginal()
+end
+
+player.CharacterAdded:Connect(function(char)
+    task.spawn(function() RunCustomAnimation(char) end)
+    task.wait(2) 
+    applyOutfitWithOriginal()
+end)
