@@ -1,0 +1,174 @@
+-- [[ VIP LIST - ffsww_1007 ]]
+local VIP_LIST = {
+    "ffsww_1007",
+    "zx71828",
+    "YourFriendName"
+}
+
+-- [[ ระบบตรวจสอบ VIP ]]
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local isVip = false
+
+if lp then
+    for _, v in pairs(VIP_LIST) do
+        if lp.Name == v then
+            isVip = true
+            break
+        end
+    end
+end
+
+if not isVip then
+    warn("YOU ARE NOT VIP - ACCESS DENIED")
+    return 
+end
+
+-- [[ เริ่มต้นสคิปต์ ]]
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+local LicenseText = Instance.new("TextLabel")
+
+-- Profile Elements
+local CharFrame = Instance.new("Frame")
+local CharImage = Instance.new("ImageLabel")
+local CharName = Instance.new("TextLabel")
+
+-- Minimize Elements
+local MiniBtn = Instance.new("TextButton")
+local OpenCircle = Instance.new("ImageButton")
+local OpenCorner = Instance.new("UICorner")
+
+-- [[ ส่วนตรงกลางที่เลื่อนได้ (Scrolling Section) ]]
+local ScrollContainer = Instance.new("ScrollingFrame")
+local CenterLayout = Instance.new("UIGridLayout")
+
+-- Setup Main Window
+ScreenGui.Parent = game.CoreGui
+Main.Name = "ScriptWordTH_Main"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(12, 0, 0) 
+Main.Position = UDim2.new(0.5, -200, 0.5, -80)
+Main.Size = UDim2.new(0, 400, 0, 160)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Color = Color3.fromRGB(150, 0, 0)
+MainStroke.Thickness = 1.5
+
+-- [Title & License]
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "SCRIPT WORD [TH]"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 18
+Title.Font = Enum.Font.SpecialElite
+
+LicenseText.Parent = Main
+LicenseText.Size = UDim2.new(1, 0, 0, 20)
+LicenseText.Position = UDim2.new(0, 0, 0, 30)
+LicenseText.BackgroundTransparency = 1
+LicenseText.Text = "License: ffsww_1007"
+LicenseText.TextColor3 = Color3.fromRGB(120, 0, 0)
+LicenseText.TextSize = 12
+LicenseText.Font = Enum.Font.SpecialElite
+
+-- [Minimize Button - ขีด]
+MiniBtn.Parent = Main
+MiniBtn.Size = UDim2.new(0, 30, 0, 30)
+MiniBtn.Position = UDim2.new(1, -35, 0, 5)
+MiniBtn.BackgroundTransparency = 1
+MiniBtn.Text = "-"
+MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniBtn.TextSize = 30
+MiniBtn.Font = Enum.Font.SpecialElite
+
+-- [Open Icon]
+OpenCircle.Parent = ScreenGui
+OpenCircle.Size = UDim2.new(0, 50, 0, 50)
+OpenCircle.Position = UDim2.new(0.1, 0, 0.5, 0)
+OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+OpenCircle.Image = "rbxassetid://14579989646" 
+OpenCircle.Visible = false
+OpenCircle.Active = true
+OpenCircle.Draggable = true
+OpenCorner.CornerRadius = UDim.new(1, 0)
+OpenCorner.Parent = OpenCircle
+Instance.new("UIStroke", OpenCircle).Color = Color3.fromRGB(255, 0, 0)
+
+-- [Profile Section]
+CharFrame.Parent = Main
+CharFrame.BackgroundTransparency = 1
+CharFrame.Position = UDim2.new(0.05, 0, 0.35, 0)
+CharFrame.Size = UDim2.new(0, 80, 0, 100)
+
+CharImage.Parent = CharFrame
+CharImage.BackgroundTransparency = 1
+CharImage.Size = UDim2.new(1, 0, 0.7, 0)
+CharImage.Image = Players:GetUserThumbnailAsync(lp.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+
+CharName.Parent = CharFrame
+CharName.Size = UDim2.new(1, 0, 0, 20)
+CharName.Position = UDim2.new(0, 0, 0.75, 0)
+CharName.BackgroundTransparency = 1
+CharName.Text = lp.DisplayName
+CharName.TextColor3 = Color3.fromRGB(200, 200, 200)
+CharName.Font = Enum.Font.SpecialElite
+CharName.TextSize = 9
+
+-- [[ Setup Scrolling Area (ส่วนที่เลื่อนได้) ]]
+ScrollContainer.Parent = Main
+ScrollContainer.Name = "ScriptScroll"
+ScrollContainer.BackgroundTransparency = 1
+ScrollContainer.Position = UDim2.new(0.32, 0, 0.4, 0)
+ScrollContainer.Size = UDim2.new(0, 255, 0, 85) -- ปรับขนาดให้พอดีพื้นที่ตรงกลาง
+ScrollContainer.CanvasSize = UDim2.new(0, 0, 2, 0) -- ทำให้เลื่อนลงได้
+ScrollContainer.ScrollBarThickness = 2
+ScrollContainer.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+
+CenterLayout.Parent = ScrollContainer
+CenterLayout.CellSize = UDim2.new(0, 115, 0, 32)
+CenterLayout.CellPadding = UDim2.new(0, 8, 0, 8)
+
+local function createScriptBtn(txt, callback)
+    local b = Instance.new("TextButton")
+    b.Parent = ScrollContainer
+    b.BackgroundColor3 = Color3.fromRGB(45, 0, 0)
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 10
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+    local s = Instance.new("UIStroke", b)
+    s.Color = Color3.fromRGB(255, 0, 0)
+    b.MouseButton1Click:Connect(callback)
+    return b
+end
+
+-- [[ รายการปุ่มสคิปต์ (เพิ่ม ดรีม และ PCX แล้ว) ]]
+createScriptBtn("DREAM", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%94%E0%B8%A3%E0%B8%B5%E0%B8%A1"))() end)
+createScriptBtn("PCX", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/PCX"))() end)
+createScriptBtn("BIG BIKE", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/bigbur"))() end)
+createScriptBtn("NOODLE TRUCK", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Car"))() end)
+createScriptBtn("SANS", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/SANS"))() end)
+createScriptBtn("KJ", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kij"))() end)
+
+-- [Logic]
+MiniBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenCircle.Visible = true
+end)
+
+OpenCircle.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenCircle.Visible = false
+end)
+
+print("Script Word [TH] by ffsww_1007 Loaded with Scrolling System!")
