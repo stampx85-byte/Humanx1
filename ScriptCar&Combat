@@ -4,7 +4,8 @@ local VIP_LIST = {
     "zx71828",
     "godzilla_minusteen",
     "Fitchburg968",
-    "poppeiie99"
+    "poppeiie99",
+    "Brunserika" -- เพิ่มรายชื่อใหม่ตรงนี้
 }
 
 -- [[ ระบบตรวจสอบ VIP ]]
@@ -130,8 +131,8 @@ ScrollContainer.Parent = Main
 ScrollContainer.Name = "ScriptScroll"
 ScrollContainer.BackgroundTransparency = 1
 ScrollContainer.Position = UDim2.new(0.32, 0, 0.4, 0)
-ScrollContainer.Size = UDim2.new(0, 255, 0, 85) -- ปรับขนาดให้พอดีพื้นที่ตรงกลาง
-ScrollContainer.CanvasSize = UDim2.new(0, 0, 2, 0) -- ทำให้เลื่อนลงได้
+ScrollContainer.Size = UDim2.new(0, 255, 0, 85)
+ScrollContainer.CanvasSize = UDim2.new(0, 0, 2, 0) 
 ScrollContainer.ScrollBarThickness = 2
 ScrollContainer.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
 
