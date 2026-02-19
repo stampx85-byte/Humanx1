@@ -5,7 +5,7 @@ local VIP_LIST = {
     "godzilla_minusteen",
     "Fitchburg968",
     "poppeiie99",
-    "Brunserika" -- เพิ่มรายชื่อใหม่ตรงนี้
+    "burnserika" -- เพิ่มรายชื่อใหม่ตรงนี้
 }
 
 -- [[ ระบบตรวจสอบ VIP ]]
