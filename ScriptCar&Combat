@@ -5,8 +5,7 @@ local VIP_LIST = {
     "godzilla_minusteen",
     "Fitchburg968",
     "poppeiie99",
-    "burnserika",
-    "JackieYusi005"
+    "burnserika" -- เพิ่มรายชื่อใหม่ตรงนี้
 }
 
 -- [[ ระบบตรวจสอบ VIP ]]
@@ -28,29 +27,19 @@ if not isVip then
     return 
 end
 
--- [[ ระบบส่งข้อความลงแชทโลก ]]
-local function SendPublicChat(msg)
+-- [[ ระบบ Auto Chat เมื่อรันสคิปต์ ]]
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SayMessageRequest = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+
+if SayMessageRequest then
+    SayMessageRequest:FireServer("Script Word [TH] <On Car> [Vip]", "All")
+else
     local TextChatService = game:GetService("TextChatService")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-        local generalChannel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
-        if generalChannel then
-            generalChannel:SendAsync(msg)
-        end
-    else
-        local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") 
-            and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
-        if chatEvent then
-            chatEvent:FireServer(msg, "All")
-        end
+        local channel = TextChatService.TextChannels.RBXGeneral
+        channel:SendAsync("Script Word [TH] <On Car> [Vip]")
     end
 end
-
-task.spawn(function()
-    task.wait(1)
-    SendPublicChat("Script Word [TH] <On Car> [Vip]")
-end)
 
 -- [[ เริ่มต้นสคิปต์ GUI ]]
 local ScreenGui = Instance.new("ScreenGui")
@@ -70,6 +59,7 @@ local OpenCorner = Instance.new("UICorner")
 local ScrollContainer = Instance.new("ScrollingFrame")
 local CenterLayout = Instance.new("UIGridLayout")
 
+-- Setup Main Window
 ScreenGui.Parent = game.CoreGui
 Main.Name = "ScriptWordTH_Main"
 Main.Parent = ScreenGui
@@ -86,6 +76,7 @@ local MainStroke = Instance.new("UIStroke", Main)
 MainStroke.Color = Color3.fromRGB(150, 0, 0)
 MainStroke.Thickness = 1.5
 
+-- [Title & License]
 Title.Parent = Main
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.BackgroundTransparency = 1
@@ -103,6 +94,7 @@ LicenseText.TextColor3 = Color3.fromRGB(120, 0, 0)
 LicenseText.TextSize = 12
 LicenseText.Font = Enum.Font.SpecialElite
 
+-- [Minimize Button]
 MiniBtn.Parent = Main
 MiniBtn.Size = UDim2.new(0, 30, 0, 30)
 MiniBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -112,6 +104,7 @@ MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
 MiniBtn.TextSize = 30
 MiniBtn.Font = Enum.Font.SpecialElite
 
+-- [Open Icon]
 OpenCircle.Parent = ScreenGui
 OpenCircle.Size = UDim2.new(0, 50, 0, 50)
 OpenCircle.Position = UDim2.new(0.1, 0, 0.5, 0)
@@ -124,6 +117,7 @@ OpenCorner.CornerRadius = UDim.new(1, 0)
 OpenCorner.Parent = OpenCircle
 Instance.new("UIStroke", OpenCircle).Color = Color3.fromRGB(255, 0, 0)
 
+-- [Profile Section]
 CharFrame.Parent = Main
 CharFrame.BackgroundTransparency = 1
 CharFrame.Position = UDim2.new(0.05, 0, 0.35, 0)
@@ -143,6 +137,7 @@ CharName.TextColor3 = Color3.fromRGB(200, 200, 200)
 CharName.Font = Enum.Font.SpecialElite
 CharName.TextSize = 9
 
+-- [[ Setup Scrolling Area ]]
 ScrollContainer.Parent = Main
 ScrollContainer.Name = "ScriptScroll"
 ScrollContainer.BackgroundTransparency = 1
@@ -171,18 +166,20 @@ local function createScriptBtn(txt, callback)
     return b
 end
 
--- [[ แก้ไขสลับลิงก์ PCX และ WAVE 100 ให้ถูกต้อง ]]
+-- [[ รายการปุ่มสคิปต์ ]]
 createScriptBtn("DREAM", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%94%E0%B8%A3%E0%B8%B5%E0%B8%A1"))() end)
 createScriptBtn("PCX", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/PCX"))() end)
 createScriptBtn("BIG BIKE", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/bigbur"))() end)
 createScriptBtn("NOODLE TRUCK", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Car"))() end)
 createScriptBtn("SANS", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/SANS"))() end)
 createScriptBtn("KJ", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kij"))() end)
-createScriptBtn("SCOOPY", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%AA%E0%B8%81%E0%B8%B9%E0%B8%9A%E0%B8%B5%E0%B9%89"))() end)
-createScriptBtn("WAVE 100", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/wave100"))() end)
 createScriptBtn("FORZA", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%9F%E0%B8%AD%E0%B8%8B%E0%B9%88%E0%B8%B2"))() end)
 createScriptBtn("GIORNO", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%88%E0%B8%B5%E0%B8%AD%E0%B8%AD%E0%B9%82%E0%B8%99%E0%B9%88"))() end)
 
+-- WAVE 100 ใช้ลิงก์ของ Scoopy ตามที่ต้องการ
+createScriptBtn("WAVE 100", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%AA%E0%B8%81%E0%B8%B9%E0%B8%9A%E0%B8%B5%E0%B9%89"))() end)
+
+-- [Logic]
 MiniBtn.MouseButton1Click:Connect(function()
     Main.Visible = false
     OpenCircle.Visible = true
@@ -193,4 +190,4 @@ OpenCircle.MouseButton1Click:Connect(function()
     OpenCircle.Visible = false
 end)
 
-print("Script Word [TH] Fixed: PCX & WAVE 100 swapped back!")
+print("Script Word [TH] Updated: Wave 100 linked to Scoopy & Scoopy button removed!")
