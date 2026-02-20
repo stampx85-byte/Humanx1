@@ -5,7 +5,8 @@ local VIP_LIST = {
     "godzilla_minusteen",
     "Fitchburg968",
     "poppeiie99",
-    "burnserika" -- เพิ่มรายชื่อใหม่ตรงนี้
+    "burnserika",
+    "JackieYusi005" -- เพิ่มรายชื่อใหม่เรียบร้อย
 }
 
 -- [[ ระบบตรวจสอบ VIP ]]
@@ -27,24 +28,48 @@ if not isVip then
     return 
 end
 
--- [[ เริ่มต้นสคิปต์ ]]
+-- [[ ระบบส่งข้อความลงแชทโลก (แก้ไขให้เห็นทุกคน) ]]
+local function SendPublicChat(msg)
+    local TextChatService = game:GetService("TextChatService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    
+    -- สำหรับระบบแชทแบบใหม่ (TextChatService)
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local generalChannel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+        if generalChannel then
+            generalChannel:SendAsync(msg)
+        end
+    -- สำหรับระบบแชทแบบเก่า (Legacy Chat)
+    else
+        local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") 
+            and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+        if chatEvent then
+            chatEvent:FireServer(msg, "All")
+        end
+    end
+end
+
+-- สั่งรันข้อความทันที
+task.spawn(function()
+    task.wait(1) -- รอให้ระบบแชทโหลดเสร็จครู่หนึ่ง
+    SendPublicChat("Script Word [TH] <On Car> [Vip]")
+end)
+
+-- [[ เริ่มต้นสคิปต์ GUI ]]
 local ScreenGui = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
 local UICorner = Instance.new("UICorner")
 local Title = Instance.new("TextLabel")
 local LicenseText = Instance.new("TextLabel")
 
--- Profile Elements
 local CharFrame = Instance.new("Frame")
 local CharImage = Instance.new("ImageLabel")
 local CharName = Instance.new("TextLabel")
 
--- Minimize Elements
 local MiniBtn = Instance.new("TextButton")
 local OpenCircle = Instance.new("ImageButton")
 local OpenCorner = Instance.new("UICorner")
 
--- [[ ส่วนตรงกลางที่เลื่อนได้ (Scrolling Section) ]]
 local ScrollContainer = Instance.new("ScrollingFrame")
 local CenterLayout = Instance.new("UIGridLayout")
 
@@ -83,7 +108,7 @@ LicenseText.TextColor3 = Color3.fromRGB(120, 0, 0)
 LicenseText.TextSize = 12
 LicenseText.Font = Enum.Font.SpecialElite
 
--- [Minimize Button - ขีด]
+-- [Minimize Button]
 MiniBtn.Parent = Main
 MiniBtn.Size = UDim2.new(0, 30, 0, 30)
 MiniBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -126,13 +151,13 @@ CharName.TextColor3 = Color3.fromRGB(200, 200, 200)
 CharName.Font = Enum.Font.SpecialElite
 CharName.TextSize = 9
 
--- [[ Setup Scrolling Area (ส่วนที่เลื่อนได้) ]]
+-- [[ Setup Scrolling Area ]]
 ScrollContainer.Parent = Main
 ScrollContainer.Name = "ScriptScroll"
 ScrollContainer.BackgroundTransparency = 1
 ScrollContainer.Position = UDim2.new(0.32, 0, 0.4, 0)
 ScrollContainer.Size = UDim2.new(0, 255, 0, 85)
-ScrollContainer.CanvasSize = UDim2.new(0, 0, 2, 0) 
+ScrollContainer.CanvasSize = UDim2.new(0, 0, 2.5, 0) 
 ScrollContainer.ScrollBarThickness = 2
 ScrollContainer.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
 
@@ -162,6 +187,10 @@ createScriptBtn("BIG BIKE", function() loadstring(game:HttpGet("https://raw.gith
 createScriptBtn("NOODLE TRUCK", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/Car"))() end)
 createScriptBtn("SANS", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/SANS"))() end)
 createScriptBtn("KJ", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/kij"))() end)
+createScriptBtn("SCOOPY", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%AA%E0%B8%81%E0%B8%B9%E0%B8%9A%E0%B8%B5%E0%B9%89"))() end)
+createScriptBtn("WAVE 100", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/wave100"))() end)
+createScriptBtn("FORZA", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%9F%E0%B8%AD%E0%B8%8B%E0%B9%88%E0%B8%B2"))() end)
+createScriptBtn("GIORNO", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%88%E0%B8%B5%E0%B8%AD%E0%B8%AD%E0%B9%82%E0%B8%99%E0%B9%88"))() end)
 
 -- [Logic]
 MiniBtn.MouseButton1Click:Connect(function()
@@ -174,4 +203,4 @@ OpenCircle.MouseButton1Click:Connect(function()
     OpenCircle.Visible = false
 end)
 
-print("Script Word [TH] by ffsww_1007 Loaded with Scrolling System!")
+print("Script Word [TH] Loaded - VIP Added & Chat System Improved!")
