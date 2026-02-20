@@ -6,7 +6,7 @@ local VIP_LIST = {
     "Fitchburg968",
     "poppeiie99",
     "burnserika",
-    "JackieYusi005" -- เพิ่มรายชื่อใหม่เรียบร้อย
+    "JackieYusi005"
 }
 
 -- [[ ระบบตรวจสอบ VIP ]]
@@ -28,18 +28,16 @@ if not isVip then
     return 
 end
 
--- [[ ระบบส่งข้อความลงแชทโลก (แก้ไขให้เห็นทุกคน) ]]
+-- [[ ระบบส่งข้อความลงแชทโลก ]]
 local function SendPublicChat(msg)
     local TextChatService = game:GetService("TextChatService")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     
-    -- สำหรับระบบแชทแบบใหม่ (TextChatService)
     if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         local generalChannel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
         if generalChannel then
             generalChannel:SendAsync(msg)
         end
-    -- สำหรับระบบแชทแบบเก่า (Legacy Chat)
     else
         local chatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") 
             and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
@@ -49,9 +47,8 @@ local function SendPublicChat(msg)
     end
 end
 
--- สั่งรันข้อความทันที
 task.spawn(function()
-    task.wait(1) -- รอให้ระบบแชทโหลดเสร็จครู่หนึ่ง
+    task.wait(1)
     SendPublicChat("Script Word [TH] <On Car> [Vip]")
 end)
 
@@ -73,7 +70,6 @@ local OpenCorner = Instance.new("UICorner")
 local ScrollContainer = Instance.new("ScrollingFrame")
 local CenterLayout = Instance.new("UIGridLayout")
 
--- Setup Main Window
 ScreenGui.Parent = game.CoreGui
 Main.Name = "ScriptWordTH_Main"
 Main.Parent = ScreenGui
@@ -90,7 +86,6 @@ local MainStroke = Instance.new("UIStroke", Main)
 MainStroke.Color = Color3.fromRGB(150, 0, 0)
 MainStroke.Thickness = 1.5
 
--- [Title & License]
 Title.Parent = Main
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.BackgroundTransparency = 1
@@ -108,7 +103,6 @@ LicenseText.TextColor3 = Color3.fromRGB(120, 0, 0)
 LicenseText.TextSize = 12
 LicenseText.Font = Enum.Font.SpecialElite
 
--- [Minimize Button]
 MiniBtn.Parent = Main
 MiniBtn.Size = UDim2.new(0, 30, 0, 30)
 MiniBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -118,7 +112,6 @@ MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
 MiniBtn.TextSize = 30
 MiniBtn.Font = Enum.Font.SpecialElite
 
--- [Open Icon]
 OpenCircle.Parent = ScreenGui
 OpenCircle.Size = UDim2.new(0, 50, 0, 50)
 OpenCircle.Position = UDim2.new(0.1, 0, 0.5, 0)
@@ -131,7 +124,6 @@ OpenCorner.CornerRadius = UDim.new(1, 0)
 OpenCorner.Parent = OpenCircle
 Instance.new("UIStroke", OpenCircle).Color = Color3.fromRGB(255, 0, 0)
 
--- [Profile Section]
 CharFrame.Parent = Main
 CharFrame.BackgroundTransparency = 1
 CharFrame.Position = UDim2.new(0.05, 0, 0.35, 0)
@@ -151,7 +143,6 @@ CharName.TextColor3 = Color3.fromRGB(200, 200, 200)
 CharName.Font = Enum.Font.SpecialElite
 CharName.TextSize = 9
 
--- [[ Setup Scrolling Area ]]
 ScrollContainer.Parent = Main
 ScrollContainer.Name = "ScriptScroll"
 ScrollContainer.BackgroundTransparency = 1
@@ -180,7 +171,7 @@ local function createScriptBtn(txt, callback)
     return b
 end
 
--- [[ รายการปุ่มสคิปต์ ]]
+-- [[ แก้ไขสลับลิงก์ PCX และ WAVE 100 ให้ถูกต้อง ]]
 createScriptBtn("DREAM", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%94%E0%B8%A3%E0%B8%B5%E0%B8%A1"))() end)
 createScriptBtn("PCX", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/PCX"))() end)
 createScriptBtn("BIG BIKE", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/bigbur"))() end)
@@ -192,7 +183,6 @@ createScriptBtn("WAVE 100", function() loadstring(game:HttpGet("https://raw.gith
 createScriptBtn("FORZA", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%9F%E0%B8%AD%E0%B8%8B%E0%B9%88%E0%B8%B2"))() end)
 createScriptBtn("GIORNO", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%88%E0%B8%B5%E0%B8%AD%E0%B8%AD%E0%B9%82%E0%B8%99%E0%B9%88"))() end)
 
--- [Logic]
 MiniBtn.MouseButton1Click:Connect(function()
     Main.Visible = false
     OpenCircle.Visible = true
@@ -203,4 +193,4 @@ OpenCircle.MouseButton1Click:Connect(function()
     OpenCircle.Visible = false
 end)
 
-print("Script Word [TH] Loaded - VIP Added & Chat System Improved!")
+print("Script Word [TH] Fixed: PCX & WAVE 100 swapped back!")
