@@ -5,7 +5,8 @@ local VIP_LIST = {
     "godzilla_minusteen",
     "Fitchburg968",
     "poppeiie99",
-    "burnserika" -- เพิ่มรายชื่อใหม่ตรงนี้
+    "burnserika",
+    "JackieYusi005" -- เพิ่มรายชื่อใหม่ตรงนี้
 }
 
 -- [[ ระบบตรวจสอบ VIP ]]
@@ -190,4 +191,4 @@ OpenCircle.MouseButton1Click:Connect(function()
     OpenCircle.Visible = false
 end)
 
-print("Script Word [TH] Updated: Wave 100 linked to Scoopy & Scoopy button removed!")
+print("Script Word [TH] Updated: JackieYusi005 added to VIP!")
