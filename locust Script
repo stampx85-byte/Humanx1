@@ -1,0 +1,325 @@
+-- [[ ⚡ locust script + Warp Kill Tools (Multi-Tool Update) ⚡ ]]
+
+local player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+-- === [ ระบบ Tool ??? [1] (ส่งรีโมทตรง ไม่ถือปืน) ] ===
+local Tool1 = Instance.new("Tool")
+Tool1.Name = "??? [1]"
+Tool1.RequiresHandle = false
+Tool1.Parent = player.Backpack
+
+local function FireDirect(targetInstance)
+    local char = player.Character
+    if not char or not targetInstance then return end
+    local function searchAndFire(parent)
+        for _, item in ipairs(parent:GetChildren()) do
+            if item:IsA("Tool") and item.Name ~= "??? [1]" and item.Name ~= "??? [2]" then
+                local remote = item:FindFirstChild("shot") or item:FindFirstChild("Fire") or item:FindFirstChild("RemoteEvent")
+                if remote then remote:FireServer(targetInstance.Position) end
+            end
+        end
+    end
+    searchAndFire(char)
+    searchAndFire(player.Backpack)
+end
+
+Tool1.Activated:Connect(function()
+    local char = player.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    for _, target in ipairs(Players:GetPlayers()) do
+        if target ~= player and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local targetHRP = target.Character.HumanoidRootPart
+            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, 3)
+            for i = 1, 10 do
+                FireDirect(targetHRP)
+                RunService.Stepped:Wait()
+            end
+        end
+    end
+end)
+
+-- === [ ส่วนที่เพิ่มใหม่: Tool ??? [2] (สไตล์โปรบล็อค บินบนหัว สลับรั่วๆ) ] ===
+local Tool2 = Instance.new("Tool")
+Tool2.Name = "??? [2]"
+Tool2.RequiresHandle = false
+Tool2.Parent = player.Backpack
+
+local isWarping2 = false
+Tool2.Activated:Connect(function()
+    if isWarping2 then return end
+    isWarping2 = true
+    
+    local char = player.Character
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then isWarping2 = false return end
+
+    for _, target in ipairs(Players:GetPlayers()) do
+        if target ~= player and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local targetHRP = target.Character.HumanoidRootPart
+            
+            -- บินวนบนหัวและสลับปืนรัวๆ
+            for i = 1, 15 do
+                if not targetHRP.Parent then break end
+                
+                -- วาร์ปไปตำแหน่งบนหัว (สุ่มมุมเล็กน้อยให้ดูเหมือนโปรบล็อค)
+                local offset = CFrame.Angles(0, math.rad(i * 24), 0) * CFrame.new(0, 5, 2)
+                hrp.CFrame = targetHRP.CFrame * offset
+                
+                -- ระบบสลับอาวุธรัวๆ (Equip/Unequip)
+                for _, pItem in ipairs(player.Backpack:GetChildren()) do
+                    if pItem:IsA("Tool") and pItem ~= Tool1 and pItem ~= Tool2 then
+                        hum:EquipTool(pItem)
+                        local remote = pItem:FindFirstChild("shot") or pItem:FindFirstChild("Fire") or pItem:FindFirstChild("RemoteEvent")
+                        if remote then remote:FireServer(targetHRP.Position) end
+                        task.wait() -- สลับแบบไวที่สุด
+                    end
+                end
+                RunService.Heartbeat:Wait()
+            end
+        end
+    end
+    isWarping2 = false
+end)
+
+-- === [ ระบบ UI Behind Teleport (คงเดิม 100%) ] ===
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+local ScrollFrame = Instance.new("ScrollingFrame")
+local UIList = Instance.new("UIListLayout")
+local MenuButton = Instance.new("TextButton") 
+local MiniButton = Instance.new("TextButton") 
+local OpenCircle = Instance.new("ImageButton")
+
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "LocustTeleportUI"
+
+Main.Name = "MainFrame"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Main.BorderSizePixel = 0
+Main.Position = UDim2.new(0.5, -150, 0.5, -100)
+Main.Size = UDim2.new(0, 300, 0, 250)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 6)
+UICorner.Parent = Main
+
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "LOCUST TELEPORT"
+Title.TextColor3 = Color3.fromRGB(200, 0, 0)
+Title.TextSize = 16
+Title.Font = Enum.Font.SpecialElite
+
+MiniButton.Parent = Main
+MiniButton.Size = UDim2.new(0, 30, 0, 30)
+MiniButton.Position = UDim2.new(1, -65, 0, 2)
+MiniButton.BackgroundTransparency = 1
+MiniButton.Text = "-"
+MiniButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniButton.TextSize = 25
+MiniButton.Font = Enum.Font.SpecialElite
+
+MenuButton.Parent = Main
+MenuButton.Size = UDim2.new(0, 30, 0, 30)
+MenuButton.Position = UDim2.new(1, -35, 0, 2)
+MenuButton.BackgroundTransparency = 1
+MenuButton.Text = "≡"
+MenuButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+MenuButton.TextSize = 25
+MenuButton.Font = Enum.Font.SpecialElite
+
+ScrollFrame.Parent = Main
+ScrollFrame.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+ScrollFrame.BorderSizePixel = 0
+ScrollFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
+ScrollFrame.Size = UDim2.new(0, 270, 0, 185)
+ScrollFrame.ScrollBarThickness = 3
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
+
+UIList.Parent = ScrollFrame
+UIList.Padding = UDim.new(0, 5)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+OpenCircle.Parent = ScreenGui
+OpenCircle.Size = UDim2.new(0, 55, 0, 55)
+OpenCircle.Position = UDim2.new(0.02, 0, 0.5, -27)
+OpenCircle.Visible = false
+OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+OpenCircle.Image = "rbxassetid://14579989646" 
+local CircleCorner = Instance.new("UICorner", OpenCircle)
+CircleCorner.CornerRadius = UDim.new(1, 0)
+OpenCircle.Draggable = true
+
+local function updatePlayerList()
+    for _, item in pairs(ScrollFrame:GetChildren()) do
+        if item:IsA("TextButton") then item:Destroy() end
+    end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player then
+            local pBtn = Instance.new("TextButton")
+            pBtn.Parent = ScrollFrame
+            pBtn.Size = UDim2.new(0.95, 0, 0, 32)
+            pBtn.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+            pBtn.Text = "Behind: " .. p.DisplayName
+            pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            pBtn.Font = Enum.Font.SpecialElite
+            pBtn.TextSize = 12
+            Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0, 4)
+            
+            pBtn.MouseButton1Click:Connect(function()
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3.5)
+                end
+            end)
+        end
+    end
+    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
+end
+
+MiniButton.MouseButton1Click:Connect(function() Main.Visible = false OpenCircle.Visible = true end)
+OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true OpenCircle.Visible = false updatePlayerList() end)
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+updatePlayerList()
+
+-- === [ ระบบเดิมคงเดิมทั้งหมด ] ===
+
+local function applyBloxOutfit()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local BloxRemote = ReplicatedStorage:WaitForChild("BloxbizRemotes", 5):WaitForChild("CatalogOnApplyOutfit", 5)
+    if not BloxRemote then return end
+    local skinColor = Color3.fromRGB(215, 197, 154)
+    local outfitData = {
+        ["Accessories"] = {},
+        ["Shirt"] = 7345708891, ["Pants"] = 7469943814,
+        ["Head"] = 123269142184215, ["Torso"] = 111706289013793, 
+        ["LeftArm"] = 81154535611704, ["RightArm"] = 79221342353289,
+        ["LeftLeg"] = 110590011434217, ["RightLeg"] = 97568762628790,
+        ["HeadColor"] = skinColor, ["TorsoColor"] = skinColor,
+        ["LeftArmColor"] = skinColor, ["RightArmColor"] = skinColor,
+        ["LeftLegColor"] = skinColor, ["RightLegColor"] = skinColor,
+        ["HeightScale"] = 1, ["WidthScale"] = 1, ["DepthScale"] = 1, ["HeadScale"] = 1, ["ProportionScale"] = 0, ["BodyTypeScale"] = 1
+    }
+    BloxRemote:FireServer(outfitData)
+end
+
+local function PlayMusic(id) 
+    pcall(function() workspace.DRadio_Script.Event:FireServer(tostring(id)) end)
+end
+
+local function StopMusic() 
+    pcall(function() workspace.DRadio_Script.STOPEvent:FireServer() end)
+end
+
+function RunCustomAnimation(Char)
+    if not Char then return end
+    local Humanoid = Char:WaitForChild("Humanoid", 20)
+    local HRP = Char:WaitForChild("HumanoidRootPart", 20)
+    if not Humanoid or not HRP then return end
+    
+    applyBloxOutfit()
+    if Char:FindFirstChild("Animate") then Char.Animate.Disabled = true end
+    HRP.Anchored = false
+    Humanoid.WalkSpeed = 16
+
+    local currentAnimTrack = nil
+    local lastState = "Idle"
+    local RootJoint = HRP:FindFirstChild("RootJoint", true)
+    local RootCF = CFrame.fromEulerAnglesXYZ(-math.pi/2, 0, math.pi)
+
+    local flexConn = RunService.RenderStepped:Connect(function()
+        if not HRP.Parent or not RootJoint then return end
+        local moveSpeed = Humanoid.MoveDirection.Magnitude
+        local sine = tick() * 12
+        if moveSpeed > 0.1 then
+            local walkFlex = CFrame.new(0, math.sin(sine) * 0.15, 0) * CFrame.Angles(math.rad(math.sin(sine) * 20), 0, math.rad(math.sin(sine) * 5))
+            RootJoint.C0 = RootJoint.C0:Lerp(RootCF * walkFlex, 0.2)
+        else
+            local idleFlex = CFrame.new(0, math.sin(sine/2) * 0.05, 0) * CFrame.Angles(0, math.rad(math.sin(sine/2) * 4), 0)
+            RootJoint.C0 = RootJoint.C0:Lerp(RootCF * idleFlex, 0.1)
+        end
+    end)
+
+    local animTable = {}    
+    local animNames = { 
+        spawn = {{id = "rbxassetid://122903384028978"}},
+        idle = {{id = "rbxassetid://139202419024508"}},
+        walk = {{id = "rbxassetid://82741102191749"}},
+        run = {{id = "rbxassetid://102622695004986"}}
+    }
+
+    for name, fileList in pairs(animNames) do
+        animTable[name] = {count = 0}
+        for idx, anim in pairs(fileList) do
+            animTable[name][idx] = {anim = Instance.new("Animation")}
+            animTable[name][idx].anim.AnimationId = anim.id
+            animTable[name].count += 1
+        end
+    end
+
+    local function playAnim(name, loop, speed)
+        if not animTable[name] or not Humanoid then return end
+        if currentAnimTrack then currentAnimTrack:Stop(0.1) end
+        local idx = math.random(1, animTable[name].count)
+        currentAnimTrack = Humanoid:LoadAnimation(animTable[name][idx].anim)
+        currentAnimTrack.Looped = loop
+        currentAnimTrack:Play(0.1)
+        if speed then currentAnimTrack:AdjustSpeed(speed) end
+        return currentAnimTrack
+    end
+
+    Humanoid.Running:Connect(function(speed)
+        if speed > 2 then 
+            if lastState ~= "Running" then 
+                lastState = "Running" 
+                playAnim("run", true, 1.2) 
+                StopMusic() 
+            end
+        else 
+            if lastState ~= "Idle" then 
+                lastState = "Idle" 
+                playAnim("idle", true) 
+                PlayMusic("80809195155515") 
+            end 
+        end
+    end)
+
+    Humanoid.Died:Connect(function()
+        flexConn:Disconnect()
+        StopMusic()
+    end)
+
+    task.spawn(function()
+        task.wait(1)
+        if Humanoid and HRP then
+            Humanoid.WalkSpeed = 0
+            HRP.Anchored = true
+            PlayMusic("80809195155515")
+            local st = playAnim("spawn", false)
+            if st then st.Ended:Wait() else task.wait(3.5) end
+            HRP.Anchored = false
+            Humanoid.WalkSpeed = 16
+            playAnim("idle", true)
+        end
+    end)
+end
+
+if player.Character then 
+    task.spawn(function() RunCustomAnimation(player.Character) end) 
+end
+
+player.CharacterAdded:Connect(function(char)
+    task.wait(1.2)
+    RunCustomAnimation(char)
+end)
