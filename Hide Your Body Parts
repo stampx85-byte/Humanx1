@@ -1,0 +1,100 @@
+-- [[ BodyParts Hunter V5 - GOD SPEED 1000% ]] --
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+
+-- [[ UI DESIGN: RED HORROR ]] --
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local Status = Instance.new("TextLabel")
+local ToggleBtn = Instance.new("TextButton")
+
+ScreenGui.Parent = game.CoreGui
+Main.Parent = ScreenGui
+Main.Size = UDim2.new(0, 260, 0, 160)
+Main.Position = UDim2.new(0.5, -130, 0.5, -80)
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "GOD SPEED WARP 1000%"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.TextSize = 16
+Title.BackgroundTransparency = 1
+
+Status.Parent = Main
+Status.Size = UDim2.new(1, 0, 0, 30)
+Status.Position = UDim2.new(0, 0, 0.25, 0)
+Status.Text = "SYSTEM READY"
+Status.TextColor3 = Color3.fromRGB(255, 255, 255)
+Status.Font = Enum.Font.Code
+Status.BackgroundTransparency = 1
+
+ToggleBtn.Parent = Main
+ToggleBtn.Size = UDim2.new(0.8, 0, 0, 45)
+ToggleBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
+ToggleBtn.Text = "ACTIVATE HYPER WARP"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.SpecialElite
+ToggleBtn.TextSize = 14
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 5)
+
+local isWarping = false
+
+-- [[ ฟังก์ชันวาร์ปความเร็วแสง ]] --
+local function hyperWarp()
+    while isWarping do
+        local targetFolder = workspace:FindFirstChild("BodyParts")
+        
+        if targetFolder then
+            local items = targetFolder:GetChildren()
+            
+            if #items > 0 then
+                for _, item in pairs(items) do
+                    if not isWarping then break end
+                    
+                    local targetPart = nil
+                    if item:IsA("BasePart") then
+                        targetPart = item
+                    else
+                        targetPart = item:FindFirstChildWhichIsA("BasePart", true)
+                    end
+                    
+                    if targetPart and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                        -- วาร์ปทันทีไม่มีดีเลย์
+                        lp.Character.HumanoidRootPart.CFrame = targetPart.CFrame
+                        -- ใช้เวลาพักสั้นมากๆ เพื่อไม่ให้เกมค้าง (0.01 วินาที)
+                        task.wait(0.01) 
+                    end
+                end
+            else
+                Status.Text = "CLEARED! WAITING..."
+            end
+        end
+        task.wait() -- รอรอบถัดไปในเฟรมถัดไปทันที
+    end
+end
+
+-- [[ Logic ปุ่ม ]] --
+ToggleBtn.MouseButton1Click:Connect(function()
+    isWarping = not isWarping
+    
+    if isWarping then
+        ToggleBtn.Text = "DEACTIVATE"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        ToggleBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        Status.Text = "HYPER WARP RUNNING"
+        task.spawn(hyperWarp)
+    else
+        ToggleBtn.Text = "ACTIVATE HYPER WARP"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+        ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Status.Text = "STOPPED"
+    end
+end)
