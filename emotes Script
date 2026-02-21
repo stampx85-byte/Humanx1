@@ -1,0 +1,215 @@
+-- [[ 💀 DanceScriptWord[TH] : HORROR BOSS EDITION 💀 ]]
+
+local player = game:GetService("Players").LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- === [ 1. CONFIGURATION (SAME LOGIC) ] ===
+local animIds = {
+    ["Laugh"]    = "rbxassetid://98316145061745",
+    ["No!"]      = "rbxassetid://134062079498962",
+    ["Yeah"]     = "rbxassetid://99895420404718",
+    ["DaneCat"]  = "rbxassetid://79878714311433",
+    ["Stand"]    = "rbxassetid://110099406570327",
+    ["LegSwing"] = "rbxassetid://87033513223989",
+    ["Baldil"]   = "rbxassetid://121934635382614"
+}
+
+local soundIds = {
+    [animIds["Laugh"]]    = "102337139534241",
+    [animIds["No!"]]      = "135090296882999",
+    [animIds["Yeah"]]     = "131841146945935",
+    [animIds["DaneCat"]]  = "131865146401160",
+    [animIds["Stand"]]    = "119112471897885",
+    [animIds["LegSwing"]] = "116739344338720",
+    [animIds["Baldil"]]   = "133488024208372"
+}
+
+-- === [ 2. DRADIO SYSTEM ] ===
+local function PlayMusic(animId) 
+    local soundId = soundIds[animId] or animId:gsub("rbxassetid://", "")
+    pcall(function() 
+        workspace.DRadio_Script.Event:FireServer(soundId) 
+    end)
+end
+
+local function StopMusic() 
+    pcall(function() 
+        workspace.DRadio_Script.STOPEvent:FireServer() 
+    end)
+end
+
+-- === [ 3. ANIMATION ENGINE ] ===
+local currentTrack = nil
+local function PlayAnim(id)
+    local char = player.Character
+    if not char or id == "rbxassetid://0" then return end
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return end
+    if currentTrack then currentTrack:Stop(0.1) end
+    StopMusic()
+    if char:FindFirstChild("Animate") then char.Animate.Disabled = true end
+    local anim = Instance.new("Animation")
+    anim.AnimationId = id
+    currentTrack = hum:LoadAnimation(anim)
+    currentTrack.Looped = (id == animIds["DaneCat"] or id == animIds["Stand"] or id == animIds["LegSwing"] or id == animIds["Baldil"])
+    currentTrack:Play(0.1)
+    PlayMusic(id)
+    if not currentTrack.Looped then
+        currentTrack.Stopped:Connect(function()
+            StopMusic()
+            if char:FindFirstChild("Animate") then char.Animate.Disabled = false end
+        end)
+    end
+end
+
+-- === [ 4. HORROR BOSS SQUARE UI ] ===
+local sg = Instance.new("ScreenGui")
+sg.Name = "DanceScriptWord_TH"
+sg.Parent = game.CoreGui
+sg.ResetOnSpawn = false
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Parent = sg
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0) -- ดำมืด
+Main.BorderSizePixel = 2
+Main.BorderColor3 = Color3.fromRGB(150, 0, 0) -- ขอบแดงเลือด
+Main.Position = UDim2.new(0.5, -100, 0.5, -125)
+Main.Size = UDim2.new(0, 200, 0, 250)
+Main.Active = true
+Main.Draggable = true -- ทำให้ลากได้
+
+-- ขอบเหลี่ยม (เอา UICorner ออกเพื่อให้เป็นสี่เหลี่ยมเป๊ะๆ หรือใส่ค่าน้อยมาก)
+local UICorner = Instance.new("UICorner", Main)
+UICorner.CornerRadius = UDim.new(0, 2)
+
+-- ส่วนหัว (TopBar)
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 30)
+TopBar.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = Main
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -30, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "SANS EVOLVE [TH]"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.TextSize = 14
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local MiniBtn = Instance.new("TextButton")
+MiniBtn.Size = UDim2.new(0, 30, 0, 30)
+MiniBtn.Position = UDim2.new(1, -30, 0, 0)
+MiniBtn.BackgroundTransparency = 1
+MiniBtn.Text = "-"
+MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniBtn.TextSize = 25
+MiniBtn.Font = Enum.Font.SpecialElite
+MiniBtn.Parent = TopBar
+
+-- พื้นที่ปุ่มเลื่อนได้
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Size = UDim2.new(1, -10, 1, -85)
+ScrollFrame.Position = UDim2.new(0, 5, 0, 35)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.BorderSizePixel = 0
+ScrollFrame.ScrollBarThickness = 3
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(150, 0, 0)
+ScrollFrame.Parent = Main
+
+local UIList = Instance.new("UIListLayout", ScrollFrame)
+UIList.Padding = UDim.new(0, 5)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function createAnimBtn(name, id)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -10, 0, 30)
+    b.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+    b.BorderSizePixel = 1
+    b.BorderColor3 = Color3.fromRGB(80, 0, 0)
+    b.Text = name
+    b.TextColor3 = Color3.fromRGB(200, 0, 0)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 12
+    b.Parent = ScrollFrame
+    
+    b.MouseButton1Click:Connect(function()
+        PlayAnim(id)
+        b.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+        task.wait(0.1)
+        b.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+    end)
+end
+
+local order = {"Laugh", "No!", "Yeah", "DaneCat", "Stand", "LegSwing", "Baldil"}
+for _, name in ipairs(order) do
+    if animIds[name] then createAnimBtn(name, animIds[name]) end
+end
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
+
+-- ปุ่ม STOP (สี่เหลี่ยมแดง)
+local StopBtn = Instance.new("TextButton")
+StopBtn.Size = UDim2.new(1, -10, 0, 35)
+StopBtn.Position = UDim2.new(0, 5, 1, -40)
+StopBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+StopBtn.BorderSizePixel = 1
+StopBtn.BorderColor3 = Color3.fromRGB(255, 0, 0)
+StopBtn.Text = "STOP SYSTEM"
+StopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+StopBtn.Font = Enum.Font.SpecialElite
+StopBtn.TextSize = 12
+StopBtn.Parent = Main
+
+StopBtn.MouseButton1Click:Connect(function()
+    if currentTrack then currentTrack:Stop(0.1) end
+    StopMusic()
+    local char = player.Character
+    if char and char:FindFirstChild("Animate") then char.Animate.Disabled = false end
+end)
+
+-- === [ 5. DRAGGABLE MINI ICON (LOGIC เพิ่มเติม) ] ===
+local OpenCircle = Instance.new("ImageButton")
+OpenCircle.Name = "MiniIcon"
+OpenCircle.Parent = sg
+OpenCircle.Size = UDim2.new(0, 55, 0, 55)
+OpenCircle.Position = UDim2.new(0.05, 0, 0.5, -27)
+OpenCircle.Visible = false
+OpenCircle.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+OpenCircle.Image = "rbxassetid://14579989646" -- ไอคอน Horror
+OpenCircle.Active = true
+OpenCircle.Draggable = true -- ทำให้ไอคอนลากได้ตามคำขอ
+
+local CircleCorner = Instance.new("UICorner", OpenCircle)
+CircleCorner.CornerRadius = UDim.new(1, 0)
+
+local CircleStroke = Instance.new("UIStroke", OpenCircle)
+CircleStroke.Color = Color3.fromRGB(255, 0, 0)
+CircleStroke.Thickness = 2
+
+-- ระบบ เปิด/ปิด
+MiniBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenCircle.Visible = true
+end)
+
+OpenCircle.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenCircle.Visible = false
+end)
+
+-- Tag ชื่อด้านล่าง (ตามต้นฉบับ)
+local Tag = Instance.new("TextLabel")
+Tag.Size = UDim2.new(1, 0, 0, 15)
+Tag.Position = UDim2.new(0, 5, 1, 5)
+Tag.BackgroundTransparency = 1
+Tag.Text = "DanceScriptWord [TH]"
+Tag.TextColor3 = Color3.fromRGB(100, 0, 0)
+Tag.Font = Enum.Font.SpecialElite
+Tag.TextSize = 10
+Tag.TextXAlignment = Enum.TextXAlignment.Left
+Tag.Parent = Main
