@@ -1,10 +1,10 @@
--- [[ 💀 DanceScriptWord[TH] : HORROR BOSS EDITION 💀 ]]
+-- [[ 💀 DanceScriptWord[TH] : HORROR BOSS EDITION (ROSE UPDATED) 💀 ]]
 
 local player = game:GetService("Players").LocalPlayer
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
--- === [ 1. CONFIGURATION (SAME LOGIC) ] ===
+-- === [ 1. CONFIGURATION ] ===
 local animIds = {
     ["Laugh"]    = "rbxassetid://98316145061745",
     ["No!"]      = "rbxassetid://134062079498962",
@@ -12,7 +12,12 @@ local animIds = {
     ["DaneCat"]  = "rbxassetid://79878714311433",
     ["Stand"]    = "rbxassetid://110099406570327",
     ["LegSwing"] = "rbxassetid://87033513223989",
-    ["Baldil"]   = "rbxassetid://121934635382614"
+    ["Baldil"]   = "rbxassetid://121934635382614",
+    ["JumpStyle"] = "rbxassetid://112773902133223",
+    ["FAYGO"]    = "rbxassetid://116263116372086",
+    ["good job"] = "rbxassetid://90894939191994",
+    -- เพิ่มเติมใหม่: Rose
+    ["Rose"]     = "rbxassetid://94224559355149"
 }
 
 local soundIds = {
@@ -22,7 +27,11 @@ local soundIds = {
     [animIds["DaneCat"]]  = "131865146401160",
     [animIds["Stand"]]    = "119112471897885",
     [animIds["LegSwing"]] = "116739344338720",
-    [animIds["Baldil"]]   = "133488024208372"
+    [animIds["Baldil"]]   = "133488024208372",
+    [animIds["JumpStyle"]] = "120915658433879",
+    [animIds["FAYGO"]]    = "73942390102688",
+    [animIds["good job"]] = "77344216204394",
+    [animIds["Rose"]]     = "94224559355149" -- ใส่ ID เสียงเดียวกับท่าทาง (หรือเปลี่ยนตามต้องการ)
 }
 
 -- === [ 2. DRADIO SYSTEM ] ===
@@ -46,16 +55,42 @@ local function PlayAnim(id)
     if not char or id == "rbxassetid://0" then return end
     local hum = char:FindFirstChild("Humanoid")
     if not hum then return end
+    
     if currentTrack then currentTrack:Stop(0.1) end
     StopMusic()
+    
     if char:FindFirstChild("Animate") then char.Animate.Disabled = true end
+    
     local anim = Instance.new("Animation")
     anim.AnimationId = id
     currentTrack = hum:LoadAnimation(anim)
-    currentTrack.Looped = (id == animIds["DaneCat"] or id == animIds["Stand"] or id == animIds["LegSwing"] or id == animIds["Baldil"])
-    currentTrack:Play(0.1)
-    PlayMusic(id)
-    if not currentTrack.Looped then
+    
+    -- ตั้งค่าการวนลูป
+    local loopList = {
+        animIds["DaneCat"], animIds["Stand"], animIds["LegSwing"], 
+        animIds["Baldil"], animIds["JumpStyle"], animIds["FAYGO"]
+    }
+    
+    currentTrack.Looped = table.find(loopList, id) ~= nil
+    
+    -- Logic สำหรับท่า Rose (ให้ค้างท่าตอนจบ)
+    if id == animIds["Rose"] then
+        currentTrack.Looped = false
+        currentTrack:Play(0.1)
+        PlayMusic(id)
+        
+        -- รอจนเกือบจบแล้วปรับความเร็วเป็น 0 เพื่อให้ค้างท่า
+        task.spawn(function()
+            repeat task.wait() until currentTrack.TimePosition >= (currentTrack.Length * 0.95)
+            currentTrack:AdjustSpeed(0) -- หยุดความเร็วอนิเมชั่น (ค้างท่า)
+        end)
+    else
+        currentTrack:Play(0.1)
+        PlayMusic(id)
+    end
+    
+    -- จัดการเมื่อท่าจบ (สำหรับท่าที่ไม่ Loop และไม่ใช่ Rose)
+    if not currentTrack.Looped and id ~= animIds["Rose"] then
         currentTrack.Stopped:Connect(function()
             StopMusic()
             if char:FindFirstChild("Animate") then char.Animate.Disabled = false end
@@ -72,19 +107,17 @@ sg.ResetOnSpawn = false
 local Main = Instance.new("Frame")
 Main.Name = "Main"
 Main.Parent = sg
-Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0) -- ดำมืด
+Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
 Main.BorderSizePixel = 2
-Main.BorderColor3 = Color3.fromRGB(150, 0, 0) -- ขอบแดงเลือด
+Main.BorderColor3 = Color3.fromRGB(150, 0, 0)
 Main.Position = UDim2.new(0.5, -100, 0.5, -125)
-Main.Size = UDim2.new(0, 200, 0, 250)
+Main.Size = UDim2.new(0, 200, 0, 300) -- ปรับขนาดเพิ่ม
 Main.Active = true
-Main.Draggable = true -- ทำให้ลากได้
+Main.Draggable = true 
 
--- ขอบเหลี่ยม (เอา UICorner ออกเพื่อให้เป็นสี่เหลี่ยมเป๊ะๆ หรือใส่ค่าน้อยมาก)
 local UICorner = Instance.new("UICorner", Main)
 UICorner.CornerRadius = UDim.new(0, 2)
 
--- ส่วนหัว (TopBar)
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 30)
 TopBar.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
@@ -112,7 +145,6 @@ MiniBtn.TextSize = 25
 MiniBtn.Font = Enum.Font.SpecialElite
 MiniBtn.Parent = TopBar
 
--- พื้นที่ปุ่มเลื่อนได้
 local ScrollFrame = Instance.new("ScrollingFrame")
 ScrollFrame.Size = UDim2.new(1, -10, 1, -85)
 ScrollFrame.Position = UDim2.new(0, 5, 0, 35)
@@ -146,13 +178,13 @@ local function createAnimBtn(name, id)
     end)
 end
 
-local order = {"Laugh", "No!", "Yeah", "DaneCat", "Stand", "LegSwing", "Baldil"}
+-- ลำดับการแสดงผลปุ่ม (เพิ่ม Rose เข้าไปข้างหน้า)
+local order = {"Rose", "Laugh", "No!", "Yeah", "DaneCat", "Stand", "LegSwing", "Baldil", "JumpStyle", "FAYGO", "good job"}
 for _, name in ipairs(order) do
     if animIds[name] then createAnimBtn(name, animIds[name]) end
 end
 ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
 
--- ปุ่ม STOP (สี่เหลี่ยมแดง)
 local StopBtn = Instance.new("TextButton")
 StopBtn.Size = UDim2.new(1, -10, 0, 35)
 StopBtn.Position = UDim2.new(0, 5, 1, -40)
@@ -166,13 +198,17 @@ StopBtn.TextSize = 12
 StopBtn.Parent = Main
 
 StopBtn.MouseButton1Click:Connect(function()
-    if currentTrack then currentTrack:Stop(0.1) end
+    if currentTrack then 
+        currentTrack:Stop(0.1) 
+    end
     StopMusic()
     local char = player.Character
-    if char and char:FindFirstChild("Animate") then char.Animate.Disabled = false end
+    if char and char:FindFirstChild("Animate") then 
+        char.Animate.Disabled = false 
+    end
 end)
 
--- === [ 5. DRAGGABLE MINI ICON (LOGIC เพิ่มเติม) ] ===
+-- === [ 5. DRAGGABLE MINI ICON ] ===
 local OpenCircle = Instance.new("ImageButton")
 OpenCircle.Name = "MiniIcon"
 OpenCircle.Parent = sg
@@ -180,9 +216,9 @@ OpenCircle.Size = UDim2.new(0, 55, 0, 55)
 OpenCircle.Position = UDim2.new(0.05, 0, 0.5, -27)
 OpenCircle.Visible = false
 OpenCircle.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
-OpenCircle.Image = "rbxassetid://14579989646" -- ไอคอน Horror
+OpenCircle.Image = "rbxassetid://14579989646" 
 OpenCircle.Active = true
-OpenCircle.Draggable = true -- ทำให้ไอคอนลากได้ตามคำขอ
+OpenCircle.Draggable = true 
 
 local CircleCorner = Instance.new("UICorner", OpenCircle)
 CircleCorner.CornerRadius = UDim.new(1, 0)
@@ -191,7 +227,6 @@ local CircleStroke = Instance.new("UIStroke", OpenCircle)
 CircleStroke.Color = Color3.fromRGB(255, 0, 0)
 CircleStroke.Thickness = 2
 
--- ระบบ เปิด/ปิด
 MiniBtn.MouseButton1Click:Connect(function()
     Main.Visible = false
     OpenCircle.Visible = true
@@ -202,7 +237,6 @@ OpenCircle.MouseButton1Click:Connect(function()
     OpenCircle.Visible = false
 end)
 
--- Tag ชื่อด้านล่าง (ตามต้นฉบับ)
 local Tag = Instance.new("TextLabel")
 Tag.Size = UDim2.new(1, 0, 0, 15)
 Tag.Position = UDim2.new(0, 5, 1, 5)
