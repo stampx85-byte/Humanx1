@@ -1,4 +1,4 @@
--- [[ Script Word [TH] <By Human> ]]
+-- [[ Script Word [TH] <By Human> - NAMETAG & RAINBOW ]]
 print("--------------------------------------")
 print("Script Word [TH] <By Human> - PCX & Dance Update")
 print("--------------------------------------")
@@ -104,7 +104,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ----- หน้า NAMETAG -----
+-- ----- หน้า NAMETAG (รวม Boombox Rainbow) -----
 local pgTag = CreatePage("NAMETAG")
 pgTag.Visible = true
 
@@ -138,6 +138,62 @@ tagToggle.MouseButton1Click:Connect(function()
                 task.wait(0.1)
             end
         end)
+    end
+end)
+
+-- เพิ่มส่วน Boombox Rainbow ในหน้า Nametag
+local rbLine = Instance.new("Frame", pgTag)
+rbLine.Size = UDim2.new(0.95, 0, 0, 2)
+rbLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+rbLine.BorderSizePixel = 0
+
+local rbTitle = Instance.new("TextLabel", pgTag)
+rbTitle.Size = UDim2.new(0.95, 0, 0, 30)
+rbTitle.BackgroundTransparency = 1
+rbTitle.Text = "BOOMBOX RAINBOW"
+rbTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+rbTitle.Font = Enum.Font.SpecialElite
+
+local MegaColors = {
+    "Bright red", "Bright blue", "Bright yellow", "Bright green", "Bright violet", "Bright orange",
+    "Electric blue", "Hot pink", "Lime green", "Deep orange", "Cyan", "Magenta", "Gold", "Royal purple",
+    "New Yeller", "Really red", "Really blue", "Neon orange", "Alder", "Pastel blue", "Pastel violet",
+    "Toothpaste", "Parsley green", "Sand blue", "Medium blue", "Lapis", "Smoky grey", "Ghost grey",
+    "Carnation pink", "Mauve", "Sunrise", "Sunset", "Deep blue", "Navy blue", "Teal", "Camo",
+    "Dark green", "Pine Cone", "Olive", "Br. yellowish orange", "Bright bluish green", "CGA brown",
+    "Dark orange", "Deep orange", "Electric blue", "Eggplant", "Fog", "Grime", "Institutional white",
+    "Linen", "Light reddish violet", "Mulberry", "Persimmon", "Pistachio", "Rust", "Sand red",
+    "Shamrock", "Steel blue", "Terra Cotta", "Tropical blue"
+}
+
+local rbRunning = false
+local rbThread
+local rbBtn = Instance.new("TextButton", pgTag)
+rbBtn.Size = UDim2.new(0.95, 0, 0, 45)
+rbBtn.Text = "START RAINBOW BOOMBOX"
+rbBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+rbBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", rbBtn)
+
+rbBtn.MouseButton1Click:Connect(function()
+    rbRunning = not rbRunning
+    rbBtn.Text = rbRunning and "STOP RAINBOW BOOMBOX" or "START RAINBOW BOOMBOX"
+    rbBtn.BackgroundColor3 = rbRunning and Color3.fromRGB(40, 0, 0) or Color3.fromRGB(100, 0, 0)
+    
+    if rbRunning then
+        rbThread = task.spawn(function()
+            while rbRunning do
+                for _, colorName in pairs(MegaColors) do
+                    if not rbRunning then break end
+                    pcall(function()
+                        workspace.DRadio_Script.Color:FireServer(BrickColor.new(colorName))
+                    end)
+                    task.wait(0.07)
+                end
+            end
+        end)
+    else
+        if rbThread then task.cancel(rbThread) end
     end
 end)
 
@@ -201,32 +257,18 @@ pcxBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/PCX"))()
 end)
 
--- ----- หน้า DANCE (เพิ่มใหม่) -----
+-- ----- หน้า DANCE -----
 local pgDance = CreatePage("DANCE")
-local danceDesc = Instance.new("TextLabel", pgDance)
-danceDesc.Size = UDim2.new(0.95, 0, 0, 40)
-danceDesc.BackgroundTransparency = 1
-danceDesc.Text = "ระบบท่าเต้น / Emotes"
-danceDesc.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-danceDesc.Font = Enum.Font.SpecialElite
-danceDesc.TextSize = 14
-
 local emotesBtn = Instance.new("TextButton", pgDance)
 emotesBtn.Size = UDim2.new(0.95, 0, 0, 50)
 emotesBtn.Text = "Emotes"
-emotesBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 150) -- ใช้สีม่วงเข้มให้ดูต่างจากปุ่มอื่น
+emotesBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 150)
 emotesBtn.TextColor3 = Color3.new(1,1,1)
 emotesBtn.Font = Enum.Font.SpecialElite
 Instance.new("UICorner", emotesBtn)
 
 emotesBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/emotes%20Script"))()
-    
-    game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-        Text = "[System] Emotes Script Loaded!",
-        Color = Color3.new(1, 0, 1),
-        Font = Enum.Font.SpecialElite
-    })
 end)
 
 -- ==========================================
@@ -245,7 +287,7 @@ MiniBtn.MouseButton1Click:Connect(function() Main.Visible = false OpenCircle.Vis
 OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true OpenCircle.Visible = false end)
 
 game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-    Text = "Script Word [TH] <By Human> Loaded!",
+    Text = "Script Word [TH] Loaded (Rainbow Boombox in Nametag)",
     Color = Color3.new(1, 0, 0),
     Font = Enum.Font.SpecialElite
 })
