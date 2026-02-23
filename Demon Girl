@@ -1,0 +1,276 @@
+-- [[ 💀 INTEGRATED VERSION: DANCE UI + NEW OUTFIT 💀 ]]
+
+local player = game:GetService("Players").LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local PlayerGui = player:WaitForChild("PlayerGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- === [ 1. CONFIGURATION (DANCE) ] ===
+local animIds = {
+    ["Laugh"]    = "rbxassetid://98316145061745",
+    ["No!"]      = "rbxassetid://134062079498962",
+    ["Yeah"]     = "rbxassetid://99895420404718",
+    ["DaneCat"]  = "rbxassetid://79878714311433",
+    ["Stand"]    = "rbxassetid://110099406570327",
+    ["Cat"] = "rbxassetid://111892394639126",
+    ["UWU"]   = "rbxassetid://125529137930284",
+    ["So SuS"] = "rbxassetid://116770693490265",
+    ["FAYGO"]    = "rbxassetid://116263116372086",
+    ["good job"] = "rbxassetid://90894939191994",
+    ["Rose"]     = "rbxassetid://94224559355149"
+}
+
+local soundIds = {
+    [animIds["Laugh"]]    = "102337139534241",
+    [animIds["No!"]]      = "135090296882999",
+    [animIds["Yeah"]]     = "131841146945935",
+    [animIds["DaneCat"]]  = "131865146401160",
+    [animIds["Stand"]]    = "119112471897885",
+    [animIds["Cat"]] = "116739344338720",
+    [animIds["UWU"]]   = "133488024208372",
+    [animIds["So SuS"]] = "120915658433879",
+    [animIds["FAYGO"]]    = "73942390102688",
+    [animIds["good job"]] = "77344216204394",
+    [animIds["Rose"]]     = "94224559355149"
+}
+
+-- === [ 2. SHARED UTILITIES ] ===
+local currentTrack = nil 
+
+local function PlayMusic(id) 
+    local soundId = soundIds[id] or id:gsub("rbxassetid://", "")
+    pcall(function() 
+        workspace.DRadio_Script.Event:FireServer(tostring(soundId)) 
+    end)
+end
+
+local function StopMusic() 
+    pcall(function() 
+        workspace.DRadio_Script.STOPEvent:FireServer() 
+    end)
+end
+
+-- === [ 3. BLOXBIZ OUTFIT SYSTEM (UPDATED) ] ===
+local function applyBloxOutfit()
+    local BloxbizRemotes = ReplicatedStorage:WaitForChild("BloxbizRemotes", 5)
+    if not BloxbizRemotes then return end
+    local BloxRemote = BloxbizRemotes:WaitForChild("CatalogOnApplyOutfit")
+    
+    -- รวมข้อมูลจากสคริปต์ที่คุณให้มาล่าสุด
+    local outfitData = {
+        ["WalkAnimation"] = 0, ["IdleAnimation"] = 0, ["RunAnimation"] = 0,
+        ["JumpAnimation"] = 0, ["FallAnimation"] = 0, ["ClimbAnimation"] = 0,
+        ["SwimAnimation"] = 0, ["MoodAnimation"] = 14618207727,
+        ["Accessories"] = {
+            {["AssetId"] = 14618273768, ["AccessoryType"] = Enum.AccessoryType.Hair, ["IsLayered"] = false},
+            {["AssetId"] = 398672920, ["AccessoryType"] = Enum.AccessoryType.Hair, ["IsLayered"] = false},
+            {["AssetId"] = 14082636421, ["AccessoryType"] = Enum.AccessoryType.Hat, ["IsLayered"] = false},
+            {["AssetId"] = 7791326331, ["AccessoryType"] = Enum.AccessoryType.Waist, ["IsLayered"] = false},
+            {["AssetId"] = 126977197929766, ["AccessoryType"] = Enum.AccessoryType.Front, ["IsLayered"] = false}, -- เพิ่มของตกแต่งใหม่
+        },
+        ["Torso"] = 48474356, 
+        ["LeftArm"] = 87202958751790, 
+        ["RightArm"] = 103452055306587,
+        ["LeftLeg"] = 106411216404626, 
+        ["RightLeg"] = 129699548221468, 
+        ["Head"] = 104619869928477,
+        ["HeadColor"] = Color3.fromRGB(163, 75, 75), 
+        ["TorsoColor"] = Color3.fromRGB(163, 75, 75),
+        ["LeftArmColor"] = Color3.fromRGB(163, 75, 75), 
+        ["RightArmColor"] = Color3.fromRGB(163, 75, 75),
+        ["LeftLegColor"] = Color3.fromRGB(163, 75, 75), 
+        ["RightLegColor"] = Color3.fromRGB(163, 75, 75),
+        ["Pants"] = 136775804384155, -- ID กางเกงใหม่
+        ["Shirt"] = 0, 
+        ["Face"] = 0, 
+        ["GraphicTShirt"] = 0,
+        ["HeightScale"] = 0.8999999761581421, 
+        ["WidthScale"] = 0.8500000238418579,
+        ["DepthScale"] = 0.949999988079071, 
+        ["HeadScale"] = 1, 
+        ["ProportionScale"] = 0.5, 
+        ["BodyTypeScale"] = 0
+    }
+    BloxRemote:FireServer(outfitData)
+end
+
+-- === [ 4. ANIMATION ENGINE (DANCE) ] ===
+local function PlayAnim(id)
+    local char = player.Character
+    if not char or id == "rbxassetid://0" then return end
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return end
+    
+    if currentTrack then currentTrack:Stop(0.1) end
+    StopMusic()
+    
+    if char:FindFirstChild("Animate") then char.Animate.Disabled = true end
+    
+    local anim = Instance.new("Animation")
+    anim.AnimationId = id
+    currentTrack = hum:LoadAnimation(anim)
+    
+    local loopList = {animIds["DaneCat"], animIds["Stand"], animIds["LegSwing"], animIds["Baldil"], animIds["JumpStyle"], animIds["FAYGO"]}
+    currentTrack.Looped = table.find(loopList, id) ~= nil
+    
+    if id == animIds["Rose"] then
+        currentTrack.Looped = false
+        currentTrack:Play(0.1)
+        PlayMusic(id)
+        task.spawn(function()
+            repeat task.wait() until currentTrack.TimePosition >= (currentTrack.Length * 0.95)
+            currentTrack:AdjustSpeed(0)
+        end)
+    else
+        currentTrack:Play(0.1)
+        PlayMusic(id)
+    end
+    
+    if not currentTrack.Looped and id ~= animIds["Rose"] then
+        currentTrack.Stopped:Connect(function()
+            StopMusic()
+            if char:FindFirstChild("Animate") then char.Animate.Disabled = false end
+        end)
+    end
+end
+
+-- === [ 5. KJ VISUALS SYSTEM ] ===
+function ApplyKJVisuals(Char)
+    if not Char then return end
+    local Humanoid = Char:WaitForChild("Humanoid", 10)
+    local HRP = Char:WaitForChild("HumanoidRootPart", 10)
+    if not Humanoid or not HRP then return end
+    
+    applyBloxOutfit()
+    if Char:FindFirstChild("Animate") then Char.Animate.Disabled = true end
+    
+    local RootJoint = HRP:FindFirstChild("RootJoint", true)
+    local RootCF = CFrame.fromEulerAnglesXYZ(-math.pi/2, 0, math.pi)
+    local kjTrack = nil
+    local lastState = "Idle"
+    local anims = {spawn = "rbxassetid://127723628963306", idle = "rbxassetid://93161512534608", run = "rbxassetid://85475131476587"}
+
+    local function playKJAnim(name, loop, speed)
+        if kjTrack then kjTrack:Stop(0.1) end
+        local anim = Instance.new("Animation")
+        anim.AnimationId = anims[name]
+        kjTrack = Humanoid:LoadAnimation(anim)
+        kjTrack.Looped = loop
+        kjTrack:Play(0.1)
+        if speed then kjTrack:AdjustSpeed(speed) end
+        currentTrack = kjTrack 
+        return kjTrack
+    end
+
+    local flexConn = RunService.RenderStepped:Connect(function()
+        if not HRP.Parent or not RootJoint then return end
+        local moveSpeed = Humanoid.MoveDirection.Magnitude
+        local sine = tick() * 12
+        if moveSpeed > 0.1 then
+            local walkFlex = CFrame.new(0, math.sin(sine) * 0.15, 0) * CFrame.Angles(math.rad(math.sin(sine) * 20), 0, math.rad(math.sin(sine) * 5))
+            RootJoint.C0 = RootJoint.C0:Lerp(RootCF * walkFlex, 0.2)
+        else
+            local idleFlex = CFrame.new(0, math.sin(sine/2) * 0.05, 0) * CFrame.Angles(0, math.rad(math.sin(sine/2) * 4), 0)
+            RootJoint.C0 = RootJoint.C0:Lerp(RootCF * idleFlex, 0.1)
+        end
+    end)
+
+    Humanoid.Running:Connect(function(speed)
+        if speed > 2 then 
+            if lastState ~= "Running" then lastState = "Running" playKJAnim("run", true, 1.2) end
+        else 
+            if lastState ~= "Idle" then lastState = "Idle" playKJAnim("idle", true) end 
+        end
+    end)
+
+    task.spawn(function()
+        Humanoid.WalkSpeed = 0
+        HRP.Anchored = true
+        PlayMusic("111572591472056")
+        local st = playKJAnim("spawn", false)
+        if st then st.Ended:Wait() else task.wait(3) end
+        HRP.Anchored = false
+        Humanoid.WalkSpeed = 16
+        playKJAnim("idle", true)
+        StopMusic()
+    end)
+
+    Humanoid.Died:Connect(function() flexConn:Disconnect() StopMusic() end)
+end
+
+-- === [ 6. UI CONSTRUCTION ] ===
+local sg = Instance.new("ScreenGui", game.CoreGui)
+sg.Name = "DanceScriptWord_TH"
+sg.ResetOnSpawn = false
+
+local Main = Instance.new("Frame", sg)
+Main.Name = "Main"; Main.BackgroundColor3 = Color3.fromRGB(10, 0, 0); Main.BorderSizePixel = 2
+Main.BorderColor3 = Color3.fromRGB(150, 0, 0); Main.Position = UDim2.new(0.5, -100, 0.5, -125)
+Main.Size = UDim2.new(0, 200, 0, 300); Main.Active = true; Main.Draggable = true 
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 2)
+
+local TopBar = Instance.new("Frame", Main)
+TopBar.Size = UDim2.new(1, 0, 0, 30); TopBar.BackgroundColor3 = Color3.fromRGB(25, 0, 0); TopBar.BorderSizePixel = 0
+
+local Title = Instance.new("TextLabel", TopBar)
+Title.Size = UDim2.new(1, -30, 1, 0); Title.Position = UDim2.new(0, 10, 0, 0); Title.BackgroundTransparency = 1
+Title.Text = "SANS EVOLVE [TH]"; Title.TextColor3 = Color3.fromRGB(255, 0, 0); Title.Font = Enum.Font.SpecialElite; Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local MiniBtn = Instance.new("TextButton", TopBar)
+MiniBtn.Size = UDim2.new(0, 30, 0, 30); MiniBtn.Position = UDim2.new(1, -30, 0, 0); MiniBtn.BackgroundTransparency = 1
+MiniBtn.Text = "-"; MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0); MiniBtn.TextSize = 25; MiniBtn.Font = Enum.Font.SpecialElite
+
+local ScrollFrame = Instance.new("ScrollingFrame", Main)
+ScrollFrame.Size = UDim2.new(1, -10, 1, -85); ScrollFrame.Position = UDim2.new(0, 5, 0, 35); ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.BorderSizePixel = 0; ScrollFrame.ScrollBarThickness = 3; ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(150, 0, 0)
+
+local UIList = Instance.new("UIListLayout", ScrollFrame)
+UIList.Padding = UDim.new(0, 5); UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function createAnimBtn(name, id)
+    local b = Instance.new("TextButton", ScrollFrame)
+    b.Size = UDim2.new(1, -10, 0, 30); b.BackgroundColor3 = Color3.fromRGB(20, 0, 0); b.BorderSizePixel = 1
+    b.BorderColor3 = Color3.fromRGB(80, 0, 0); b.Text = name; b.TextColor3 = Color3.fromRGB(200, 0, 0); b.Font = Enum.Font.SpecialElite; b.TextSize = 12
+    b.MouseButton1Click:Connect(function()
+        PlayAnim(id)
+        b.BackgroundColor3 = Color3.fromRGB(100, 0, 0); task.wait(0.1); b.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+    end)
+end
+
+local order = {"Rose", "Laugh", "No!", "Yeah", "DaneCat", "Stand", "Cat", "UWU", "So SuS", "FAYGO", "good job"}
+for _, name in ipairs(order) do if animIds[name] then createAnimBtn(name, animIds[name]) end end
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
+
+local StopBtn = Instance.new("TextButton", Main)
+StopBtn.Size = UDim2.new(1, -10, 0, 35); StopBtn.Position = UDim2.new(0, 5, 1, -40); StopBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+StopBtn.BorderSizePixel = 1; StopBtn.BorderColor3 = Color3.fromRGB(255, 0, 0); StopBtn.Text = "STOP SYSTEM"; StopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+StopBtn.Font = Enum.Font.SpecialElite; StopBtn.TextSize = 12
+
+StopBtn.MouseButton1Click:Connect(function()
+    if currentTrack then currentTrack:Stop(0.1) end
+    StopMusic()
+    local char = player.Character
+    if char and char:FindFirstChild("Animate") then char.Animate.Disabled = false end
+end)
+
+local OpenCircle = Instance.new("ImageButton", sg)
+OpenCircle.Name = "MiniIcon"; OpenCircle.Size = UDim2.new(0, 55, 0, 55); OpenCircle.Position = UDim2.new(0.05, 0, 0.5, -27); OpenCircle.Visible = false
+OpenCircle.BackgroundColor3 = Color3.fromRGB(30, 0, 0); OpenCircle.Image = "rbxassetid://14579989646"; OpenCircle.Active = true; OpenCircle.Draggable = true 
+Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0)
+local CircleStroke = Instance.new("UIStroke", OpenCircle); CircleStroke.Color = Color3.fromRGB(255, 0, 0); CircleStroke.Thickness = 2
+
+MiniBtn.MouseButton1Click:Connect(function() Main.Visible = false; OpenCircle.Visible = true end)
+OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true; OpenCircle.Visible = false end)
+
+local Tag = Instance.new("TextLabel", Main)
+Tag.Size = UDim2.new(1, 0, 0, 15); Tag.Position = UDim2.new(0, 5, 1, 5); Tag.BackgroundTransparency = 1
+Tag.Text = "DanceScriptWord [TH]"; Tag.TextColor3 = Color3.fromRGB(100, 0, 0); Tag.Font = Enum.Font.SpecialElite; Tag.TextSize = 10; Tag.TextXAlignment = Enum.TextXAlignment.Left
+
+-- === [ 7. INITIALIZATION ] ===
+if player.Character then ApplyKJVisuals(player.Character) end
+player.CharacterAdded:Connect(function(char)
+    task.wait(0.5)
+    ApplyKJVisuals(char)
+end)
