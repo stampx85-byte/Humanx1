@@ -1,0 +1,150 @@
+-- === [ COMBINED SYSTEM: BODY & SCALE + SANS ANIMATION ] ===
+local player = game:GetService("Players").LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- ==========================================
+-- PART 1: ระบบเปลี่ยน Body & Scale ตามไอดี
+-- ==========================================
+local function applyOriginalBodyAndScale()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    local BloxbizRemotes = ReplicatedStorage:WaitForChild("BloxbizRemotes", 5)
+    if not BloxbizRemotes then return end
+    local BloxRemote = BloxbizRemotes:WaitForChild("CatalogOnApplyOutfit")
+
+    -- ดึงข้อมูลปัจจุบันเพื่อคงของแต่งกายและสีผิวไว้
+    local desc = humanoid:GetAppliedDescription()
+
+    local outfitData = {
+        -- [[ เปลี่ยนบอดี้ตามไอดีที่คุณให้มา ]]
+        ["Torso"] = 18970728812,
+        ["LeftArm"] = 87202958751790,
+        ["RightArm"] = 103452055306587,
+        ["LeftLeg"] = 106411216404626,
+        ["RightLeg"] = 129699548221468,
+
+        -- [[ ปรับสเกลตามค่าต้นฉบับที่คุณส่งมา ]]
+        ["HeightScale"] = 0.8999999761581421,
+        ["WidthScale"] = 0.8500000238418579,
+        ["DepthScale"] = 0.949999988079071,
+        ["HeadScale"] = 1,
+        ["ProportionScale"] = 0.5,
+        ["BodyTypeScale"] = 0,
+
+        -- [[ ส่วนอื่นๆ ให้คงเดิมตามอวตาร์ผู้เล่นที่ใส่อยู่ตอนนี้ ]]
+        ["Accessories"] = desc:GetAccessories(true),
+        ["Head"] = desc.Head,
+        ["Face"] = desc.Face,
+        ["Shirt"] = desc.Shirt,
+        ["Pants"] = desc.Pants,
+        ["GraphicTShirt"] = desc.GraphicTShirt,
+        ["HeadColor"] = desc.HeadColor,
+        ["TorsoColor"] = desc.TorsoColor,
+        ["LeftArmColor"] = desc.LeftArmColor,
+        ["RightArmColor"] = desc.RightArmColor,
+        ["LeftLegColor"] = desc.LeftLegColor,
+        ["RightLegColor"] = desc.RightLegColor
+    }
+
+    -- Apply ชุดผ่านระบบเดิม
+    BloxRemote:FireServer(outfitData)
+end
+
+-- ==========================================
+-- PART 2: ระบบ SANS ANIMATION (NO MUSIC - NO ANCHOR)
+-- ==========================================
+local animNames = { 
+    spawn = "rbxassetid://75602578104627", 
+    idle  = "rbxassetid://75602578104627",  
+    move  = "rbxassetid://81741314647757",
+    jump  = "rbxassetid://139390570947836" 
+}
+
+function RunCustomAnimation(Char)
+    if not Char then return end
+    local Humanoid = Char:WaitForChild("Humanoid", 10)
+    
+    -- ปิดอนิเมชั่นพื้นฐานของ Roblox
+    if Char:FindFirstChild("Animate") then 
+        Char.Animate.Disabled = true 
+    end
+
+    local currentAnimTrack = nil
+    local lastState = "Idle"
+
+    -- สร้าง Animation Objects
+    local tracks = {}
+    for name, id in pairs(animNames) do
+        local anim = Instance.new("Animation")
+        anim.AnimationId = id
+        tracks[name] = anim
+    end
+
+    -- ฟังก์ชันสำหรับสั่งเล่นอนิเมชั่น
+    local function playAnim(name, loop, speed)
+        if not tracks[name] or not Humanoid then return end
+        if currentAnimTrack then currentAnimTrack:Stop(0.1) end
+        
+        currentAnimTrack = Humanoid:LoadAnimation(tracks[name])
+        currentAnimTrack.Looped = loop
+        currentAnimTrack:Play(0.1)
+        if speed then currentAnimTrack:AdjustSpeed(speed) end
+        return currentAnimTrack
+    end
+
+    -- ตรวจสอบสถานะการวิ่ง
+    Humanoid.Running:Connect(function(speed)
+        if Humanoid:GetState() ~= Enum.HumanoidStateType.Freefall and Humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
+            if speed > 2 then 
+                if lastState ~= "Moving" then 
+                    lastState = "Moving" 
+                    playAnim("move", true, 1.4)
+                end
+            else 
+                if lastState ~= "Idle" then 
+                    lastState = "Idle" 
+                    playAnim("idle", true)
+                end 
+            end
+        end
+    end)
+
+    -- ตรวจสอบการกระโดด
+    Humanoid.Jumping:Connect(function()
+        lastState = "Jumping"
+        playAnim("jump", false)
+    end)
+
+    -- ตรวจสอบเมื่อแลนดิ้ง
+    Humanoid.StateChanged:Connect(function(oldState, newState)
+        if newState == Enum.HumanoidStateType.Landed then
+            lastState = "" 
+        end
+    end)
+
+    -- เริ่มต้นเล่นท่า Spawn
+    task.spawn(function()
+        local spawnTrack = playAnim("spawn", false)
+        if spawnTrack then spawnTrack.Ended:Wait() end
+        lastState = "Idle"
+        playAnim("idle", true)
+    end)
+end
+
+-- ==========================================
+-- EXECUTION: เริ่มทำงานทั้งหมด
+-- ==========================================
+
+-- รันเปลี่ยน Body & Scale ทันที
+applyOriginalBodyAndScale()
+
+-- รันระบบอนิเมชั่นเมื่อตัวละครเกิด
+if player.Character then
+    task.spawn(function() RunCustomAnimation(player.Character) end)
+end
+
+player.CharacterAdded:Connect(function(char)
+    applyOriginalBodyAndScale() -- เปลี่ยนร่างใหม่ทุกครั้งที่ตาย/เกิดใหม่
+    task.spawn(function() RunCustomAnimation(char) end)
+end)
