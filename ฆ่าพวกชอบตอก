@@ -1,0 +1,165 @@
+-- [[ Horror Combat Ultra GUI - Target & Fly Attack ]]
+local ScreenGui = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local SidebarLeft = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local PlayerListFrame = Instance.new("ScrollingFrame")
+local StatusLabel = Instance.new("TextLabel")
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+
+-- Global States
+local _G = {
+    AutoAttack = false,
+    FlyTarget = nil,
+    KillAuraRange = 20,
+    FastHit = true
+}
+
+-- [[ UI Construction ]]
+ScreenGui.Parent = game.CoreGui
+Main.Name = "UltraCombat_V3"
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Position = UDim2.new(0.5, -250, 0.5, -125)
+Main.Size = UDim2.new(0, 500, 0, 300)
+Main.Active = true
+Main.Draggable = true
+
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Main
+
+-- Title
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "ULTRA COMBAT V3 (TARGET FLY)"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 20
+Title.Font = Enum.Font.SpecialElite
+Title.BackgroundTransparency = 1
+
+-- Player Selection Area (ซ้าย)
+PlayerListFrame.Parent = Main
+PlayerListFrame.Size = UDim2.new(0.4, 0, 0.7, 0)
+PlayerListFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+PlayerListFrame.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+PlayerListFrame.CanvasSize = UDim2.new(0, 0, 5, 0)
+Instance.new("UIListLayout", PlayerListFrame).Padding = UDim.new(0, 5)
+
+-- Status Bar
+StatusLabel.Parent = Main
+StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+StatusLabel.Position = UDim2.new(0, 0, 0.9, 0)
+StatusLabel.Text = "TARGET: NONE | SYSTEM: STANDBY"
+StatusLabel.TextColor3 = Color3.fromRGB(150, 0, 0)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Font = Enum.Font.Code
+
+-- Function: Create Modern Button
+local function createBtn(txt, pos, size, color, parent)
+    local b = Instance.new("TextButton")
+    b.Parent = parent or Main
+    b.Text = txt
+    b.Position = pos
+    b.Size = size
+    b.BackgroundColor3 = color
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 12
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 5)
+    return b
+end
+
+-- Control Buttons (ขวา)
+local AuraBtn = createBtn("KILL AURA: OFF", UDim2.new(0.5, 20, 0.2, 0), UDim2.new(0.4, 0, 0, 40), Color3.fromRGB(60, 0, 0))
+local FlyBtn = createBtn("FLY ATTACK: OFF", UDim2.new(0.5, 20, 0.4, 0), UDim2.new(0.4, 0, 0, 40), Color3.fromRGB(60, 0, 0))
+local RefreshBtn = createBtn("REFRESH PLAYERS", UDim2.new(0.5, 20, 0.6, 0), UDim2.new(0.4, 0, 0, 40), Color3.fromRGB(30, 30, 30))
+
+-- [[ COMBAT LOGIC ]]
+
+-- ระบบโจมตีรัว (Fast Attack)
+local function DoAttack()
+    local char = lp.Character
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            -- ลบ Animation
+            local anims = char:FindFirstChild("Humanoid"):GetPlayingAnimationTracks()
+            for _, v in pairs(anims) do v:Stop() end
+            -- เปิดใช้งาน Tool ทันที
+            tool:Activate()
+        end
+    end
+end
+
+-- ระบบเลือกเป้าหมาย
+local function updatePlayerList()
+    for _, v in pairs(PlayerListFrame:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= lp then
+            local pBtn = createBtn(p.DisplayName, UDim2.new(0,0,0,0), UDim2.new(0.95, 0, 0, 30), Color3.fromRGB(40, 0, 0), PlayerListFrame)
+            pBtn.MouseButton1Click:Connect(function()
+                _G.FlyTarget = p
+                StatusLabel.Text = "TARGET LOCKED: " .. p.DisplayName
+                StatusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            end)
+        end
+    end
+end
+
+-- MAIN LOOP (FLY & ATTACK)
+RunService.Stepped:Connect(function()
+    local char = lp.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    -- 1. Kill Aura (ตีรอบตัว)
+    if _G.AutoAttack then
+        DoAttack()
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (char.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                if dist <= _G.KillAuraRange then
+                    -- ส่งสัญญาณตี (ในบางเกมต้องชี้เป้าไปที่ศัตรู)
+                end
+            end
+        end
+    end
+
+    -- 2. Fly Attack (พุ่งไปเกาะหัวแล้วตี)
+    if _G.FlyTarget and _G.FlyTarget.Character and _G.FlyTarget.Character:FindFirstChild("HumanoidRootPart") then
+        if _G.IsFlying then
+            local targetPos = _G.FlyTarget.Character.HumanoidRootPart.Position + Vector3.new(0, 3, 0) -- บินอยู่เหนือหัว 3 หน่วย
+            char.HumanoidRootPart.CFrame = CFrame.new(targetPos, _G.FlyTarget.Character.HumanoidRootPart.Position)
+            char.HumanoidRootPart.Velocity = Vector3.new(0,0,0) -- กันร่วง
+            DoAttack()
+        end
+    end
+end)
+
+-- Button Events
+AuraBtn.MouseButton1Click:Connect(function()
+    _G.AutoAttack = not _G.AutoAttack
+    AuraBtn.Text = _G.AutoAttack and "KILL AURA: ON" or "KILL AURA: OFF"
+    AuraBtn.BackgroundColor3 = _G.AutoAttack and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(60, 0, 0)
+end)
+
+FlyBtn.MouseButton1Click:Connect(function()
+    if not _G.FlyTarget then
+        StatusLabel.Text = "PLEASE SELECT A TARGET FIRST!"
+        return
+    end
+    _G.IsFlying = not _G.IsFlying
+    FlyBtn.Text = _G.IsFlying and "FLYING: ON" or "FLY ATTACK: OFF"
+    FlyBtn.BackgroundColor3 = _G.IsFlying and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(60, 0, 0)
+end)
+
+RefreshBtn.MouseButton1Click:Connect(updatePlayerList)
+
+-- Initial Load
+updatePlayerList()
