@@ -1,0 +1,265 @@
+-- [[ ☣️ DOOMSDAY V17: OVERLORD EDITION (ULTRA-AUTO) ☣️ ]] --
+
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+-- [ Configuration ]
+local AntiTheft = true
+local SelectedPlayer = nil
+local CapturedIDs = {}
+local UI_NAME = "Doomsday_V17_Overlord"
+local AutoScanEnabled = true
+
+-- [ 📢 Notification System ]
+local function Notify(title, text, color)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 5
+    })
+end
+
+-- [ 🔥 ระบบวางระเบิด ID ปลอม + Detection ]
+local function DropTrashBomb()
+    local TrashFolder = game:GetService("RobloxReplicatedStorage"):FindFirstChild("ดักกูไม่ได้หรอกไอ้ควายโง่ไอ้สัส")
+    if not TrashFolder then
+        TrashFolder = Instance.new("Folder")
+        TrashFolder.Name = "ดักกูไม่ได้หรอกไอ้ควายโง่ไอ้สัส"
+        TrashFolder.Parent = game:GetService("RobloxReplicatedStorage")
+    end
+    
+    for i = 1, 50 do
+        if not TrashFolder:FindFirstChild("FakeID_"..i) then
+            local FakeSound = Instance.new("Sound")
+            FakeSound.Name = "FakeID_"..i
+            FakeSound.SoundId = "rbxassetid://" .. math.random(11111111, 99999999)
+            FakeSound.Parent = TrashFolder
+        end
+    end
+end
+DropTrashBomb()
+
+-- [ Setup ScreenGui ]
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = UI_NAME
+ScreenGui.Parent = CoreGui
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+
+-- [ Smooth Drag ]
+local function MakeDraggable(gui)
+    local dragging, dragInput, dragStart, startPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        TweenService:Create(gui, TweenInfo.new(0.12, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        }):Play()
+    end
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true dragStart = input.Position startPos = gui.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+        end
+    end)
+    gui.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end end)
+    UserInputService.InputChanged:Connect(function(input) if input == dragInput and dragging then update(input) end end)
+end
+
+-- [ Main Frame ]
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 620, 0, 300)
+Main.Position = UDim2.new(0.5, -310, 0.5, -150)
+Main.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+Main.BorderSizePixel = 0
+Main.Active = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Color = Color3.fromRGB(255, 0, 0)
+MainStroke.Thickness = 2
+
+-- [ Header ]
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "☣️ V17: OVERLORD (AUTO-SCAN ACTIVE) ☣️"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 18
+Title.Font = Enum.Font.SpecialElite
+Title.BackgroundTransparency = 1
+
+-- [ Scrolling Areas ]
+local PlayerScroll = Instance.new("ScrollingFrame", Main)
+PlayerScroll.Size = UDim2.new(0, 150, 0, 220)
+PlayerScroll.Position = UDim2.new(0.02, 0, 0.15, 0)
+PlayerScroll.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+PlayerScroll.BorderSizePixel = 0
+local PL_Layout = Instance.new("UIListLayout", PlayerScroll)
+PL_Layout.Padding = UDim.new(0, 3)
+
+local AudioScroll = Instance.new("ScrollingFrame", Main)
+AudioScroll.Size = UDim2.new(0, 320, 0, 180)
+AudioScroll.Position = UDim2.new(0.28, 0, 0.15, 0)
+AudioScroll.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+AudioScroll.BorderSizePixel = 0
+local AS_Layout = Instance.new("UIListLayout", AudioScroll)
+AS_Layout.Padding = UDim.new(0, 5)
+
+-- [ 🔥 THE REAL SCANNER (Modified for Speed) ]
+local function CreateCard(player, id, location)
+    if not id or CapturedIDs[id] or id:sub(1,2) == "55" then return end
+    CapturedIDs[id] = true
+
+    local Card = Instance.new("Frame", AudioScroll)
+    Card.Size = UDim2.new(1, -10, 0, 50)
+    Card.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    Instance.new("UICorner", Card)
+
+    local Info = Instance.new("TextLabel", Card)
+    Info.Size = UDim2.new(1, -60, 1, 0)
+    Info.Position = UDim2.new(0, 10, 0, 0)
+    Info.Text = "👤 " .. (player and player.DisplayName or "System") .. "\n🆔 " .. id .. "\n📍 " .. location
+    Info.TextColor3 = Color3.new(1, 1, 1)
+    Info.Font = Enum.Font.Code
+    Info.TextSize = 9
+    Info.TextXAlignment = Enum.TextXAlignment.Left
+    Info.BackgroundTransparency = 1
+
+    local Copy = Instance.new("TextButton", Card)
+    Copy.Size = UDim2.new(0, 55, 0, 30)
+    Copy.Position = UDim2.new(1, -60, 0.5, -15)
+    Copy.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    Copy.Text = "GRAB"
+    Copy.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", Copy)
+    Copy.MouseButton1Click:Connect(function()
+        setclipboard(tostring(id))
+        Copy.Text = "STOLEN"
+        task.wait(0.5)
+        Copy.Text = "GRAB"
+    end)
+    AudioScroll.CanvasSize = UDim2.new(0, 0, 0, AS_Layout.AbsoluteContentSize.Y)
+    
+    Notify("NEW AUDIO DETECTED", "Player: " .. (player and player.Name or "Unknown") .. " | ID: " .. id)
+end
+
+-- [ 🔥 ระบบเจาะระดับเสี้ยววินาที ]
+local function UltimateScan(target)
+    local targets = target and {target} or Players:GetPlayers()
+    for _, p in pairs(targets) do
+        pcall(function()
+            local areas = {p.Character, p.Backpack, p:FindFirstChild("PlayerGui"), p:FindFirstChild("PlayerScripts")}
+            for _, area in pairs(areas) do
+                if area then
+                    for _, obj in pairs(area:GetDescendants()) do
+                        if obj:IsA("Sound") and not obj:IsDescendantOf(game:GetService("RobloxReplicatedStorage")) then
+                            local id = obj.SoundId:match("%d+")
+                            if id and #id >= 6 then CreateCard(p, id, area.Name) end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end
+
+-- [ 🔥 AUTO SCAN THREAD ]
+task.spawn(function()
+    while true do
+        if AutoScanEnabled then
+            UltimateScan(SelectedPlayer)
+        end
+        task.wait(0.1) -- สแกนทุก 0.1 วินาที (เสี้ยววินาทีของจริง)
+    end
+end)
+
+-- [ Guard & Anti-Theft & Detection Alert ]
+RunService.Heartbeat:Connect(function()
+    if AntiTheft then
+        if ScreenGui.Parent ~= CoreGui then ScreenGui.Parent = CoreGui end
+        
+        -- ตรวจสอบการพยายามทำลายระบบขยะ
+        local Trash = game:GetService("RobloxReplicatedStorage"):FindFirstChild("ดักกูไม่ได้หรอกไอ้ควายโง่ไอ้สัส")
+        if not Trash then
+            Notify("⚠️ DETECTION ALERT", "มีคนพยายามลบไฟล์ขยะของคุณ! ระบบกำลังกู้คืน...", 5)
+            DropTrashBomb()
+        end
+    end
+end)
+
+-- [ Buttons & List ]
+local function Refresh()
+    for _, v in pairs(PlayerScroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+    local function AddBtn(name, p)
+        local b = Instance.new("TextButton", PlayerScroll)
+        b.Size = UDim2.new(1, -5, 0, 30)
+        b.Text = name
+        b.BackgroundColor3 = p == SelectedPlayer and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(40, 0, 0)
+        b.TextColor3 = Color3.new(1, 1, 1)
+        b.Font = Enum.Font.Code
+        Instance.new("UICorner", b)
+        b.MouseButton1Click:Connect(function() 
+            SelectedPlayer = p 
+            Notify("TARGET SET", "กำลังจับตามอง: " .. name)
+            Refresh() 
+        end)
+    end
+    AddBtn("[ ALL PLAYERS ]", nil)
+    for _, p in pairs(Players:GetPlayers()) do AddBtn(p.DisplayName, p) end
+end
+
+local ScanBtn = Instance.new("TextButton", Main)
+ScanBtn.Size = UDim2.new(0, 120, 0, 35)
+ScanBtn.Position = UDim2.new(0.28, 0, 0.82, 0)
+ScanBtn.Text = "AUTO: ON"
+ScanBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+ScanBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", ScanBtn)
+ScanBtn.MouseButton1Click:Connect(function() 
+    AutoScanEnabled = not AutoScanEnabled
+    ScanBtn.Text = AutoScanEnabled and "AUTO: ON" or "AUTO: OFF"
+    ScanBtn.BackgroundColor3 = AutoScanEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+end)
+
+local GuardBtn = Instance.new("TextButton", Main)
+GuardBtn.Size = UDim2.new(0, 150, 0, 35)
+GuardBtn.Position = UDim2.new(0.52, 0, 0.82, 0)
+GuardBtn.Text = "🛡️ GUARD: ACTIVE"
+GuardBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+GuardBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+Instance.new("UICorner", GuardBtn)
+GuardBtn.MouseButton1Click:Connect(function()
+    AntiTheft = not AntiTheft
+    GuardBtn.Text = AntiTheft and "🛡️ GUARD: ACTIVE" or "🛡️ GUARD: OFF"
+    GuardBtn.BackgroundColor3 = AntiTheft and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(40, 0, 0)
+    GuardBtn.TextColor3 = AntiTheft and Color3.fromRGB(0, 255, 0) or Color3.new(1, 1, 1)
+end)
+
+-- [ Minimize ]
+local OpenCircle = Instance.new("ImageButton", ScreenGui)
+OpenCircle.Size = UDim2.new(0, 60, 0, 60)
+OpenCircle.Position = UDim2.new(0.02, 0, 0.85, -30)
+OpenCircle.Visible = false
+OpenCircle.Image = "rbxassetid://14579989646"
+OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0)
+
+local MiniBtn = Instance.new("TextButton", Main)
+MiniBtn.Size = UDim2.new(0, 30, 0, 30)
+MiniBtn.Position = UDim2.new(1, -35, 0, 5)
+MiniBtn.Text = "_"
+MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniBtn.BackgroundTransparency = 1
+MiniBtn.MouseButton1Click:Connect(function() Main.Visible = false OpenCircle.Visible = true end)
+OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true OpenCircle.Visible = false end)
+
+MakeDraggable(Main)
+MakeDraggable(OpenCircle)
+Refresh()
+Players.PlayerAdded:Connect(Refresh)
+Players.PlayerRemoving:Connect(Refresh)
+
+Notify("OVERLORD LOADED", "ระบบสแกนอัตโนมัติและความปลอดภัยเริ่มทำงานแล้ว!")
