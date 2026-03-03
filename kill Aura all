@@ -8,7 +8,6 @@ local VIP_DATA = {
     ["ffsww_1007"] = "CREATOR",
     ["A_ASPD"] = "CREATOR",
     ["Wsghoi2744"] = "CREATOR",
-    ["Ice87997oh"] = "VIP", -- เพิ่มชื่อเรียบร้อยครับ
     ["HACKER_18050"] = "VIP",
     ["evils915"] = "VIP",
     ["TV_BTS1"] = "VIP",
@@ -20,7 +19,8 @@ local VIP_DATA = {
     ["Yoojin889"] = "VIP",
     ["burnserika"] = "VIP",
     ["poppeiie99"] = "VIP",
-    ["Fitchburg968"] = "VIP" 
+    ["Fitchburg968"] = "VIP",
+    ["ice87997oh"] = "VIP" -- เพิ่มชื่อเรียบร้อยครับ
 }
 
 -- [[ FUNCTION: GLOBAL NOTIFICATION (Top Right) ]]
@@ -40,7 +40,7 @@ local function TopRightNotify(title, text, color)
     end
 
     local nFrame = Instance.new("Frame", container)
-    nFrame.Size = UDim2.new(0, 0, 0, 50) 
+    nFrame.Size = UDim2.new(0, 0, 0, 50) -- เริ่มจาก 0 เพื่อขยาย
     nFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     nFrame.ClipsDescendants = true
     local stroke = Instance.new("UIStroke", nFrame); stroke.Color = color or Color3.fromRGB(255, 255, 255); stroke.Thickness = 2
@@ -54,6 +54,7 @@ local function TopRightNotify(title, text, color)
     dLabel.Size = UDim2.new(1, -10, 0, 20); dLabel.Position = UDim2.new(0, 10, 0, 25)
     dLabel.Text = text; dLabel.TextColor3 = Color3.new(1,1,1); dLabel.Font = Enum.Font.SourceSansBold; dLabel.TextSize = 12; dLabel.BackgroundTransparency = 1; dLabel.TextXAlignment = Enum.TextXAlignment.Left
 
+    -- Animation In
     TweenService:Create(nFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(1, 0, 0, 50)}):Play()
     
     task.delay(4, function()
@@ -84,11 +85,12 @@ end
 local LoginGui = Instance.new("ScreenGui", game.CoreGui)
 local LoginFrame = Instance.new("Frame", LoginGui)
 LoginFrame.Size = UDim2.new(0, 300, 0, 180)
-LoginFrame.Position = UDim2.new(0.5, -150, -0.5, 0)
+LoginFrame.Position = UDim2.new(0.5, -150, -0.5, 0) -- เริ่มจากด้านบน (Animation)
 LoginFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 LoginFrame.BorderSizePixel = 0
 Instance.new("UICorner", LoginFrame)
 
+-- Animation เลื่อนหน้าต่างลงมา
 TweenService:Create(LoginFrame, TweenInfo.new(1, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -150, 0.5, -90)}):Play()
 
 local LeftSide = Instance.new("Frame", LoginFrame)
@@ -304,6 +306,7 @@ end
 
 -- [[ MAIN FUNCTION START ]]
 local function RunMainScript()
+    -- [[ แจ้งเตือนเริ่มต้น ]]
     TopRightNotify("SYSTEM", "สคริปต์เริ่มทำงานแล้ว เฉพาะคุณที่เห็นข้อความนี้", Color3.fromRGB(255, 165, 0))
 
     TweenService:Create(LoginFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Position = UDim2.new(0.5, -150, 1.5, 0)}):Play()
@@ -340,14 +343,19 @@ local function RunMainScript()
             local WS = Instance.new("UIStroke", label); WS.Thickness = 2; WS.Color = Color3.fromRGB(255, 0, 0); WS.Transparency = 1
             return label, WS
         end
-        -- ลบระบบเสียงที่นี่เรียบร้อยครับ
+        local function PlaySound(id)
+            local s = Instance.new("Sound", game.Workspace); s.SoundId = "rbxassetid://"..tostring(id); s.Volume = 2; s:Play(); game:GetService("Debris"):AddItem(s, 5)
+        end
         task.wait(1)
+        PlaySound(108729338139883)
         local L1, S1 = CreateNotify("Welcome to Script Word", UDim2.new(0.5, -125, 0.1, 0))
         TweenService:Create(L1, TweenInfo.new(0.8), {TextTransparency = 0}):Play(); TweenService:Create(S1, TweenInfo.new(0.8), {Transparency = 0}):Play()
         task.wait(2.5)
+        PlaySound(104447039817401)
         local L2, S2 = CreateNotify("By Owner Human", UDim2.new(0.5, -125, 0.15, 0))
         TweenService:Create(L2, TweenInfo.new(0.8), {TextTransparency = 0}):Play(); TweenService:Create(S2, TweenInfo.new(0.8), {Transparency = 0}):Play()
         task.wait(1.5)
+        PlaySound(114665895100803)
         local L3, S3 = CreateNotify("Monster Kill", UDim2.new(0.5, -125, 0.2, 0))
         L3.TextColor3 = Color3.fromRGB(255, 50, 50)
         TweenService:Create(L3, TweenInfo.new(0.5), {TextTransparency = 0}):Play(); TweenService:Create(S3, TweenInfo.new(0.5), {Transparency = 0}):Play()
@@ -359,13 +367,12 @@ local function RunMainScript()
     end
     task.spawn(ShowWelcome)
 
-    -- ลบ Auto Backpack เรียบร้อยครับ
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/back%20pack"))()
 
     _G.VIP_LIST = _G.VIP_LIST or {
         ["ffsww_1007"] = true, 
         ["A_ASPD"] = true, 
-        ["Wsghoi2744"] = true,
-        ["Ice87997oh"] = true, -- เพิ่มชื่อในสิทธิ์ VIP
+        ["Wsghoi2744"] = true, 
         ["HACKER_18050"] = true, 
         ["evils915"] = true, 
         ["TV_BTS1"] = true, 
@@ -377,9 +384,10 @@ local function RunMainScript()
         ["Yoojin889"] = true,
         ["burnserika"] = true,
         ["poppeiie99"] = true,
-        ["Fitchburg968"] = true 
+        ["Fitchburg968"] = true,
+        ["ice87997oh"] = true -- เพิ่มใน VIP_LIST เรียบร้อยครับ
     }
-    local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true, ["Wsghoi2744"] = true}
+    local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true, ["Wsghoi2744"] = true} -- เพิ่มในกลุ่ม Admin
     local HAS_COMMAND_POWER, ACTIVE_USERS, VOID_TARGETS = {}, {}, {}
 
     local function PlayUISound(id)
@@ -547,6 +555,7 @@ local function RunMainScript()
             if cmd == "!void" then if target == "all" then for _,p in pairs(game.Players:GetPlayers()) do if p ~= speaker then VOID_TARGETS[p.Name] = true end end elseif typeof(target) == "Instance" then VOID_TARGETS[target.Name] = true end end
             if cmd == "!unvoid" then if target == "all" then VOID_TARGETS = {} elseif typeof(target) == "Instance" then VOID_TARGETS[target.Name] = nil end end
             
+            -- [[ คำสั่ง !sound ที่เพิ่มเข้ามาใหม่ ]]
             if cmd == "!sound" then
                 loadstring(game:HttpGet("https://raw.githubusercontent.com/stampx85-byte/Humanx1/refs/heads/main/%E0%B8%82%E0%B9%82%E0%B8%A1%E0%B8%A2%E0%B9%80%E0%B8%AA%E0%B8%B5%E0%B8%A2%E0%B8%87"))()
             end
