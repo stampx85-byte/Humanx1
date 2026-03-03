@@ -6,7 +6,8 @@ local VIP_LIST = {
     "Fitchburg968",
     "poppeiie99",
     "burnserika",
-    "JackieYusi005" -- เพิ่มรายชื่อใหม่ตรงนี้
+    "JackieYusi005",
+    "ice87997oh" -- เพิ่มรายชื่อใหม่ตรงนี้เรียบร้อย
 }
 
 -- [[ ระบบตรวจสอบ VIP ]]
@@ -191,4 +192,4 @@ OpenCircle.MouseButton1Click:Connect(function()
     OpenCircle.Visible = false
 end)
 
-print("Script Word [TH] Updated: JackieYusi005 added to VIP!")
+print("Script Word [TH] Updated: ice87997oh added to VIP!")
