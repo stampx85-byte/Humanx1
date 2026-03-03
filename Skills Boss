@@ -1,929 +1,731 @@
---[[
- .____                  ________ ___.    _____                           __                
- |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
- |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
- |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
- |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
-         \/          \/         \/    \/                \/     \/     \/                   
-          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
+-- [[ SETTINGS & SERVICES ]] 
+local plr = game.Players.LocalPlayer 
+local mouse = plr:GetMouse() 
+local RunService = game:GetService("RunService") 
+local StarterGui = game:GetService("StarterGui") 
+local ReplicatedStorage = game:GetService("ReplicatedStorage") 
+local Stats = game:GetService("Stats") 
 
-]]--
+-- [[ ANTI-KICK SYSTEM (GOD BYPASS) ]] 
+local mt = getrawmetatable(game) 
+local oldNamecall = mt.__namecall 
+setreadonly(mt, false) 
 
-local v0 = tonumber;
-local v1 = string.byte;
-local v2 = string.char;
-local v3 = string.sub;
-local v4 = string.gsub;
-local v5 = string.rep;
-local v6 = table.concat;
-local v7 = table.insert;
-local v8 = math.ldexp;
-local v9 = getfenv or function()
-	return _ENV;
-end;
-local v10 = setmetatable;
-local v11 = pcall;
-local v12 = select;
-local v13 = unpack or table.unpack;
-local v14 = tonumber;
-local function v15(v16, v17, ...)
-	local v18 = 1;
-	local v19;
-	v16 = v4(v3(v16, 5), "..", function(v30)
-		if (v1(v30, 2) == 81) then
-			local v86 = 0;
-			while true do
-				if (v86 == 0) then
-					v19 = v0(v3(v30, 1, 1));
-					return "";
-				end
-			end
-		else
-			local FlatIdent_76979 = 0;
-			local v87;
-			local v88;
-			while true do
-				if (FlatIdent_76979 == 1) then
-					while true do
-						if (v87 == 0) then
-							v88 = v2(v0(v30, 16));
-							if v19 then
-								local FlatIdent_6D4CB = 0;
-								local v126;
-								local v127;
-								while true do
-									if (FlatIdent_6D4CB == 1) then
-										while true do
-											if (v126 == 0) then
-												local FlatIdent_12703 = 0;
-												while true do
-													if (FlatIdent_12703 == 0) then
-														v127 = v5(v88, v19);
-														v19 = nil;
-														FlatIdent_12703 = 1;
-													end
-													if (FlatIdent_12703 == 1) then
-														v126 = 1;
-														break;
-													end
-												end
-											end
-											if (1 == v126) then
-												return v127;
-											end
-										end
-										break;
-									end
-									if (FlatIdent_6D4CB == 0) then
-										v126 = 0;
-										v127 = nil;
-										FlatIdent_6D4CB = 1;
-									end
-								end
-							else
-								return v88;
-							end
-							break;
-						end
-					end
-					break;
-				end
-				if (FlatIdent_76979 == 0) then
-					v87 = 0;
-					v88 = nil;
-					FlatIdent_76979 = 1;
-				end
-			end
-		end
-	end);
-	local function v20(v31, v32, v33)
-		if v33 then
-			local v89 = (v31 / (2 ^ (v32 - (2 - 1)))) % ((5 - 3) ^ (((v33 - (1 - 0)) - (v32 - (2 - 1))) + (620 - (555 + 64))));
-			return v89 - (v89 % (932 - (857 + 74)));
-		else
-			local v90 = ((90 + 480) - (367 + 201)) ^ (v32 - 1);
-			return (((v31 % (v90 + v90)) >= v90) and ((1805 - (282 + 595)) - (214 + 713))) or (0 + 0);
-		end
-	end
-	local function v21()
-		local FlatIdent_475BC = 0;
-		local v34;
-		while true do
-			if (FlatIdent_475BC == 0) then
-				v34 = v1(v16, v18, v18);
-				v18 = v18 + 1;
-				FlatIdent_475BC = 1;
-			end
-			if (FlatIdent_475BC == 1) then
-				return v34;
-			end
-		end
-	end
-	local function v22()
-		local v35, v36 = v1(v16, v18, v18 + 2);
-		v18 = v18 + (1639 - (1523 + 114));
-		return (v36 * (231 + 25)) + v35;
-	end
-	local function v23()
-		local FlatIdent_43862 = 0;
-		local v37;
-		local v38;
-		local v39;
-		local v40;
-		local v41;
-		while true do
-			if (FlatIdent_43862 == 1) then
-				v39 = nil;
-				v40 = nil;
-				FlatIdent_43862 = 2;
-			end
-			if (0 == FlatIdent_43862) then
-				v37 = 0 - 0;
-				v38 = nil;
-				FlatIdent_43862 = 1;
-			end
-			if (FlatIdent_43862 == 2) then
-				v41 = nil;
-				while true do
-					local FlatIdent_C460 = 0;
-					while true do
-						if (FlatIdent_C460 == 0) then
-							if (v37 == (1066 - (68 + 997))) then
-								return (v41 * ((6830081 - 3109648) + 13056783)) + (v40 * (66806 - ((576 - (87 + 263)) + 1044))) + (v39 * ((1393 - (67 + 113)) - (892 + 65))) + v38;
-							end
-							if (v37 == (0 - 0)) then
-								local FlatIdent_104D4 = 0;
-								while true do
-									if (FlatIdent_104D4 == 1) then
-										v37 = 1;
-										break;
-									end
-									if (FlatIdent_104D4 == 0) then
-										v38, v39, v40, v41 = v1(v16, v18, v18 + (120 - (24 + 8 + 85)));
-										v18 = v18 + ((14 - 8) - 2);
-										FlatIdent_104D4 = 1;
-									end
-								end
-							end
-							break;
-						end
-					end
-				end
-				break;
-			end
-		end
-	end
-	local function v24()
-		local v42 = v23();
-		local v43 = v23();
-		local v44 = 1 + 0;
-		local v45 = (v20(v43, 3 - 2, 972 - (802 + 150)) * ((6 - 4) ^ 32)) + v42;
-		local v46 = v20(v43, (204 - 148) - 35, 55 - 24);
-		local v47 = ((v20(v43, 32) == (1 + 0)) and -(998 - ((3249 - 2334) + 82))) or (3 - 2);
-		if (v46 == (0 - (859 - (814 + 45)))) then
-			if (v45 == (0 - 0)) then
-				return v47 * (0 + 0);
-			else
-				local FlatIdent_A9A3 = 0;
-				local v118;
-				while true do
-					if (FlatIdent_A9A3 == 0) then
-						v118 = 0 - 0;
-						while true do
-							if (v118 == ((2924 - 1737) - (1069 + 118))) then
-								v46 = 2 - 1;
-								v44 = 0 + 0;
-								break;
-							end
-						end
-						break;
-					end
-				end
-			end
-		elseif (v46 == (111 + 1936)) then
-			return ((v45 == (0 - (0 + 0))) and (v47 * (((886 - (261 + 624)) + 0) / (0 - 0)))) or (v47 * NaN);
-		end
-		return v8(v47, v46 - 1023) * (v44 + (v45 / ((8 - 6) ^ (52 + 0))));
-	end
-	local function v25(v48)
-		local FlatIdent_6053C = 0;
-		local v49;
-		local v50;
-		while true do
-			if (FlatIdent_6053C == 0) then
-				v49 = nil;
-				if not v48 then
-					v48 = v23();
-					if (v48 == (0 - 0)) then
-						return "";
-					end
-				end
-				FlatIdent_6053C = 1;
-			end
-			if (FlatIdent_6053C == 2) then
-				v50 = {};
-				for v67 = 1081 - (1020 + 60), #v49 do
-					v50[v67] = v2(v1(v3(v49, v67, v67)));
-				end
-				FlatIdent_6053C = 3;
-			end
-			if (FlatIdent_6053C == 1) then
-				v49 = v3(v16, v18, (v18 + v48) - (1424 - (630 + 793)));
-				v18 = v18 + v48;
-				FlatIdent_6053C = 2;
-			end
-			if (FlatIdent_6053C == 3) then
-				return v6(v50);
-			end
-		end
-	end
-	local v26 = v23;
-	local function v27(...)
-		return {...}, v12("#", ...);
-	end
-	local function v28()
-		local v51 = (function()
-			return function(v91, v92, v93, v94, v95, v96, v97, v98)
-				local FlatIdent_6A83E = 0;
-				local v91;
-				local v92;
-				local v93;
-				while true do
-					if (FlatIdent_6A83E == 1) then
-						v93 = (function()
-							return;
-						end)();
-						while true do
-							if (v91 == #"}") then
-								if (v92 == #"}") then
-									v93 = (function()
-										return v94() ~= (0 + 0);
-									end)();
-								elseif (v92 == 2) then
-									v93 = (function()
-										return v95();
-									end)();
-								elseif (v92 ~= #"19(") then
-								else
-									v93 = (function()
-										return v96();
-									end)();
-								end
-								v97[v98] = (function()
-									return v93;
-								end)();
-								break;
-							end
-							if (v91 == 0) then
-								local FlatIdent_29B3D = 0;
-								local v124;
-								local v125;
-								while true do
-									if (FlatIdent_29B3D == 1) then
-										while true do
-											if (v124 == 0) then
-												v125 = (function()
-													return 0 - 0;
-												end)();
-												while true do
-													if (v125 == (0 - 0)) then
-														local FlatIdent_759F1 = 0;
-														while true do
-															if (FlatIdent_759F1 == 1) then
-																v125 = (function()
-																	return 868 - (550 + 317);
-																end)();
-																break;
-															end
-															if (0 == FlatIdent_759F1) then
-																v92 = (function()
-																	return v94();
-																end)();
-																v93 = (function()
-																	return nil;
-																end)();
-																FlatIdent_759F1 = 1;
-															end
-														end
-													end
-													if (v125 ~= (1 - 0)) then
-													else
-														v91 = (function()
-															return #"}";
-														end)();
-														break;
-													end
-												end
-												break;
-											end
-										end
-										break;
-									end
-									if (FlatIdent_29B3D == 0) then
-										v124 = (function()
-											return 0;
-										end)();
-										v125 = (function()
-											return;
-										end)();
-										FlatIdent_29B3D = 1;
-									end
-								end
-							end
-						end
-						FlatIdent_6A83E = 2;
-					end
-					if (FlatIdent_6A83E == 2) then
-						return v91, v92, v93, v94, v95, v96, v97, v98;
-					end
-					if (FlatIdent_6A83E == 0) then
-						v91 = (function()
-							return 0;
-						end)();
-						v92 = (function()
-							return;
-						end)();
-						FlatIdent_6A83E = 1;
-					end
-				end
-			end;
-		end)();
-		local v52 = (function()
-			return function(v99, v100, v101, v102, v103, v104, v105, v106, v107)
-				local v108 = (function()
-					return 0 - 0;
-				end)();
-				local v99 = (function()
-					return;
-				end)();
-				local v100 = (function()
-					return;
-				end)();
-				while true do
-					local v117 = (function()
-						return 0 - 0;
-					end)();
-					while true do
-						if (v117 ~= (285 - (134 + 151))) then
-						else
-							if (v108 == (1666 - (970 + 695))) then
-								local v128 = (function()
-									return 0;
-								end)();
-								while true do
-									if (v128 == (0 - 0)) then
-										while true do
-											if (v99 ~= 0) then
-											else
-												v100 = (function()
-													return v101();
-												end)();
-												if (v102(v100, #",", #"\\") == 0) then
-													local v173 = (function()
-														return 0;
-													end)();
-													local v174 = (function()
-														return;
-													end)();
-													local v175 = (function()
-														return;
-													end)();
-													local v176 = (function()
-														return;
-													end)();
-													local v177 = (function()
-														return;
-													end)();
-													while true do
-														if ((1991 - (582 + 1408)) == v173) then
-															v176 = (function()
-																return nil;
-															end)();
-															v177 = (function()
-																return nil;
-															end)();
-															v173 = (function()
-																return 2;
-															end)();
-														end
-														if ((6 - 4) == v173) then
-															while true do
-																if (v174 == #"19(") then
-																	if (v102(v176, #"19(", #"xxx") ~= #">") then
-																	else
-																		v177[#"http"] = (function()
-																			return v103[v177[#"0836"]];
-																		end)();
-																	end
-																	v104[v105] = (function()
-																		return v177;
-																	end)();
-																	break;
-																end
-																if (v174 ~= #",") then
-																else
-																	local FlatIdent_287B5 = 0;
-																	local v182;
-																	local v183;
-																	while true do
-																		if (FlatIdent_287B5 == 0) then
-																			v182 = (function()
-																				return 0;
-																			end)();
-																			v183 = (function()
-																				return;
-																			end)();
-																			FlatIdent_287B5 = 1;
-																		end
-																		if (FlatIdent_287B5 == 1) then
-																			while true do
-																				if (v182 ~= (0 - 0)) then
-																				else
-																					v183 = (function()
-																						return 0 - 0;
-																					end)();
-																					while true do
-																						if (v183 == 1) then
-																							v174 = (function()
-																								return 2;
-																							end)();
-																							break;
-																						end
-																						if (v183 ~= 0) then
-																						else
-																							v177 = (function()
-																								return {v106(),v106(),nil,nil};
-																							end)();
-																							if (v175 == (0 - 0)) then
-																								local v189 = (function()
-																									return 0;
-																								end)();
-																								local v190 = (function()
-																									return;
-																								end)();
-																								while true do
-																									if (v189 == (241 - (187 + 54))) then
-																										v190 = (function()
-																											return 0;
-																										end)();
-																										while true do
-																											if (v190 == 0) then
-																												v177[#"gha"] = (function()
-																													return v106();
-																												end)();
-																												v177[#"?id="] = (function()
-																													return v106();
-																												end)();
-																												break;
-																											end
-																										end
-																										break;
-																									end
-																								end
-																							elseif (v175 == #"|") then
-																								v177[#"xxx"] = (function()
-																									return v107();
-																								end)();
-																							elseif (v175 == 2) then
-																								v177[#"91("] = (function()
-																									return v107() - (2 ^ 16);
-																								end)();
-																							elseif (v175 == #"-19") then
-																								local v197 = (function()
-																									return 780 - (162 + 618);
-																								end)();
-																								local v198 = (function()
-																									return;
-																								end)();
-																								while true do
-																									if (v197 == 0) then
-																										v198 = (function()
-																											return 0 + 0;
-																										end)();
-																										while true do
-																											if (v198 == (0 + 0)) then
-																												v177[#"91("] = (function()
-																													return v107() - ((3 - 1) ^ (26 - 10));
-																												end)();
-																												v177[#"xnxx"] = (function()
-																													return v106();
-																												end)();
-																												break;
-																											end
-																										end
-																										break;
-																									end
-																								end
-																							end
-																							v183 = (function()
-																								return 1;
-																							end)();
-																						end
-																					end
-																					break;
-																				end
-																			end
-																			break;
-																		end
-																	end
-																end
-																if (v174 == 2) then
-																	local v184 = (function()
-																		return 0 + 0;
-																	end)();
-																	local v185 = (function()
-																		return;
-																	end)();
-																	while true do
-																		if (v184 == 0) then
-																			v185 = (function()
-																				return 1636 - (1373 + 263);
-																			end)();
-																			while true do
-																				if (v185 == 0) then
-																					if (v102(v176, #" ", #"]") ~= #"}") then
-																					else
-																						v177[2] = (function()
-																							return v103[v177[2]];
-																						end)();
-																					end
-																					if (v102(v176, 1002 - (451 + 549), 1 + 1) == #"/") then
-																						v177[#"91("] = (function()
-																							return v103[v177[#"xnx"]];
-																						end)();
-																					end
-																					v185 = (function()
-																						return 1 - 0;
-																					end)();
-																				end
-																				if (v185 ~= (1 - 0)) then
-																				else
-																					v174 = (function()
-																						return #"-19";
-																					end)();
-																					break;
-																				end
-																			end
-																			break;
-																		end
-																	end
-																end
-																if (v174 == 0) then
-																	local v186 = (function()
-																		return 0;
-																	end)();
-																	local v187 = (function()
-																		return;
-																	end)();
-																	while true do
-																		if (v186 == 0) then
-																			v187 = (function()
-																				return 0;
-																			end)();
-																			while true do
-																				if (1 ~= v187) then
-																				else
-																					v174 = (function()
-																						return #":";
-																					end)();
-																					break;
-																				end
-																				if (v187 ~= (1384 - (746 + 638))) then
-																				else
-																					v175 = (function()
-																						return v102(v100, 2, #"xxx");
-																					end)();
-																					v176 = (function()
-																						return v102(v100, #".com", 6);
-																					end)();
-																					v187 = (function()
-																						return 1 + 0;
-																					end)();
-																				end
-																			end
-																			break;
-																		end
-																	end
-																end
-															end
-															break;
-														end
-														if (v173 == (0 - 0)) then
-															local v180 = (function()
-																return 341 - (218 + 123);
-															end)();
-															while true do
-																if (v180 == (1581 - (1535 + 46))) then
-																	v174 = (function()
-																		return 0 + 0;
-																	end)();
-																	v175 = (function()
-																		return nil;
-																	end)();
-																	v180 = (function()
-																		return 1;
-																	end)();
-																end
-																if (v180 == 1) then
-																	v173 = (function()
-																		return 1;
-																	end)();
-																	break;
-																end
-															end
-														end
-													end
-												end
-												break;
-											end
-										end
-										return v99, v100, v101, v102, v103, v104, v105, v106, v107;
-									end
-								end
-							end
-							if (v108 == (0 + 0)) then
-								local v129 = (function()
-									return 560 - (306 + 254);
-								end)();
-								local v130 = (function()
-									return;
-								end)();
-								while true do
-									if (v129 ~= (0 + 0)) then
-									else
-										v130 = (function()
-											return 0;
-										end)();
-										while true do
-											if (v130 ~= 0) then
-											else
-												v99 = (function()
-													return 0 - 0;
-												end)();
-												v100 = (function()
-													return nil;
-												end)();
-												v130 = (function()
-													return 1468 - (899 + 568);
-												end)();
-											end
-											if (1 ~= v130) then
-											else
-												v108 = (function()
-													return 1 + 0;
-												end)();
-												break;
-											end
-										end
-										break;
-									end
-								end
-							end
-							break;
-						end
-					end
-				end
-			end;
-		end)();
-		local v53 = (function()
-			return function(v109, v110, v111)
-				local v112 = (function()
-					return 0 - 0;
-				end)();
-				local v113 = (function()
-					return;
-				end)();
-				while true do
-					if ((603 - (268 + 335)) == v112) then
-						v113 = (function()
-							return 290 - (60 + 230);
-						end)();
-						while true do
-							if (v113 == (572 - (426 + 146))) then
-								v109[v110 - #"<"] = (function()
-									return v111();
-								end)();
-								return v109, v110, v111;
-							end
-						end
-						break;
-					end
-				end
-			end;
-		end)();
-		local v54 = (function()
-			return {};
-		end)();
-		local v55 = (function()
-			return {};
-		end)();
-		local v56 = (function()
-			return {};
-		end)();
-		local v57 = (function()
-			return {v54,v55,nil,v56};
-		end)();
-		local v58 = (function()
-			return v23();
-		end)();
-		local v59 = (function()
-			return {};
-		end)();
-		for v69 = #"{", v58 do
-			FlatIdent_7126A, Type, Cons, v21, v24, v25, v59, v69 = (function()
-				return v51(FlatIdent_7126A, Type, Cons, v21, v24, v25, v59, v69);
-			end)();
-		end
-		v57[#"19("] = (function()
-			return v21();
-		end)();
-		for v70 = #",", v23() do
-			FlatIdent_40CF, Descriptor, v21, v20, v59, v54, v70, v22, v23 = (function()
-				return v52(FlatIdent_40CF, Descriptor, v21, v20, v59, v54, v70, v22, v23);
-			end)();
-		end
-		for v71 = #":", v23() do
-			v55, v71, v28 = (function()
-				return v53(v55, v71, v28);
-			end)();
-		end
-		return v57;
-	end
-	local function v29(v61, v62, v63)
-		local v64 = v61[1 + 0];
-		local v65 = v61[1458 - (282 + 1174)];
-		local v66 = v61[814 - ((982 - (15 + 398)) + 242)];
-		return function(...)
-			local v72 = v64;
-			local v73 = v65;
-			local v74 = v66;
-			local v75 = v27;
-			local v76 = 1;
-			local v77 = -1;
-			local v78 = {};
-			local v79 = {...};
-			local v80 = v12("#", ...) - 1;
-			local v81 = {};
-			local v82 = {};
-			for v114 = (982 - (18 + 964)) - 0, v80 do
-				if ((1853 < 4813) and (v114 >= v74)) then
-					v78[v114 - v74] = v79[v114 + 1 + 0];
-				else
-					v82[v114] = v79[v114 + (1025 - (706 + 318))];
-				end
-			end
-			local v83 = (v80 - v74) + (1252 - (721 + 530));
-			local v84;
-			local v85;
-			while true do
-				v84 = v72[v76];
-				v85 = v84[1];
-				if ((v85 <= (1278 - (945 + 326))) or (2821 < 2431)) then
-					if (v85 <= (7 - 4)) then
-						if (v85 <= 1) then
-							if ((v85 > (0 + 0)) or (2874 < 2181)) then
-								local FlatIdent_5B2CE = 0;
-								local v132;
-								local v133;
-								local v134;
-								local v135;
-								while true do
-									if (FlatIdent_5B2CE == 1) then
-										v77 = (v134 + v132) - ((3 - 2) + 0);
-										v135 = 1500 - (1408 + 92);
-										FlatIdent_5B2CE = 2;
-									end
-									if (FlatIdent_5B2CE == 2) then
-										for v165 = v132, v77 do
-											v135 = v135 + (1087 - (461 + 625));
-											v82[v165] = v133[v135];
-										end
-										break;
-									end
-									if (FlatIdent_5B2CE == 0) then
-										v132 = v84[2];
-										v133, v134 = v75(v82[v132](v13(v82, v132 + 1, v84[703 - (271 + 429)])));
-										FlatIdent_5B2CE = 1;
-									end
-								end
-							else
-								local FlatIdent_47ABB = 0;
-								local v136;
-								local v137;
-								local v138;
-								local v139;
-								local v140;
-								while true do
-									if (FlatIdent_47ABB == 0) then
-										v136 = 1288 - (993 + 295);
-										v137 = nil;
-										FlatIdent_47ABB = 1;
-									end
-									if (2 == FlatIdent_47ABB) then
-										v140 = nil;
-										while true do
-											if (v136 == (0 + 0 + 0)) then
-												v137 = v84[(740 + 433) - (418 + 753)];
-												v138, v139 = v75(v82[v137](v13(v82, v137 + 1 + 0, v84[1 + 2])));
-												v136 = 1 + (850 - (20 + 830));
-											end
-											if (v136 == 1) then
-												v77 = (v139 + v137) - (1 + 0);
-												v140 = 0;
-												v136 = 531 - (406 + 123);
-											end
-											if (v136 == 2) then
-												for v171 = v137, v77 do
-													local v172 = (1381 + 388) - ((1875 - (116 + 10)) + 20);
-													while true do
-														if (v172 == (0 + 0)) then
-															v140 = v140 + (1323 - (1249 + 73));
-															v82[v171] = v138[v140];
-															break;
-														end
-													end
-												end
-												break;
-											end
-										end
-										break;
-									end
-									if (FlatIdent_47ABB == 1) then
-										v138 = nil;
-										v139 = nil;
-										FlatIdent_47ABB = 2;
-									end
-								end
-							end
-						elseif ((v85 == (1 + 0 + 1)) or (2689 <= 343)) then
-							v82[v84[1147 - ((1204 - (542 + 196)) + 679)]]();
-						else
-							do
-								return;
-							end
-						end
-					elseif ((v85 <= (11 - 6)) or (1869 == 2009)) then
-						if (v85 == (11 - 7)) then
-							v82[v84[1902 - (106 + 1794)]] = v63[v84[(1 - 0) + 2]];
-						else
-							local v143 = 0 + 0;
-							local v144;
-							while true do
-								if (v143 == (0 - 0)) then
-									v144 = v84[5 - 3];
-									v82[v144] = v82[v144](v13(v82, v144 + (115 - (2 + 2 + 110)), v77));
-									break;
-								end
-							end
-						end
-					elseif (v85 > (590 - (57 + 527))) then
-						v82[v84[2]]();
-					else
-						v82[v84[1429 - (41 + 1386)]] = v63[v84[106 - (17 + 44 + 42)]];
-					end
-				elseif ((v85 <= (3 + 5 + 3)) or (3546 < 2322)) then
-					if ((v85 <= (19 - 10)) or (2082 == 4773)) then
-						if (v85 > (23 - 15)) then
-							local FlatIdent_2BE02 = 0;
-							local v147;
-							while true do
-								if (FlatIdent_2BE02 == 0) then
-									v147 = v84[168 - (122 + 44)];
-									v82[v147] = v82[v147](v13(v82, v147 + (1 - 0), v77));
-									break;
-								end
-							end
-						else
-							v82[v84[6 - (10 - 6)]] = v84[(7 - 4) + 0];
-						end
-					elseif (v85 == (2 + 8)) then
-						v82[v84[3 - 1]] = {};
-					else
-						local v152 = v84[67 - (30 + (1586 - (1126 + 425)))];
-						local v153 = v82[v84[408 - (118 + 287)]];
-						v82[v152 + 1] = v153;
-						v82[v152] = v153[v84[3 + 1]];
-					end
-				elseif ((3244 > 1055) and (v85 <= ((4977 - 3707) - ((2164 - (118 + 1003)) + 214)))) then
-					if ((v85 > (45 - 33)) or (3313 <= 1778)) then
-						v82[v84[1214 - ((945 - 622) + 889)]] = {};
-					else
-						do
-							return;
-						end
-					end
-				elseif (v85 > 14) then
-					local v158 = v84[5 - 3];
-					local v159 = v82[v84[583 - (361 + 219)]];
-					v82[v158 + 1] = v159;
-					v82[v158] = v159[v84[324 - (53 + 267)]];
-				else
-					v82[v84[1 + 1]] = v84[3];
-				end
-				v76 = v76 + 1;
-			end
-		end;
-	end
-	return v29(v28(), {}, v17)(...);
+mt.__namecall = newcclosure(function(self, ...) 
+    local method = getnamecallmethod() 
+    local args = {...} 
+    if tostring(method) == "Kick" or tostring(method) == "kick" then 
+        warn("ป้องกันการเตะ: บล็อคการ Kick สำเร็จ!") 
+        return nil 
+    end 
+    if tostring(method) == "FireServer" and self.Name == "MainEvent" then 
+        if args[1] == "TeleportDetect" or args[1] == "WalkSpeed" then return nil end 
+    end 
+    if tostring(method) == "FireServer" and self.Name == "MainEvent" and args[1] == "Hit" then
+        if args[2] and args[2].Parent == plr.Character then return nil end 
+    end
+    return oldNamecall(self, unpack(args)) 
+end) 
+setreadonly(mt, true) 
+
+-- [[ VIP & ADMIN LIST ]] 
+local allowedNames = {"ffsww_1007", "A_ASPD", "HACKER_18050", "evils915", "Winwie001", "TV_BTS1","zx71828","llukaku991","LeoSingha508","Ruce066","16xd5664","klkjkukoo","85IIQ","maidbuzs6_199","Yoojin889","burnserika","maidbuzs6_199","kaitanx_12","Wsghoi2744","Margarite218188","poppeiie99","Fitchburg968","Ddbcvc98"," ice87997oh"} 
+local isVIP = false 
+for _, name in ipairs(allowedNames) do if plr.Name == name then isVIP = true break end end 
+
+if not isVIP then 
+    StarterGui:SetCore("SendNotification", {Title = "เข้าถึงไม่ได้", Text = "คุณไม่มีชื่ออยู่ในรายการ VIP", Duration = 10}) 
+    return 
+end 
+
+--------------------------------------------------------- 
+-- [ REFLECT, PIERCE & ENHANCED BULLET SHIELD ] 
+--------------------------------------------------------- 
+local function ApplyReflectAndPierce(targetPos) 
+    for _, obj in ipairs(workspace:GetChildren()) do 
+        if obj:IsA("BasePart") and (obj.Name:lower():find("bullet") or obj.Name:lower():find("projectile") or obj.Name:lower():find("ammo")) then 
+            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
+                local dist = (obj.Position - plr.Character.HumanoidRootPart.Position).Magnitude 
+                if dist < 25 then 
+                    obj.Velocity = -obj.Velocity * 3 
+                    obj.CanCollide = false 
+                    obj.Size = Vector3.new(0,0,0) 
+                end 
+            end 
+        end 
+    end 
+    return targetPos + Vector3.new(math.random(-1,1)/10, -0.4, math.random(-1,1)/10) 
+end 
+
+--------------------------------------------------------- 
+-- [ AUTO CLAIM SYSTEM - ALWAYS ACTIVE ] 
+--------------------------------------------------------- 
+local lastPos = nil 
+task.spawn(function() 
+    while task.wait(0.1) do 
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
+            local currentPos = plr.Character.HumanoidRootPart.Position 
+            if lastPos then 
+                if (currentPos - lastPos).Magnitude > 100 then 
+                    ReplicatedStorage.GetItemBack:FireServer() 
+                end 
+            end 
+            lastPos = currentPos 
+        end 
+    end 
+end) 
+
+--------------------------------------------------------- 
+-- [ ANTI-CRASH SYSTEM ] 
+--------------------------------------------------------- 
+if game.PlaceId == 4503309821 then 
+    local function disableCrashGui(p) 
+        task.spawn(function() 
+            local plrgui = p:WaitForChild("PlayerGui", 5) 
+            if plrgui then 
+                plrgui.ChildAdded:Connect(function(gui) 
+                    if gui.Name == "Announcement" then 
+                        gui:Destroy() 
+                    end 
+                end) 
+                if plrgui:FindFirstChild("Announcement") then 
+                    plrgui.Announcement:Destroy() 
+                end 
+            end 
+        end) 
+    end 
+    plr.CharacterAdded:Connect(function() disableCrashGui(plr) end) 
+    disableCrashGui(plr) 
+end 
+
+--------------------------------------------------------- 
+-- [ UI CONSTRUCTION ] 
+--------------------------------------------------------- 
+local ScreenGui = Instance.new("ScreenGui") 
+ScreenGui.Name = "Horror_Ultimate_V3_OP" 
+ScreenGui.Parent = game.CoreGui 
+ScreenGui.ResetOnSpawn = false 
+
+local Main = Instance.new("Frame") 
+Main.Name = "Main" 
+Main.Parent = ScreenGui 
+Main.BackgroundColor3 = Color3.fromRGB(5, 0, 0) 
+Main.BorderSizePixel = 0 
+Main.Position = UDim2.new(0.5, -240, 0.5, -110) 
+Main.Size = UDim2.new(0, 480, 0, 220) 
+Main.Active = true 
+Main.Draggable = true 
+
+local UIStroke = Instance.new("UIStroke") 
+UIStroke.Color = Color3.fromRGB(180, 0, 0) 
+UIStroke.Thickness = 2.5 
+UIStroke.Parent = Main 
+
+local UICorner = Instance.new("UICorner") 
+UICorner.CornerRadius = UDim.new(0, 10) 
+UICorner.Parent = Main 
+
+-- [ SIDEBAR SKILL MENU ]
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "SkillSidebar"
+Sidebar.Parent = Main
+Sidebar.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+Sidebar.Position = UDim2.new(-0.35, -5, 0, 0)
+Sidebar.Size = UDim2.new(0, 160, 1, 0)
+Sidebar.Visible = false 
+local SideStroke = Instance.new("UIStroke", Sidebar)
+SideStroke.Color = Color3.fromRGB(200, 0, 0)
+SideStroke.Thickness = 2
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
+
+local SideScroll = Instance.new("ScrollingFrame", Sidebar)
+SideScroll.Size = UDim2.new(1, -10, 1, -20)
+SideScroll.Position = UDim2.new(0, 5, 0, 10)
+SideScroll.BackgroundTransparency = 1
+SideScroll.CanvasSize = UDim2.new(0, 0, 1.2, 0) 
+SideScroll.ScrollBarThickness = 2
+local SideLayout = Instance.new("UIListLayout", SideScroll)
+SideLayout.Padding = UDim.new(0, 8)
+SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local AvatarIcon = Instance.new("ImageLabel") 
+AvatarIcon.Parent = Main 
+AvatarIcon.BackgroundColor3 = Color3.fromRGB(15, 0, 0) 
+AvatarIcon.Position = UDim2.new(0.04, 0, 0.18, 0) 
+AvatarIcon.Size = UDim2.new(0, 125, 0, 125) 
+AvatarIcon.Image = "rbxthumb://type=AvatarHeadShot&id="..plr.UserId.."&w=420&h=420" 
+AvatarIcon.BorderSizePixel = 0 
+local AvatarCorner = Instance.new("UICorner", AvatarIcon) 
+AvatarCorner.CornerRadius = UDim.new(1, 0) 
+local AvatarStroke = Instance.new("UIStroke", AvatarIcon) 
+AvatarStroke.Color = Color3.fromRGB(120, 0, 0) 
+AvatarStroke.Thickness = 3 
+
+local ScriptTag = Instance.new("TextLabel") 
+ScriptTag.Parent = Main 
+ScriptTag.BackgroundTransparency = 1 
+ScriptTag.Position = UDim2.new(0.68, 0, 0.84, 0) 
+ScriptTag.Size = UDim2.new(0, 140, 0, 25) 
+ScriptTag.Font = Enum.Font.SpecialElite 
+ScriptTag.Text = "สคริปต์ภาษาไทย [OP]" 
+ScriptTag.TextColor3 = Color3.fromRGB(255, 0, 0) 
+ScriptTag.TextSize = 16 
+ScriptTag.TextXAlignment = Enum.TextXAlignment.Right 
+
+local Mini = Instance.new("TextButton", Main) 
+Mini.Name = "MiniButton" 
+Mini.Size = UDim2.new(0, 28, 0, 28) 
+Mini.Position = UDim2.new(1, -35, 0, 7) 
+Mini.BackgroundColor3 = Color3.fromRGB(40, 0, 0) 
+Mini.BorderSizePixel = 0 
+Mini.Text = "-" 
+Mini.TextColor3 = Color3.fromRGB(255, 255, 255) 
+Mini.Font = Enum.Font.GothamBold 
+Mini.TextSize = 20 
+local MiniCorner = Instance.new("UICorner", Mini) 
+MiniCorner.CornerRadius = UDim.new(0, 6) 
+local MiniStroke = Instance.new("UIStroke", Mini) 
+MiniStroke.Color = Color3.fromRGB(200, 0, 0) 
+
+local MenuToggle = Instance.new("TextButton", Main) 
+MenuToggle.Size = UDim2.new(0, 30, 0, 30) 
+MenuToggle.Position = UDim2.new(0, 10, 1, -40) 
+MenuToggle.BackgroundColor3 = Color3.fromRGB(60, 0, 0) 
+MenuToggle.Text = "≡" 
+MenuToggle.TextColor3 = Color3.fromRGB(255, 255, 255) 
+MenuToggle.TextSize = 25 
+Instance.new("UICorner", MenuToggle).CornerRadius = UDim.new(0, 5) 
+
+local ScrollFrame = Instance.new("ScrollingFrame") 
+ScrollFrame.Parent = Main 
+ScrollFrame.BackgroundTransparency = 1 
+ScrollFrame.Position = UDim2.new(0.36, 0, 0.15, 0) 
+ScrollFrame.Size = UDim2.new(0.6, 0, 0.7, 0) 
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 2.5, 0) 
+ScrollFrame.ScrollBarThickness = 2 
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0) 
+
+local ListLayout = Instance.new("UIListLayout") 
+ListLayout.Parent = ScrollFrame 
+ListLayout.Padding = UDim.new(0, 10) 
+ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center 
+
+local RightList = Instance.new("ScrollingFrame", Main) 
+RightList.Visible = false 
+RightList.BackgroundColor3 = Color3.fromRGB(10, 0, 0) 
+RightList.Position = UDim2.new(1.02, 0, 0, 0) 
+RightList.Size = UDim2.new(0, 160, 0, 220) 
+RightList.ScrollBarThickness = 3 
+Instance.new("UIStroke", RightList).Color = Color3.fromRGB(200, 0, 0) 
+Instance.new("UICorner", RightList) 
+local RightLayout = Instance.new("UIListLayout", RightList) 
+RightLayout.Padding = UDim.new(0, 5) 
+
+local OpenCircle = Instance.new("ImageButton") 
+OpenCircle.Parent = ScreenGui 
+OpenCircle.Size = UDim2.new(0, 55, 0, 55) 
+OpenCircle.Position = UDim2.new(0.01, 0, 0.5, -25) 
+OpenCircle.Visible = false 
+OpenCircle.BackgroundColor3 = Color3.fromRGB(20, 0, 0) 
+OpenCircle.Image = "rbxthumb://type=AvatarHeadShot&id="..plr.UserId.."&w=420&h=420" 
+Instance.new("UICorner", OpenCircle).CornerRadius = UDim.new(1, 0) 
+Instance.new("UIStroke", OpenCircle).Color = Color3.fromRGB(255, 0, 0) 
+OpenCircle.Draggable = true 
+
+--------------------------------------------------------- 
+-- [ UTILS & FUNCTIONS ] 
+--------------------------------------------------------- 
+local isForcingHolster = false 
+local antiWarpEnabled = false 
+local lastValidPos = nil 
+local TargetPlayer = nil 
+local OrbitAngle = 0 
+local ClickToShootEnabled = false
+local isBursting = false 
+
+local SelectionHighlight = Instance.new("Highlight")
+SelectionHighlight.FillColor = Color3.fromRGB(255, 0, 0)
+SelectionHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+SelectionHighlight.FillTransparency = 0.5
+SelectionHighlight.Name = "ClickSelectTarget"
+
+local function isFriend(otherPlr) 
+    return plr:IsFriendsWith(otherPlr.UserId) 
+end 
+
+local function getClosestPlayer(range) 
+    local closest, dist = nil, range 
+    for _, p in ipairs(game.Players:GetPlayers()) do 
+        if p ~= plr and p.Character and p.Character:FindFirstChild("Head") and p.Character.Humanoid.Health > 0 and not isFriend(p) then 
+            local currentDist = (plr.Character.Head.Position - p.Character.Head.Position).Magnitude 
+            if currentDist < dist then 
+                dist = currentDist 
+                closest = p 
+            end 
+        end 
+    end 
+    return closest 
+end 
+
+local function skillFire(pos)
+    for _, gun in ipairs(plr.Backpack:GetChildren()) do 
+        if gun:IsA("Tool") and gun.Name ~= "Phone" then 
+            local rem = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire") 
+            if rem then for i=1,10 do rem:FireServer(pos) end end 
+        end 
+    end
 end
-return v15("LOL!043Q00030A3Q006C6F6164737472696E6703043Q0067616D6503073Q00482Q747047657403573Q00682Q7470733A2Q2F7261772E67697468756275736572636F6E74656E742E636F6D2F7374616D707838352D627974652F48756D616E78312F726566732F68656164732F6D61696E2F6B692Q6C6175726125323076312Q3000094Q000A7Q001204000100013Q001204000200023Q00200B00020002000300120E000400046Q000200044Q000900013Q00022Q00020001000100012Q00033Q00017Q00", v9(), ...);
+
+--------------------------------------------------------- 
+-- [ NEW SKILLS IMPLEMENTATION ] 
+--------------------------------------------------------- 
+
+-- 1. ABYSSAL CHAIN
+local function Skill_AbyssalChain()
+    if isBursting or not plr.Character then return end
+    isBursting = true
+    local target = getClosestPlayer(400)
+    if not target then isBursting = false return end
+    local tHrp = target.Character.HumanoidRootPart
+    local hrp = plr.Character.HumanoidRootPart
+    
+    local startTime = tick()
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        if tick() - startTime > 4 or not isBursting then conn:Disconnect() isBursting = false return end
+        local angle = tick() * 25
+        local offset = Vector3.new(math.cos(angle)*6, 0, math.sin(angle)*6)
+        hrp.CFrame = CFrame.new(tHrp.Position + offset, tHrp.Position)
+        skillFire(tHrp.Position)
+    end)
+end
+
+-- 2. VOID VORTEX ORBIT
+local function Skill_VoidVortex()
+    if isBursting or not plr.Character then return end
+    isBursting = true
+    local target = getClosestPlayer(400)
+    if not target then isBursting = false return end
+    local tHrp = target.Character.HumanoidRootPart
+    local hrp = plr.Character.HumanoidRootPart
+    
+    local startTime = tick()
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        if tick() - startTime > 4 or not isBursting then conn:Disconnect() isBursting = false return end
+        local t = tick() * 15
+        local offset = Vector3.new(math.cos(t)*8, math.sin(t*0.5)*10, math.sin(t)*8)
+        hrp.CFrame = CFrame.new(tHrp.Position + offset, tHrp.Position)
+        skillFire(tHrp.Position)
+    end)
+end
+
+-- 3. INFINITE BLINK ASSAULT
+local function Skill_InfiniteBlink()
+    if isBursting or not plr.Character then return end
+    isBursting = true
+    local target = getClosestPlayer(500)
+    if not target then isBursting = false return end
+    local tHrp = target.Character.HumanoidRootPart
+    local hrp = plr.Character.HumanoidRootPart
+
+    task.spawn(function()
+        for i = 1, 30 do
+            if not isBursting then break end
+            local randomOffset = Vector3.new(math.random(-12,12), math.random(-2,10), math.random(-12,12))
+            hrp.CFrame = CFrame.new(tHrp.Position + randomOffset, tHrp.Position)
+            skillFire(tHrp.Position)
+            task.wait(0.08)
+        end
+        isBursting = false
+    end)
+end
+
+-- 4. CELESTIAL CRASH ORBIT
+local function Skill_CelestialCrash()
+    if isBursting or not plr.Character then return end
+    isBursting = true
+    local target = getClosestPlayer(500)
+    if not target then isBursting = false return end
+    local tHrp = target.Character.HumanoidRootPart
+    local hrp = plr.Character.HumanoidRootPart
+
+    local startTime = tick()
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        local elapsed = tick() - startTime
+        if elapsed > 4 or not isBursting then conn:Disconnect() isBursting = false return end
+        local radius = 20 - (elapsed * 4) 
+        local angle = tick() * 30
+        local offset = Vector3.new(math.cos(angle)*radius, 15 - (elapsed * 3), math.sin(angle)*radius)
+        hrp.CFrame = CFrame.new(tHrp.Position + offset, tHrp.Position)
+        skillFire(tHrp.Position)
+    end)
+end
+
+local function createSkillBtn(name, callback, color)
+    local btn = Instance.new("TextButton", SideScroll)
+    btn.Size = UDim2.new(1, -10, 0, 35)
+    btn.BackgroundColor3 = color or Color3.fromRGB(50, 0, 0)
+    btn.Text = name; btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SpecialElite; btn.TextSize = 12
+    Instance.new("UICorner", btn)
+    btn.MouseButton1Click:Connect(callback)
+end
+
+-- สร้างปุ่มสกิลภาษาไทย
+createSkillBtn("โซ่บรรลัยกัลป์", Skill_AbyssalChain, Color3.fromRGB(0, 100, 150))
+createSkillBtn("พายุมืดมรณะ", Skill_VoidVortex, Color3.fromRGB(120, 0, 180))
+createSkillBtn("วาร์ปสังหารต่อเนื่อง", Skill_InfiniteBlink, Color3.fromRGB(200, 0, 0))
+createSkillBtn("โคจรสวรรค์พินาศ", Skill_CelestialCrash, Color3.fromRGB(200, 150, 0))
+
+--------------------------------------------------------- 
+-- [ CORE SYSTEMS ] 
+--------------------------------------------------------- 
+
+local function UpdateRightList() 
+    for _, v in ipairs(RightList:GetChildren()) do if v:IsA("Frame") or v:IsA("TextButton") then v:Destroy() end end 
+    local RefBtn = Instance.new("TextButton", RightList) 
+    RefBtn.Size = UDim2.new(1, -10, 0, 30) 
+    RefBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0) 
+    RefBtn.Text = "รีเฟรชรายชื่อ" 
+    RefBtn.TextColor3 = Color3.fromRGB(255, 255, 255) 
+    RefBtn.Font = Enum.Font.GothamBold 
+    Instance.new("UICorner", RefBtn) 
+    RefBtn.MouseButton1Click:Connect(UpdateRightList) 
+    for _, p in ipairs(game.Players:GetPlayers()) do 
+        if p ~= plr then 
+            local f = Instance.new("Frame", RightList) 
+            f.Size = UDim2.new(1, -10, 0, 45) 
+            f.BackgroundColor3 = (TargetPlayer == p) and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(30, 0, 0) 
+            Instance.new("UICorner", f) 
+            local img = Instance.new("ImageLabel", f) 
+            img.Size = UDim2.new(0, 35, 0, 35) 
+            img.Position = UDim2.new(0.05, 0, 0.1, 0) 
+            img.Image = "rbxthumb://type=AvatarHeadShot&id="..p.UserId.."&w=420&h=420" 
+            Instance.new("UICorner", img).CornerRadius = UDim.new(1, 0) 
+            local btn = Instance.new("TextButton", f) 
+            btn.Size = UDim2.new(0.6, 0, 1, 0) 
+            btn.Position = UDim2.new(0.35, 0, 0, 0) 
+            btn.BackgroundTransparency = 1 
+            btn.Text = p.DisplayName 
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255) 
+            btn.TextSize = 10 
+            btn.MouseButton1Click:Connect(function() 
+                if TargetPlayer == p then 
+                    TargetPlayer = nil 
+                    UpdateRightList() 
+                    StarterGui:SetCore("SendNotification", {Title = "เป้าหมาย", Text = "ยกเลิกเป้าหมายแล้ว", Duration = 2}) 
+                else 
+                    TargetPlayer = p 
+                    UpdateRightList() 
+                    StarterGui:SetCore("SendNotification", {Title = "เป้าหมาย", Text = "ล็อคเป้า: "..p.DisplayName, Duration = 2}) 
+                end 
+            end) 
+        end 
+    end 
+    RightList.CanvasSize = UDim2.new(0, 0, 0, RightLayout.AbsoluteContentSize.Y + 40) 
+end 
+
+MenuToggle.MouseButton1Click:Connect(function() 
+    Sidebar.Visible = not Sidebar.Visible 
+    RightList.Visible = not RightList.Visible 
+    if RightList.Visible then UpdateRightList() end 
+end) 
+
+local function needsMore(itemName) 
+    local count = 0 
+    for _, v in ipairs(plr.Backpack:GetChildren()) do if v.Name == itemName then count = count + 1 end end 
+    if plr.Character then 
+        for _, v in ipairs(plr.Character:GetChildren()) do if v.Name == itemName then count = count + 1 end end 
+    end 
+    return count < 10 
+end 
+
+local function findAndClick(targetPos) 
+    local closestClick = nil 
+    for _, v in ipairs(game.Workspace:GetDescendants()) do 
+        if v:IsA("ClickDetector") then 
+            local part = v.Parent 
+            if part and part:IsA("BasePart") and (part.Position - targetPos).Magnitude < 10 then 
+                closestClick = v break 
+            end 
+        end 
+    end 
+    if closestClick then fireclickdetector(closestClick) return true end 
+    return false 
+end 
+
+local function createToggle(name, callback) 
+    local btn = Instance.new("TextButton") 
+    btn.Size = UDim2.new(0.9, 0, 0, 35) 
+    btn.BackgroundColor3 = Color3.fromRGB(25, 0, 0) 
+    btn.Text = name .. ": ปิด" 
+    btn.TextColor3 = Color3.fromRGB(180, 180, 180) 
+    btn.Font = Enum.Font.SpecialElite 
+    btn.TextSize = 12 
+    btn.Parent = ScrollFrame 
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5) 
+    local active = false 
+    btn.MouseButton1Click:Connect(function() 
+        active = not active 
+        btn.Text = name .. (active and ": เปิด" or ": ปิด") 
+        btn.TextColor3 = active and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(180, 180, 180) 
+        btn.BackgroundColor3 = active and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(25, 0, 0) 
+        callback(active) 
+    end) 
+end 
+
+--------------------------------------------------------- 
+-- [ FEATURES LOGIC ] 
+--------------------------------------------------------- 
+
+RunService.RenderStepped:Connect(function()
+    if ClickToShootEnabled then
+        local target = mouse.Target
+        if target and target.Parent and target.Parent:FindFirstChild("Humanoid") then
+            SelectionHighlight.Parent = target.Parent
+            SelectionHighlight.Enabled = true
+        else
+            SelectionHighlight.Enabled = false
+        end
+    else
+        SelectionHighlight.Enabled = false
+    end
+    ApplyReflectAndPierce(Vector3.new(0,0,0))
+end)
+
+mouse.Button1Down:Connect(function()
+    if ClickToShootEnabled then
+        local target = mouse.Target
+        if target and target.Parent and target.Parent:FindFirstChild("Humanoid") then
+            local clickedPlr = game.Players:GetPlayerFromCharacter(target.Parent)
+            if clickedPlr and clickedPlr ~= plr and clickedPlr.Character and clickedPlr.Character:FindFirstChild("Head") then
+                local tHeadPos = clickedPlr.Character.Head.Position + (clickedPlr.Character.Head.Velocity * 0.12)
+                local finalPos = ApplyReflectAndPierce(tHeadPos)
+                for _, gun in ipairs(plr.Backpack:GetChildren()) do
+                    if gun:IsA("Tool") and gun.Name ~= "Phone" and gun.Name ~= "Boombox" then
+                        local rem = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Fire")
+                        if rem then for i = 1, 10 do rem:FireServer(finalPos) end end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function(dt) 
+    if TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
+        local tHRP = TargetPlayer.Character.HumanoidRootPart 
+        local myHRP = plr.Character.HumanoidRootPart 
+        OrbitAngle = OrbitAngle + (dt * 5) 
+        local offset = Vector3.new(math.cos(OrbitAngle) * 15, 10, math.sin(OrbitAngle) * 15) 
+        myHRP.CFrame = CFrame.new(tHRP.Position + offset, tHRP.Position) 
+        for _, gun in ipairs(plr.Backpack:GetChildren()) do 
+            if gun:IsA("Tool") and gun.Name ~= "Phone" then 
+                gun.Parent = plr.Character 
+                local rem = gun:FindFirstChild("shot") or gun:FindFirstChild("RemoteEvent") or gun:FindFirstChild("Fire") 
+                if rem then rem:FireServer(tHRP.Position) end 
+                gun.Parent = plr.Backpack 
+            end 
+        end 
+    end 
+end) 
+
+createToggle("สลับปืนยิงรัว (Dual)", function(v) 
+    _G.DualSwapActive = v 
+    task.spawn(function() 
+        while _G.DualSwapActive do 
+            RunService.Heartbeat:Wait() 
+            if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end 
+            local target = getClosestPlayer(999999) 
+            if target and target.Character and target.Character:FindFirstChild("Head") then 
+                local tHeadPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.1) 
+                local finalPos = ApplyReflectAndPierce(tHeadPos) 
+                local guns = {} 
+                for _, item in ipairs(plr.Backpack:GetChildren()) do 
+                    if item:IsA("Tool") and item.Name ~= "Phone" and item.Name ~= "Boombox" then table.insert(guns, item) end 
+                end 
+                for i = 1, #guns, 2 do 
+                    if not _G.DualSwapActive then break end 
+                    local gun1, gun2 = guns[i], guns[i+1] 
+                    if gun1 then gun1.Parent = plr.Character end 
+                    if gun2 then gun2.Parent = plr.Character end 
+                    task.wait() 
+                    if gun1 then local r = gun1:FindFirstChild("shot") or gun1:FindFirstChild("Fire") if r then for x=1,15 do r:FireServer(finalPos) end end end 
+                    if gun2 then local r = gun2:FindFirstChild("shot") or gun2:FindFirstChild("Fire") if r then for x=1,15 do r:FireServer(finalPos) end end end 
+                    if gun1 then gun1.Parent = plr.Backpack end 
+                    if gun2 then gun2.Parent = plr.Backpack end 
+                end 
+            end 
+        end 
+    end) 
+end) 
+
+-- [[ เริ่มส่วนที่เพิ่มใหม่: สลับปืนยิงรัวสายฟ้า (MAX SPEED) ]]
+createToggle("สลับปืนยิงรัว (สายฟ้า)", function(v) 
+    _G.HyperSwapActive = v 
+    task.spawn(function() 
+        while _G.HyperSwapActive do 
+            RunService.Stepped:Wait() -- ใช้ความเร็วสูงสุดของเฟรมเรต
+            if not plr.Character then continue end 
+            local target = getClosestPlayer(99999) 
+            if target and target.Character and target.Character:FindFirstChild("Head") then 
+                local tPos = target.Character.Head.Position + (target.Character.Head.Velocity * 0.12)
+                local finalPos = ApplyReflectAndPierce(tPos)
+                
+                local guns = {} 
+                for _, item in ipairs(plr.Backpack:GetChildren()) do 
+                    if item:IsA("Tool") and item.Name ~= "Phone" then table.insert(guns, item) end 
+                end 
+                
+                for i = 1, #guns do 
+                    if not _G.HyperSwapActive then break end 
+                    local currentGun = guns[i]
+                    currentGun.Parent = plr.Character 
+                    local r = currentGun:FindFirstChild("shot") or currentGun:FindFirstChild("Fire") 
+                    if r then 
+                        -- ยิงรัว 20 นัดต่อการสลับ 1 ครั้งแบบไม่มี Delay
+                        for x = 1, 20 do r:FireServer(finalPos) end 
+                    end 
+                    currentGun.Parent = plr.Backpack 
+                    -- ไม่ใส่ task.wait() เพื่อความเร็วสูงสุดในการสลับกระบอกถัดไป
+                end 
+            end 
+        end 
+    end) 
+end) 
+-- [[ จบส่วนที่เพิ่มใหม่ ]]
+
+createToggle("โหมดสังหารหมู่ (Massacre)", function(v) 
+    _G.MassacreActive = v 
+    local shield = Instance.new("Part") 
+    shield.Name = "MassacreShield"; shield.Shape = Enum.PartType.Ball; shield.Transparency = 0.7; shield.Color = Color3.fromRGB(255, 0, 0); shield.CanCollide = false; shield.Anchored = true; shield.Material = Enum.Material.ForceField; shield.Size = Vector3.new(15, 15, 15) 
+    task.spawn(function() 
+        while _G.MassacreActive do 
+            RunService.Heartbeat:Wait() 
+            if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end 
+            local myHRP = plr.Character.HumanoidRootPart 
+            local myHum = plr.Character:FindFirstChild("Humanoid") 
+            myHRP.Anchored = true; shield.Parent = workspace; shield.CFrame = myHRP.CFrame 
+            if myHum then myHum.MaxHealth = math.huge; myHum.Health = math.huge end 
+            local target = getClosestPlayer(999999) 
+            if target and target.Character and target.Character:FindFirstChild("Head") then 
+                local finalPos = ApplyReflectAndPierce(target.Character.Head.Position + (target.Character.Head.Velocity * 0.14)) 
+                myHRP.CFrame = CFrame.new(myHRP.Position, Vector3.new(finalPos.X, myHRP.Position.Y, finalPos.Z)) 
+                for _, gun in ipairs(plr.Backpack:GetChildren()) do 
+                    if not _G.MassacreActive then break end 
+                    gun.Parent = plr.Character 
+                    local remote = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire") 
+                    if remote then for i = 1, 30 do remote:FireServer(finalPos) end end 
+                    gun.Parent = plr.Backpack task.wait() 
+                end 
+            end 
+        end 
+        shield.Parent = nil; if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then plr.Character.HumanoidRootPart.Anchored = false end 
+    end) 
+end) 
+
+createToggle("ยิง 2 นัดตาย (Slaughter)", function(v) 
+    _G.UltraTwoTap = v 
+    task.spawn(function() 
+        while _G.UltraTwoTap do 
+            RunService.Heartbeat:Wait() 
+            if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end 
+            plr.Character.HumanoidRootPart.Anchored = true 
+            local target = getClosestPlayer(999999) 
+            if target and target.Character and target.Character:FindFirstChild("Head") then 
+                local finalPos = ApplyReflectAndPierce(target.Character.Head.Position + (target.Character.Head.Velocity * 0.12)) 
+                for _, gun in ipairs(plr.Backpack:GetChildren()) do 
+                    local r = gun:FindFirstChild("shot") or gun:FindFirstChild("Fire") 
+                    if r then for i = 1, 5 do r:FireServer(finalPos) end end 
+                end 
+                task.wait(0.02) 
+            end 
+        end 
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then plr.Character.HumanoidRootPart.Anchored = false end 
+    end) 
+end) 
+
+createToggle("บินหมุนยิงรัว (Spiral)", function(v) 
+    _G.SpiralActive = v 
+    local sa = 0 
+    task.spawn(function() 
+        while _G.SpiralActive do 
+            RunService.Heartbeat:Wait() 
+            sa = sa + 0.15 
+            local target = getClosestPlayer(200) 
+            local cp = target and target.Character.HumanoidRootPart.Position or plr.Character.HumanoidRootPart.Position + (plr.Character.HumanoidRootPart.CFrame.LookVector * 15) 
+            plr.Character.HumanoidRootPart.CFrame = CFrame.new(cp + Vector3.new(math.cos(sa)*12, 8, math.sin(sa)*12), cp) 
+            skillFire(cp) 
+        end 
+    end) 
+end) 
+
+createToggle("คลิกที่คนเพื่อยิง", function(v) ClickToShootEnabled = v end) 
+
+createToggle("กันล้ม/ลุกออโต้", function(v)
+    _G.AntiRagdoll = v
+    task.spawn(function()
+        while _G.AntiRagdoll do
+            task.wait(0.1)
+            local char = plr.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    if hum:GetState() == Enum.HumanoidStateType.Ragdoll or hum:GetState() == Enum.HumanoidStateType.FallingDown then
+                        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                    end
+                end
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BallSocketConstraint") or part:IsA("HingeConstraint") or part.Name == "RagdollConstraint" then
+                        part:Destroy()
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+createToggle("ป้องกันการวาร์ป", function(v) 
+    antiWarpEnabled = v 
+    if v and plr.Character then lastValidPos = plr.Character.HumanoidRootPart.CFrame end 
+    task.spawn(function() 
+        while antiWarpEnabled do 
+            RunService.Heartbeat:Wait() 
+            local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") 
+            if hrp then 
+                if lastValidPos and (hrp.Position - lastValidPos.Position).Magnitude > 50 then 
+                    hrp.CFrame = lastValidPos 
+                    ReplicatedStorage.GetItemBack:FireServer() 
+                else if not _G.MassacreActive and not _G.UltraTwoTap then lastValidPos = hrp.CFrame end end 
+            end 
+        end 
+    end) 
+end) 
+
+createToggle("ซื้อปืนออโต้ (สูงสุด 10)", function(state) 
+    _G.AutoBuyGun = state; isForcingHolster = state 
+    task.spawn(function() 
+        local toolStorage = ReplicatedStorage:WaitForChild("ToolStorage"):WaitForChild("ToolsStorage") 
+        while _G.AutoBuyGun do 
+            if needsMore("Gun") then 
+                for i = 1, 10 do if findAndClick(Vector3.new(-76.84, 162.67, 231.24)) then task.wait(0.1) toolStorage:FireServer("Save", "Gun") end end 
+                task.wait(0.5) 
+                for i = 1, 10 do toolStorage:FireServer("Get", "Gun") task.wait(0.05) end 
+            end 
+            task.wait(1) 
+        end 
+    end) 
+end) 
+
+RunService.Stepped:Connect(function() 
+    if isForcingHolster and not _G.MassacreActive and not _G.UltraTwoTap and not _G.DualSwapActive and not _G.HyperSwapActive and plr.Character then 
+        for _, t in ipairs(plr.Character:GetChildren()) do if t:IsA("Tool") then t.Parent = plr.Backpack end end 
+    end 
+end) 
+
+Mini.MouseButton1Click:Connect(function() Main.Visible = false OpenCircle.Visible = true end) 
+OpenCircle.MouseButton1Click:Connect(function() Main.Visible = true OpenCircle.Visible = false end) 
+
+StarterGui:SetCore("SendNotification", {Title = "HORROR BOSS", Text = "อัปเดตระบบสลับปืนสายฟ้าแล้ว!", Duration = 5})
