@@ -58,6 +58,8 @@ local autoClaimEnabled = true
 local autoSellEnabled = false 
 local hitboxEnabled = false
 local hitboxSize = 15 
+local antiWarpEnabled = false -- ตัวแปรควบคุมระบบใหม่
+local lastValidPos = nil
 
 -- Rainbow Settings
 local rainbowNameEnabled = false
@@ -231,6 +233,51 @@ miscTab.newToggle("Super Speed (80)", "วิ่งไว", false, function(stat
         end
         if plr.Character and plr.Character:FindFirstChild("Humanoid") then plr.Character.Humanoid.WalkSpeed = 16 end
     end)
+end)
+
+-- [ GOD ANTI-WARP SYSTEM - INTEGRATED ]
+miscTab.newToggle("God Anti-Warp", "ระบบต้านวาร์ปขั้นสูง", false, function(state)
+    antiWarpEnabled = state
+    if state then
+        task.spawn(function()
+            -- บันทึกตำแหน่งเริ่มต้น
+            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then 
+                lastValidPos = plr.Character.HumanoidRootPart.CFrame 
+            end
+
+            while antiWarpEnabled do
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChild("Humanoid")
+
+                if hrp and hum and hum.Health > 0 then
+                    -- 1. ป้องกันการโดนตรึง (Anti-Anchor)
+                    if hrp.Anchored then hrp.Anchored = false end
+
+                    -- 2. ลบวัตถุที่ใช้ดึงหรือล็อกตัว (Anti-BodyMover)
+                    for _, obj in ipairs(hrp:GetChildren()) do 
+                        if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") or obj:IsA("RocketPropulsion") then 
+                            obj:Destroy() 
+                        end 
+                    end
+
+                    -- 3. ตรวจสอบการวาร์ปผิดปกติ (Distance Check)
+                    if lastValidPos then
+                        local dist = (hrp.Position - lastValidPos.Position).Magnitude
+                        if dist > 50 then 
+                            hrp.CFrame = lastValidPos 
+                            hrp.Velocity = Vector3.new(0,0,0) 
+                        else 
+                            lastValidPos = hrp.CFrame 
+                        end
+                    end
+                end
+                RunService.Heartbeat:Wait()
+            end
+        end)
+    else
+        lastValidPos = nil
+    end
 end)
 
 miscTab.newButton("Auto Lie & Return", "นอนแล้วกลับที่เดิม", function()
