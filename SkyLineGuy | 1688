@@ -1,0 +1,113 @@
+-- [[ SkyLineGuy | ค่ายเพลงหลุด 1688 ]] --
+local MarketplaceService = game:GetService("MarketplaceService")
+local UserInputService = game:GetService("UserInputService")
+
+-- รายการ ID ทั้งหมด 33 รายการที่คุณส่งมา
+local AudioList = {
+    "139364859035367", "109213747545807", "104049068783505", "117956197901108",
+    "131783691173299", "89107787132559", "124421941339472", "71746449065680",
+    "80257250302898", "89391732870046", "135217873447796", "138880701865676",
+    "75575940953909", "78824616143993", "75715979100227", "140168985629311",
+    "74180212649765", "121586320453098", "116353720515544", "107311211041183",
+    "106494245379390", "136209869613095", "76147013236626", "83739340628456",
+    "80795041302103", "108165465224496", "128686634439921", "92539330883705",
+    "81293169027034", "116353720515544", "107311211041183", "106494245379390", "136209869613095"
+}
+
+-- [ ระบบ UI หลัก ] --
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+local MinBtn = Instance.new("TextButton", Main) -- ปุ่มย่อหน้าต่าง
+local MiniIcon = Instance.new("TextButton", ScreenGui) -- ไอคอนตอนย่อ
+
+-- ตกแต่ง Main Frame
+Main.Size = UDim2.new(0, 260, 0, 320)
+Main.Position = UDim2.new(0.5, -130, 0.5, -160)
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+-- ตกแต่ง Mini Icon (ลากได้)
+MiniIcon.Size = UDim2.new(0, 50, 0, 50)
+MiniIcon.Position = UDim2.new(0, 20, 0.5, -25)
+MiniIcon.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+MiniIcon.Text = "🩸"
+MiniIcon.TextSize = 25
+MiniIcon.Visible = false
+MiniIcon.Active = true
+MiniIcon.Draggable = true
+Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
+
+-- Title (เปลี่ยนชื่อตามคำขอ)
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "SkyLineGuy | ค่ายเพลงหลุด 1688"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.BackgroundTransparency = 1
+Title.TextSize = 12
+
+-- Scroll Frame
+local Scroll = Instance.new("ScrollingFrame", Main)
+Scroll.Size = UDim2.new(0.9, 0, 0.8, 0)
+Scroll.Position = UDim2.new(0.05, 0, 0.15, 0)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+Scroll.CanvasSize = UDim2.new(0, 0, 0, #AudioList * 45)
+
+local List = Instance.new("UIListLayout", Scroll)
+List.Padding = UDim.new(0, 5)
+
+-- ฟังก์ชันสร้างปุ่มพร้อมชื่อจริง
+local function createButton(id)
+    local btn = Instance.new("TextButton", Scroll)
+    btn.Size = UDim2.new(1, -5, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    btn.Text = "Fetching..."
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 12
+    Instance.new("UICorner", btn)
+
+    spawn(function()
+        local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
+        if success and info then
+            btn.Text = info.Name .. " [" .. id .. "]"
+        else
+            btn.Text = "Unknown Asset [" .. id .. "]"
+        end
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        setclipboard(id)
+        local old = btn.Text
+        btn.Text = "COPIED!"
+        btn.TextColor3 = Color3.fromRGB(0, 255, 0)
+        wait(0.5)
+        btn.Text = old
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+end
+
+for _, id in pairs(AudioList) do
+    createButton(id)
+end
+
+-- ระบบ Minimize / Maximize
+MinBtn.Size = UDim2.new(0, 25, 0, 25)
+MinBtn.Position = UDim2.new(1, -30, 0, 5)
+MinBtn.Text = "-"
+MinBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MinBtn.BackgroundTransparency = 1
+MinBtn.TextSize = 25
+
+MinBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    MiniIcon.Visible = true
+end)
+
+MiniIcon.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    MiniIcon.Visible = false
+end)
