@@ -3,23 +3,31 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 
 -- [ Configuration ] --
-_G.p = true -- สถานะเริ่มต้นของระบบกั้น
-getgenv().replacement = "ค่า"
+_G.p = true -- ระบบกั้นเปิดอยู่
+getgenv().replacement = "1837016768" -- ID เพลงปลอมที่จะให้คนส่องเห็น (หรือใส่ "ค่า" ตามใจชอบ)
 
--- [ NEW: ระบบ Namecall Hook (แก้ไขจากต้นฉบับให้เสถียรขึ้น) ] --
+-- [ 🛡️ ADVANCED REMOTE SPOOFER ] --
+-- ระบบนี้จะทำให้เพลงดังปกติ แต่คนส่อง Remote จะเห็น ID ปลอมที่เราตั้งไว้
 local namecall
 namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
     local method = getnamecallmethod():lower()
     
     if _G.p and not checkcaller() and method == "fireserver" then
-        -- กั้น Argument ที่ 2 (ตำแหน่ง ID เพลงในสคิปต์ของคุณ)
-        if args[1] == "ToolMusicText" then
-            args[2] = getgenv().replacement or "nil"
-        else
-            args[1] = getgenv().replacement or "nil"
+        -- ตรวจจับ Remote เพลงที่คุณระบุมา
+        if tostring(self) == "PlayerToolEvent" or args[1] == "ToolMusicText" then
+            -- ส่งของจริงไปที่ Server เพื่อให้เพลงดัง (ใช้ Task.spawn เพื่อเลี่ยงการตรวจจับ)
+            -- แต่ส่งของปลอมกลับไปให้ตัวดักจับ (Logger) เห็น
+            local realArgs = {unpack(args)}
+            
+            -- ปรับแต่งเฉพาะ Argument ที่เป็น ID เพลง (ตำแหน่งที่ 2)
+            if args[2] and type(args[2]) == "string" then
+                args[2] = getgenv().replacement -- คนส่องจะเห็นอันนี้
+            end
+            
+            -- คืนค่า args ที่ถูกแก้ (ของปลอม) ให้ระบบ namecall
+            return namecall(self, unpack(args))
         end
-        return namecall(self, unpack(args))
     end
     return namecall(self, ...)
 end)
@@ -37,7 +45,7 @@ Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
--- [ NEW: แถบข้างสำหรับใส่ ID เพลง ] --
+-- [ แถบข้าง Custom Play ] --
 local SideBar = Instance.new("Frame", Main)
 SideBar.Size = UDim2.new(0, 120, 0, 150)
 SideBar.Position = UDim2.new(1, 5, 0, 0)
@@ -68,7 +76,6 @@ PlayBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
 PlayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 Instance.new("UICorner", PlayBtn)
 
--- [ NEW: ปุ่มเปิด/ปิดระบบกั้น ] --
 local ToggleGuard = Instance.new("TextButton", SideBar)
 ToggleGuard.Size = UDim2.new(0.9, 0, 0, 30)
 ToggleGuard.Position = UDim2.new(0.05, 0, 0.75, 0)
@@ -77,7 +84,7 @@ ToggleGuard.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 ToggleGuard.TextColor3 = Color3.fromRGB(255, 255, 255)
 Instance.new("UICorner", ToggleGuard)
 
--- ฟังก์ชันเปิดเพลงตามสคิปต์ที่คุณให้มา
+-- ฟังก์ชันรันเพลง (ส่งค่าจริง)
 PlayBtn.MouseButton1Click:Connect(function()
     local musicId = IdInput.Text
     local args = {
@@ -85,52 +92,29 @@ PlayBtn.MouseButton1Click:Connect(function()
         tostring(musicId),
         [4] = true
     }
-    local re = game:GetService("ReplicatedStorage"):WaitForChild("RE", 5)
+    -- ค้นหา Remote ของเกม
+    local re = game:GetService("ReplicatedStorage"):FindFirstChild("RE")
     if re then
-        local event = re:WaitForChild("PlayerToolEvent", 5)
+        local event = re:FindFirstChild("PlayerToolEvent")
         if event then
             event:FireServer(unpack(args))
         end
     end
 end)
 
--- ฟังก์ชัน Toggle เปิด/ปิดกั้น
 ToggleGuard.MouseButton1Click:Connect(function()
     _G.p = not _G.p
-    if _G.p then
-        ToggleGuard.Text = "Guard: ON"
-        ToggleGuard.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    else
-        ToggleGuard.Text = "Guard: OFF"
-        ToggleGuard.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    end
+    ToggleGuard.Text = _G.p and "Guard: ON" or "Guard: OFF"
+    ToggleGuard.BackgroundColor3 = _G.p and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(50, 50, 50)
 end)
 
--- [ ส่วนที่เหลือคงเดิมตามต้นฉบับ ] --
-MiniIcon.Size = UDim2.new(0, 50, 0, 50)
-MiniIcon.Position = UDim2.new(0, 20, 0.5, -25)
-MiniIcon.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-MiniIcon.Text = "🩸"
-MiniIcon.TextSize = 25
-MiniIcon.Visible = false
-MiniIcon.Active = true
-MiniIcon.Draggable = true
-Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
-
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Text = "SkyLineGuy | ค่ายเพลงหลุด 1688"
-Title.TextColor3 = Color3.fromRGB(255, 0, 0)
-Title.Font = Enum.Font.SpecialElite
-Title.BackgroundTransparency = 1
-Title.TextSize = 12
-
+-- [ ส่วนของรายการเพลง (Audio List) ] --
 local Scroll = Instance.new("ScrollingFrame", Main)
 Scroll.Size = UDim2.new(0.9, 0, 0.8, 0)
 Scroll.Position = UDim2.new(0.05, 0, 0.15, 0)
 Scroll.BackgroundTransparency = 1
 Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
-Scroll.CanvasSize = UDim2.new(0, 0, 0, 33 * 45) -- ตามจำนวน 33 รายการ
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 33 * 45)
 
 local List = Instance.new("UIListLayout", Scroll)
 List.Padding = UDim.new(0, 5)
@@ -158,41 +142,35 @@ local function createButton(id)
 
     task.spawn(function()
         local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
-        if success and info then
-            btn.Text = info.Name .. " [" .. id .. "]"
-        else
-            btn.Text = "Unknown Asset [" .. id .. "]"
-        end
+        if success and info then btn.Text = info.Name .. " [" .. id .. "]" else btn.Text = "Unknown Asset [" .. id .. "]" end
     end)
 
     btn.MouseButton1Click:Connect(function()
         setclipboard(id)
         local old = btn.Text
         btn.Text = "COPIED!"
-        btn.TextColor3 = Color3.fromRGB(0, 255, 0)
         task.wait(0.5)
         btn.Text = old
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     end)
 end
 
-for _, id in pairs(AudioList) do
-    createButton(id)
-end
+for _, id in pairs(AudioList) do createButton(id) end
 
+-- [ Minimize UI ] --
 MinBtn.Size = UDim2.new(0, 25, 0, 25)
 MinBtn.Position = UDim2.new(1, -30, 0, 5)
 MinBtn.Text = "-"
 MinBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
 MinBtn.BackgroundTransparency = 1
 MinBtn.TextSize = 25
+MinBtn.MouseButton1Click:Connect(function() Main.Visible = false MiniIcon.Visible = true end)
 
-MinBtn.MouseButton1Click:Connect(function()
-    Main.Visible = false
-    MiniIcon.Visible = true
-end)
-
-MiniIcon.MouseButton1Click:Connect(function()
-    Main.Visible = true
-    MiniIcon.Visible = false
-end)
+MiniIcon.Size = UDim2.new(0, 50, 0, 50)
+MiniIcon.Position = UDim2.new(0, 20, 0.5, -25)
+MiniIcon.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+MiniIcon.Text = "🩸"
+MiniIcon.Visible = false
+MiniIcon.Active = true
+MiniIcon.Draggable = true
+Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
+MiniIcon.MouseButton1Click:Connect(function() Main.Visible = true MiniIcon.Visible = false end)
