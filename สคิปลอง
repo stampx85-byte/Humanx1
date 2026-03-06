@@ -1,0 +1,248 @@
+-- [[ SkyLineGuy | Multi-Studio Music System + ANTI-LOG + PRIVATE PLAYER ]] --
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
+
+-- [ Configuration ] --
+_G.p = true 
+getgenv().replacement = "1837016768" -- ID ปลอมที่จะให้พวกส่องเห็น
+
+-- [ 🛡️ ULTIMATE ANTI-LOGGER & SPOOFER ] --
+local namecall
+namecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod():lower()
+    
+    if _G.p and not checkcaller() and (method == "fireserver" or method == "invokeapi") then
+        if tostring(self) == "PlayerToolEvent" or args[1] == "ToolMusicText" then
+            local realId = args[2]
+            
+            task.spawn(function()
+                -- ส่ง ID จริงตามโครงสร้าง args ที่คุณให้มา
+                namecall(self, "ToolMusicText", realId, nil, true) 
+            end)
+            
+            args[2] = getgenv().replacement or "nil"
+            return namecall(self, unpack(args))
+        end
+    end
+    return namecall(self, ...)
+end)
+
+-- [ UI Setup ] --
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 280, 0, 420) -- ปรับขนาดเพิ่มเพื่อรองรับช่อง Play
+Main.Position = UDim2.new(0.5, -140, 0.5, -210)
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+-- [ 🎹 Private Player Logic ] --
+local function UniversalPlay(id)
+    if not id or id == "" then return end
+    local re = game:GetService("ReplicatedStorage"):WaitForChild("RE", 5)
+    if re and re:FindFirstChild("PlayerToolEvent") then
+        -- ใช้โครงสร้าง Args ตามที่คุณส่งมาให้ [4] = true
+        local playArgs = {
+            "ToolMusicText",
+            tostring(id),
+            [4] = true
+        }
+        re.PlayerToolEvent:FireServer(unpack(playArgs))
+    end
+end
+
+-- [ Containers ] --
+local MainMenu = Instance.new("Frame", Main) 
+MainMenu.Size = UDim2.new(1, 0, 1, -120)
+MainMenu.Position = UDim2.new(0, 0, 0, 50)
+MainMenu.BackgroundTransparency = 1
+
+local MusicPage = Instance.new("Frame", Main) 
+MusicPage.Size = UDim2.new(1, 0, 1, -120)
+MusicPage.Position = UDim2.new(0, 0, 0, 50)
+MusicPage.BackgroundTransparency = 1
+MusicPage.Visible = false
+
+-- [ ✍️ Input & Play Section (แถบเปิดเพลงเอง) ] --
+local PlayerFrame = Instance.new("Frame", Main)
+PlayerFrame.Size = UDim2.new(1, 0, 0, 70)
+PlayerFrame.Position = UDim2.new(0, 0, 1, -70)
+PlayerFrame.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+Instance.new("UICorner", PlayerFrame)
+
+local IdBox = Instance.new("TextBox", PlayerFrame)
+IdBox.Size = UDim2.new(0.65, 0, 0, 40)
+IdBox.Position = UDim2.new(0.05, 0, 0.5, -20)
+IdBox.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+IdBox.Text = ""
+IdBox.PlaceholderText = "ใส่เลข ID เพลง..."
+IdBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+IdBox.TextSize = 12
+IdBox.ClearTextOnFocus = false
+Instance.new("UICorner", IdBox)
+
+local PlayBtn = Instance.new("TextButton", PlayerFrame)
+PlayBtn.Size = UDim2.new(0.2, 0, 0, 40)
+PlayBtn.Position = UDim2.new(0.75, 0, 0.5, -20)
+PlayBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+PlayBtn.Text = "PLAY"
+PlayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", PlayBtn)
+
+PlayBtn.MouseButton1Click:Connect(function()
+    UniversalPlay(IdBox.Text)
+end)
+
+-- [ UI Elements ] --
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "SkyLineGuy | Hub"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.TextSize = 14
+Title.BackgroundTransparency = 1
+
+local BackBtn = Instance.new("TextButton", Main)
+BackBtn.Size = UDim2.new(0, 60, 0, 25)
+BackBtn.Position = UDim2.new(0, 10, 0, 12)
+BackBtn.Text = "< ย้อนกลับ"
+BackBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+BackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+BackBtn.Visible = false
+BackBtn.TextSize = 12
+Instance.new("UICorner", BackBtn)
+
+-- [ Scroll for Music ] --
+local Scroll = Instance.new("ScrollingFrame", MusicPage)
+Scroll.Size = UDim2.new(0.95, 0, 0.95, 0)
+Scroll.Position = UDim2.new(0.025, 0, 0.025, 0)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarThickness = 3
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+local ListLayout = Instance.new("UIListLayout", Scroll)
+ListLayout.Padding = UDim.new(0, 5)
+
+-- [ 🎶 Data Store ] --
+local StudioData = {
+    ["ค่าย 1688"] = {
+        "70433420449192", "118088133904805", "88404154262740", "104079603511923",
+        "106427700620281", "130068145051017", "115957293934252", "70664764327260",
+        "139364859035367", "109213747545807", "104049068783505", "117956197901108",
+        "131783691173299", "89107787132559", "124421941339472", "71746449065680",
+        "80257250302898", "89391732870046", "135217873447796", "138880701865676",
+        "75575940953909", "78824616143993", "75715979100227", "140168985629311",
+        "74180212649765", "121586320453098", "116353720515544", "107311211041183",
+        "106494245379390", "136209869613095", "76147013236626", "83739340628456",
+        "80795041302103", "108165465224496", "128686634439921", "92539330883705",
+        "81293169027034"
+    },
+    ["ขโมยเพลงรอบข้าง"] = {},
+    ["ค่าย อื่นๆ"] = {
+        "1837016768", "1837017165"
+    }
+}
+
+-- [ Functions ] --
+local function GetNearbyMusic()
+    local detected = {}
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Sound") and v.Playing and v.SoundId:match("%d+") then
+            local id = v.SoundId:match("%d+")
+            if not table.find(detected, id) then
+                table.insert(detected, id)
+            end
+        end
+    end
+    return detected
+end
+
+local function LoadStudio(name)
+    for _, item in pairs(Scroll:GetChildren()) do
+        if item:IsA("TextButton") then item:Destroy() end
+    end
+    
+    Title.Text = name
+    MainMenu.Visible = false
+    MusicPage.Visible = true
+    BackBtn.Visible = true
+    
+    local ids = (name == "ขโมยเพลงรอบข้าง") and GetNearbyMusic() or StudioData[name]
+    Scroll.CanvasSize = UDim2.new(0, 0, 0, #ids * 45)
+    
+    for _, id in pairs(ids) do
+        local btn = Instance.new("TextButton", Scroll)
+        btn.Size = UDim2.new(1, -10, 0, 40)
+        btn.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+        btn.Text = "โหลด... ["..id.."]"
+        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        btn.TextSize = 10
+        Instance.new("UICorner", btn)
+        
+        task.spawn(function()
+            local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
+            if success then
+                btn.Text = info.Name
+                btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            end
+        end)
+        
+        btn.MouseButton1Click:Connect(function()
+            IdBox.Text = id
+            setclipboard(id)
+            UniversalPlay(id)
+        end)
+    end
+end
+
+-- [ Create Main Menu Buttons ] --
+local MenuList = Instance.new("UIListLayout", MainMenu)
+MenuList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+MenuList.Padding = UDim.new(0, 10)
+
+local Categories = {"ค่าย 1688", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
+
+for _, studioName in pairs(Categories) do
+    local sBtn = Instance.new("TextButton", MainMenu)
+    sBtn.Size = UDim2.new(0.8, 0, 0, 50)
+    sBtn.BackgroundColor3 = (studioName == "ขโมยเพลงรอบข้าง") and Color3.fromRGB(100, 0, 0) or Color3.fromRGB(40, 0, 0)
+    sBtn.Text = studioName
+    sBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sBtn.Font = Enum.Font.SourceSansBold
+    sBtn.TextSize = 18
+    Instance.new("UICorner", sBtn)
+    
+    sBtn.MouseButton1Click:Connect(function()
+        LoadStudio(studioName)
+    end)
+end
+
+-- [ Navigation ] --
+BackBtn.MouseButton1Click:Connect(function()
+    MusicPage.Visible = false
+    MainMenu.Visible = true
+    BackBtn.Visible = false
+    Title.Text = "SkyLineGuy | Hub"
+end)
+
+-- [ Minimize & Close ] --
+local MiniIcon = Instance.new("TextButton", ScreenGui)
+MiniIcon.Size = UDim2.new(0, 50, 0, 50)
+MiniIcon.Position = UDim2.new(0, 20, 0.5, -25)
+MiniIcon.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+MiniIcon.Text = "🩸"
+MiniIcon.Visible = false
+MiniIcon.Draggable = true
+Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
+
+local CloseBtn = Instance.new("TextButton", Main)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 10)
+CloseBtn.Text = "-"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.TextSize = 25
+
+CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false MiniIcon.Visible = true end)
+MiniIcon.MouseButton1Click:Connect(function() Main.Visible = true MiniIcon.Visible = false end)
