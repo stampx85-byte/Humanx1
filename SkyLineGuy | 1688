@@ -2,7 +2,139 @@
 local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 
--- รายการ ID ทั้งหมด 33 รายการที่คุณส่งมา
+-- [ Configuration ] --
+_G.p = true -- สถานะเริ่มต้นของระบบกั้น
+getgenv().replacement = "ค่า"
+
+-- [ NEW: ระบบ Namecall Hook (แก้ไขจากต้นฉบับให้เสถียรขึ้น) ] --
+local namecall
+namecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod():lower()
+    
+    if _G.p and not checkcaller() and method == "fireserver" then
+        -- กั้น Argument ที่ 2 (ตำแหน่ง ID เพลงในสคิปต์ของคุณ)
+        if args[1] == "ToolMusicText" then
+            args[2] = getgenv().replacement or "nil"
+        else
+            args[1] = getgenv().replacement or "nil"
+        end
+        return namecall(self, unpack(args))
+    end
+    return namecall(self, ...)
+end)
+
+-- [ UI หลัก ] --
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+local MinBtn = Instance.new("TextButton", Main)
+local MiniIcon = Instance.new("TextButton", ScreenGui)
+
+Main.Size = UDim2.new(0, 260, 0, 320)
+Main.Position = UDim2.new(0.5, -130, 0.5, -160)
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+-- [ NEW: แถบข้างสำหรับใส่ ID เพลง ] --
+local SideBar = Instance.new("Frame", Main)
+SideBar.Size = UDim2.new(0, 120, 0, 150)
+SideBar.Position = UDim2.new(1, 5, 0, 0)
+SideBar.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+Instance.new("UICorner", SideBar)
+
+local SideTitle = Instance.new("TextLabel", SideBar)
+SideTitle.Size = UDim2.new(1, 0, 0, 30)
+SideTitle.Text = "Custom Play"
+SideTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+SideTitle.BackgroundTransparency = 1
+SideTitle.TextSize = 14
+
+local IdInput = Instance.new("TextBox", SideBar)
+IdInput.Size = UDim2.new(0.9, 0, 0, 30)
+IdInput.Position = UDim2.new(0.05, 0, 0.25, 0)
+IdInput.PlaceholderText = "Enter Music ID"
+IdInput.Text = ""
+IdInput.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+IdInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", IdInput)
+
+local PlayBtn = Instance.new("TextButton", SideBar)
+PlayBtn.Size = UDim2.new(0.9, 0, 0, 30)
+PlayBtn.Position = UDim2.new(0.05, 0, 0.5, 0)
+PlayBtn.Text = "Play Sound"
+PlayBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+PlayBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", PlayBtn)
+
+-- [ NEW: ปุ่มเปิด/ปิดระบบกั้น ] --
+local ToggleGuard = Instance.new("TextButton", SideBar)
+ToggleGuard.Size = UDim2.new(0.9, 0, 0, 30)
+ToggleGuard.Position = UDim2.new(0.05, 0, 0.75, 0)
+ToggleGuard.Text = "Guard: ON"
+ToggleGuard.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+ToggleGuard.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", ToggleGuard)
+
+-- ฟังก์ชันเปิดเพลงตามสคิปต์ที่คุณให้มา
+PlayBtn.MouseButton1Click:Connect(function()
+    local musicId = IdInput.Text
+    local args = {
+        "ToolMusicText",
+        tostring(musicId),
+        [4] = true
+    }
+    local re = game:GetService("ReplicatedStorage"):WaitForChild("RE", 5)
+    if re then
+        local event = re:WaitForChild("PlayerToolEvent", 5)
+        if event then
+            event:FireServer(unpack(args))
+        end
+    end
+end)
+
+-- ฟังก์ชัน Toggle เปิด/ปิดกั้น
+ToggleGuard.MouseButton1Click:Connect(function()
+    _G.p = not _G.p
+    if _G.p then
+        ToggleGuard.Text = "Guard: ON"
+        ToggleGuard.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    else
+        ToggleGuard.Text = "Guard: OFF"
+        ToggleGuard.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    end
+end)
+
+-- [ ส่วนที่เหลือคงเดิมตามต้นฉบับ ] --
+MiniIcon.Size = UDim2.new(0, 50, 0, 50)
+MiniIcon.Position = UDim2.new(0, 20, 0.5, -25)
+MiniIcon.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+MiniIcon.Text = "🩸"
+MiniIcon.TextSize = 25
+MiniIcon.Visible = false
+MiniIcon.Active = true
+MiniIcon.Draggable = true
+Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "SkyLineGuy | ค่ายเพลงหลุด 1688"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.BackgroundTransparency = 1
+Title.TextSize = 12
+
+local Scroll = Instance.new("ScrollingFrame", Main)
+Scroll.Size = UDim2.new(0.9, 0, 0.8, 0)
+Scroll.Position = UDim2.new(0.05, 0, 0.15, 0)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 33 * 45) -- ตามจำนวน 33 รายการ
+
+local List = Instance.new("UIListLayout", Scroll)
+List.Padding = UDim.new(0, 5)
+
 local AudioList = {
     "139364859035367", "109213747545807", "104049068783505", "117956197901108",
     "131783691173299", "89107787132559", "124421941339472", "71746449065680",
@@ -14,52 +146,6 @@ local AudioList = {
     "81293169027034", "116353720515544", "107311211041183", "106494245379390", "136209869613095"
 }
 
--- [ ระบบ UI หลัก ] --
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-local Main = Instance.new("Frame", ScreenGui)
-local MinBtn = Instance.new("TextButton", Main) -- ปุ่มย่อหน้าต่าง
-local MiniIcon = Instance.new("TextButton", ScreenGui) -- ไอคอนตอนย่อ
-
--- ตกแต่ง Main Frame
-Main.Size = UDim2.new(0, 260, 0, 320)
-Main.Position = UDim2.new(0.5, -130, 0.5, -160)
-Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
-Main.Active = true
-Main.Draggable = true
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
-
--- ตกแต่ง Mini Icon (ลากได้)
-MiniIcon.Size = UDim2.new(0, 50, 0, 50)
-MiniIcon.Position = UDim2.new(0, 20, 0.5, -25)
-MiniIcon.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-MiniIcon.Text = "🩸"
-MiniIcon.TextSize = 25
-MiniIcon.Visible = false
-MiniIcon.Active = true
-MiniIcon.Draggable = true
-Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
-
--- Title (เปลี่ยนชื่อตามคำขอ)
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.Text = "SkyLineGuy | ค่ายเพลงหลุด 1688"
-Title.TextColor3 = Color3.fromRGB(255, 0, 0)
-Title.Font = Enum.Font.SpecialElite
-Title.BackgroundTransparency = 1
-Title.TextSize = 12
-
--- Scroll Frame
-local Scroll = Instance.new("ScrollingFrame", Main)
-Scroll.Size = UDim2.new(0.9, 0, 0.8, 0)
-Scroll.Position = UDim2.new(0.05, 0, 0.15, 0)
-Scroll.BackgroundTransparency = 1
-Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
-Scroll.CanvasSize = UDim2.new(0, 0, 0, #AudioList * 45)
-
-local List = Instance.new("UIListLayout", Scroll)
-List.Padding = UDim.new(0, 5)
-
--- ฟังก์ชันสร้างปุ่มพร้อมชื่อจริง
 local function createButton(id)
     local btn = Instance.new("TextButton", Scroll)
     btn.Size = UDim2.new(1, -5, 0, 40)
@@ -70,7 +156,7 @@ local function createButton(id)
     btn.TextSize = 12
     Instance.new("UICorner", btn)
 
-    spawn(function()
+    task.spawn(function()
         local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
         if success and info then
             btn.Text = info.Name .. " [" .. id .. "]"
@@ -84,7 +170,7 @@ local function createButton(id)
         local old = btn.Text
         btn.Text = "COPIED!"
         btn.TextColor3 = Color3.fromRGB(0, 255, 0)
-        wait(0.5)
+        task.wait(0.5)
         btn.Text = old
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     end)
@@ -94,7 +180,6 @@ for _, id in pairs(AudioList) do
     createButton(id)
 end
 
--- ระบบ Minimize / Maximize
 MinBtn.Size = UDim2.new(0, 25, 0, 25)
 MinBtn.Position = UDim2.new(1, -30, 0, 5)
 MinBtn.Text = "-"
