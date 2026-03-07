@@ -1,0 +1,235 @@
+-- [[ SkyLineGuy | Multi-Studio Music System (LITE) ]] --
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
+
+-- [ UI Setup ] --
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 280, 0, 350) 
+Main.Position = UDim2.new(0.5, -140, 0.5, -175)
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+-- [ 🎹 Private Player Logic ] --
+local function UniversalPlay(id)
+    if not id or id == "" then return end
+    local re = game:GetService("ReplicatedStorage"):WaitForChild("RE", 5)
+    if re and re:FindFirstChild("PlayerToolEvent") then
+        local playArgs = {
+            "ToolMusicText",
+            tostring(id),
+            [4] = true
+        }
+        re.PlayerToolEvent:FireServer(unpack(playArgs))
+    end
+end
+
+-- [ Containers ] --
+-- ปรับ MainMenu เป็น ScrollingFrame เพื่อให้เลื่อนเลือกค่ายได้
+local MainMenu = Instance.new("ScrollingFrame", Main) 
+MainMenu.Size = UDim2.new(1, 0, 1, -60)
+MainMenu.Position = UDim2.new(0, 0, 0, 50)
+MainMenu.BackgroundTransparency = 1
+MainMenu.ScrollBarThickness = 3
+MainMenu.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+MainMenu.BorderSizePixel = 0
+
+local MusicPage = Instance.new("Frame", Main) 
+MusicPage.Size = UDim2.new(1, 0, 1, -60)
+MusicPage.Position = UDim2.new(0, 0, 0, 50)
+MusicPage.BackgroundTransparency = 1
+MusicPage.Visible = false
+
+-- [ UI Elements ] --
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "SkyLineGuy | Hub"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.TextSize = 14
+Title.BackgroundTransparency = 1
+
+local BackBtn = Instance.new("TextButton", Main)
+BackBtn.Size = UDim2.new(0, 60, 0, 25)
+BackBtn.Position = UDim2.new(0, 10, 0, 12)
+BackBtn.Text = "< ย้อนกลับ"
+BackBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+BackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+BackBtn.Visible = false
+BackBtn.TextSize = 12
+Instance.new("UICorner", BackBtn)
+
+-- [ Scroll for Music ] --
+local Scroll = Instance.new("ScrollingFrame", MusicPage)
+Scroll.Size = UDim2.new(0.95, 0, 0.95, 0)
+Scroll.Position = UDim2.new(0.025, 0, 0.025, 0)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarThickness = 3
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+local ListLayout = Instance.new("UIListLayout", Scroll)
+ListLayout.Padding = UDim.new(0, 5)
+
+-- [ 🎶 Data Store ] --
+local StudioData = {
+    ["ค่าย 1688"] = {
+        "70433420449192", "118088133904805", "88404154262740", "104079603511923",
+        "106427700620281", "130068145051017", "115957293934252", "70664764327260",
+        "139364859035367", "109213747545807", "104049068783505", "117956197901108",
+        "131783691173299", "89107787132559", "124421941339472", "71746449065680",
+        "80257250302898", "89391732870046", "135217873447796", "138880701865676",
+        "75575940953909", "78824616143993", "75715979100227", "140168985629311",
+        "74180212649765", "121586320453098", "116353720515544", "107311211041183",
+        "106494245379390", "136209869613095", "76147013236626", "83739340628456",
+        "80795041302103", "108165465224496", "128686634439921", "92539330883705",
+        "81293169027034",
+        -- เพลงใหม่ที่เพิ่มเข้ามา --
+        "117980812942988", "94466059598423", "128407285672851", "135033376729441",
+        "136495355525978", "117573020828597", "112409903835101", "120774312900609",
+        "107698257790582", "106672241567740", "123987566373062", "99684611000240",
+        "102068629587339", "117674034798266", "138432087292357", "135282750884361",
+        "137242217991210", "138832055693646", "124963397709797", "127357308077942",
+        "120982716207340", "107782812721355", "80302234019139", "89325251642828",
+        "127356451659099"
+    },
+    ["T44NZ"] = {
+        "88551883615429", "125020691118337", "78459095374647", "75419106843017",
+        "125003164596517", "100696491075057", "140487557549970", "107103411560767",
+        "130058959699214", "114290483414538"
+    },
+    ["MondayHater6739"] = {
+        "73528326631871", "83027502731555", "117377891709305", "119821788900570",
+        "100760581794255", "122054262186232", "74325832394369", "130829783911236",
+        "93536476841666", "75537884583498", "91554097572062", "112778340312662",
+        "111906625301659"
+    },
+    ["ctpvnkzz"] = {
+        "132691835472238", "91455530325972", "112118314351734", "84191674424261",
+        "117052775070870", "73109347387300", "123653786458144", "116624666332051",
+        "76585267180757", "79197528050085", "102211732616196", "79206138700303",
+        "108901872052669", "96975413167722", "126979944317491", "117587621005652",
+        "99383239300384", "95332682696521", "129898761032889", "130449561461006",
+        "137238067893446", "125857338935344", "113280471394005", "131810242244934",
+        "105099493128734", "111550226668144", "108099943758978", "92600182914620",
+        "74268569552074", "105753890983578", "89385270206204", "117871177617283",
+        "86086460137352", "128632250104556", "106339749917844", "78277809954878",
+        "136031925169350", "128721945288690", "103755574799033", "106295901248466",
+        "140734063182667", "134854589939292", "100399153668886", "88256036712017",
+        "107471039227392", "107917314623114", "91507003434396", "93832621463809",
+        "131044753212759", "120035176007362", "104541766860873", "106992306961241", 
+        "91041326396550", "125240034427593", "130661451408025"
+    },
+    ["Soulbullets"] = {
+        "118674049815976", "113823503950366", "108009164504890", "115123430414003"
+    },
+    ["ขโมยเพลงรอบข้าง"] = {},
+    ["ค่าย อื่นๆ"] = {
+        "1837016768", "1837017165"
+    }
+}
+
+-- [ Functions ] --
+local function GetNearbyMusic()
+    local detected = {}
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Sound") and v.Playing and v.SoundId:match("%d+") then
+            local id = v.SoundId:match("%d+")
+            if not table.find(detected, id) then
+                table.insert(detected, id)
+            end
+        end
+    end
+    return detected
+end
+
+local function LoadStudio(name)
+    for _, item in pairs(Scroll:GetChildren()) do
+        if item:IsA("TextButton") then item:Destroy() end
+    end
+    
+    Title.Text = name
+    MainMenu.Visible = false
+    MusicPage.Visible = true
+    BackBtn.Visible = true
+    
+    local ids = (name == "ขโมยเพลงรอบข้าง") and GetNearbyMusic() or StudioData[name]
+    Scroll.CanvasSize = UDim2.new(0, 0, 0, #ids * 45)
+    
+    for _, id in pairs(ids) do
+        local btn = Instance.new("TextButton", Scroll)
+        btn.Size = UDim2.new(1, -10, 0, 40)
+        btn.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+        btn.Text = "โหลด... ["..id.."]"
+        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        btn.TextSize = 10
+        Instance.new("UICorner", btn)
+        
+        task.spawn(function()
+            local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
+            if success then
+                btn.Text = info.Name
+                btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            end
+        end)
+        
+        btn.MouseButton1Click:Connect(function()
+            setclipboard(id)
+            UniversalPlay(id)
+        end)
+    end
+end
+
+-- [ Create Main Menu Buttons ] --
+local MenuList = Instance.new("UIListLayout", MainMenu)
+MenuList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+MenuList.Padding = UDim.new(0, 10)
+
+local Categories = {"ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
+
+-- คำนวณความสูงของ Canvas ให้อัตโนมัติตามจำนวนค่าย
+MainMenu.CanvasSize = UDim2.new(0, 0, 0, #Categories * 55)
+
+for _, studioName in pairs(Categories) do
+    local sBtn = Instance.new("TextButton", MainMenu)
+    sBtn.Size = UDim2.new(0.8, 0, 0, 45)
+    sBtn.BackgroundColor3 = (studioName == "ขโมยเพลงรอบข้าง") and Color3.fromRGB(100, 0, 0) or Color3.fromRGB(40, 0, 0)
+    sBtn.Text = studioName
+    sBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sBtn.Font = Enum.Font.SourceSansBold
+    sBtn.TextSize = 18
+    Instance.new("UICorner", sBtn)
+    
+    sBtn.MouseButton1Click:Connect(function()
+        LoadStudio(studioName)
+    end)
+end
+
+-- [ Navigation ] --
+BackBtn.MouseButton1Click:Connect(function()
+    MusicPage.Visible = false
+    MainMenu.Visible = true
+    BackBtn.Visible = false
+    Title.Text = "SkyLineGuy | Hub"
+end)
+
+-- [ Minimize & Close ] --
+local MiniIcon = Instance.new("TextButton", ScreenGui)
+MiniIcon.Size = UDim2.new(0, 50, 0, 50)
+MiniIcon.Position = UDim2.new(0, 20, 0.5, -25)
+MiniIcon.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+MiniIcon.Text = "🩸"
+MiniIcon.Visible = false
+MiniIcon.Draggable = true
+Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
+
+local CloseBtn = Instance.new("TextButton", Main)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 10)
+CloseBtn.Text = "-"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.TextSize = 25
+
+CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false MiniIcon.Visible = true end)
+MiniIcon.MouseButton1Click:Connect(function() Main.Visible = true MiniIcon.Visible = false end)
