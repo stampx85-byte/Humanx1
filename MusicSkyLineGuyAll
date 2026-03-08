@@ -1,6 +1,22 @@
--- [[ SkyLineGuy | Multi-Studio Music System (FIXED POSITION) ]] --
-local MarketplaceService = game:GetService("MarketplaceService")
+-- [[ SkyLineGuy | Multi-Studio Music System (Updated with Animations & Recent) ]] --
 local Players = game:GetService("Players")
+local lplr = Players.LocalPlayer
+
+-- [ VIP System ] --
+local VIP_LIST = {
+    ["ffsww_1007"] = true,
+    ["Winwie001"] = true,
+    ["CGGG_PRJOOOO"] = true
+}
+
+if not VIP_LIST[lplr.Name] then 
+    warn("You are not in the VIP list.")
+    return 
+end
+
+local MarketplaceService = game:GetService("MarketplaceService")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService") 
 
 -- [ UI Setup ] --
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
@@ -12,15 +28,61 @@ Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
+-- [ ✨ Animation Function ] --
+local function ClickAnim(obj)
+    local originalSize = obj.Size
+    local originalColor = obj.BackgroundColor3
+    
+    local clickTween = TweenService:Create(obj, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(originalSize.X.Scale * 0.95, originalSize.X.Offset, originalSize.Y.Scale * 0.95, originalSize.Y.Offset),
+        BackgroundColor3 = Color3.fromRGB(originalColor.R * 255 + 20, originalColor.G * 255 + 20, originalColor.B * 255 + 20)
+    })
+    
+    local releaseTween = TweenService:Create(obj, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = originalSize,
+        BackgroundColor3 = originalColor
+    })
+    
+    clickTween:Play()
+    clickTween.Completed:Connect(function() releaseTween:Play() end)
+end
+
 -- [ 🎹 Private Player Logic ] --
+local RecentSongs = {} -- เก็บเพลงที่เพิ่งเล่นล่าสุด
+
 local function UniversalPlay(id)
     if not id or id == "" then return end
+    
+    -- บันทึกลงรายการล่าสุด (ถ้ามีอยู่แล้วให้เลื่อนขึ้นมาบนสุด)
+    local existIndex = table.find(RecentSongs, id)
+    if existIndex then table.remove(RecentSongs, existIndex) end
+    table.insert(RecentSongs, 1, id)
+    if #RecentSongs > 20 then table.remove(RecentSongs, 21) end -- จำกัด 20 เพลง
+
     local re = game:GetService("ReplicatedStorage"):WaitForChild("RE", 5)
     if re and re:FindFirstChild("PlayerToolEvent") then
         local playArgs = {"ToolMusicText", tostring(id), [4] = true}
         re.PlayerToolEvent:FireServer(unpack(playArgs))
     end
 end
+
+-- [ ⭐ Favorites Logic ] --
+local FAV_FILE = "SkyLineGuy_Favs.json"
+local Favorites = {}
+
+local function SaveFavs()
+    if writefile then
+        writefile(FAV_FILE, HttpService:JSONEncode(Favorites))
+    end
+end
+
+local function LoadFavs()
+    if isfile and isfile(FAV_FILE) then
+        local success, data = pcall(function() return HttpService:JSONDecode(readfile(FAV_FILE)) end)
+        if success then Favorites = data end
+    end
+end
+LoadFavs()
 
 -- [ 🎶 Data Store ] --
 local StudioData = {
@@ -154,6 +216,16 @@ local StudioData = {
         "91041326396550", "125240034427593", "130661451408025"
     },
     ["Soulbullets"] = { "118674049815976", "113823503950366", "108009164504890", "115123430414003" },
+    ["kawaiicheeseburgerss"] = { 
+        "111382782362486", "100066791014499", "130018245556574", "126800942266130", 
+        "91200174347386", "75537152016286", "100281931368733", "126675097496707", 
+        "105943103820430", "105033417851625" 
+    },
+    ["Xytheraelsfxaxc"] = { 
+        "106159832309361", "78346339335501" 
+    },
+    ["รายการโปรด ⭐"] = {},
+    ["เล่นล่าสุด 🕒"] = {}, -- เมนูใหม่
     ["ขโมยเพลงรอบข้าง"] = {},
     ["ค่าย อื่นๆ"] = { "1837016768", "1837017165" }
 }
@@ -161,7 +233,7 @@ local StudioData = {
 -- [ 📊 Calculation Logic ] --
 local totalMusicCount = 0
 for studio, ids in pairs(StudioData) do
-    if studio ~= "ขโมยเพลงรอบข้าง" then
+    if studio ~= "ขโมยเพลงรอบข้าง" and studio ~= "รายการโปรด ⭐" and studio ~= "เล่นล่าสุด 🕒" then
         totalMusicCount = totalMusicCount + #ids
     end
 end
@@ -190,10 +262,9 @@ Title.Font = Enum.Font.SpecialElite
 Title.TextSize = 14
 Title.BackgroundTransparency = 1
 
--- [[ ✨ ปรับตำแหน่งตรงนี้ ✨ ]] --
 local TotalLabel = Instance.new("TextLabel", Main)
 TotalLabel.Size = UDim2.new(0, 100, 0, 20)
-TotalLabel.Position = UDim2.new(0.5, -50, 0, 32) -- ขยับลงมาใต้คำว่า Hub แต่อยู่เหนือค่ายเพลง
+TotalLabel.Position = UDim2.new(0.5, -50, 0, 32)
 TotalLabel.BackgroundTransparency = 1
 TotalLabel.Text = "All Songs: " .. totalMusicCount
 TotalLabel.TextColor3 = Color3.fromRGB(180, 0, 0)
@@ -211,7 +282,6 @@ BackBtn.Visible = false
 BackBtn.TextSize = 12
 Instance.new("UICorner", BackBtn)
 
--- [ Scroll for Music ] --
 local Scroll = Instance.new("ScrollingFrame", MusicPage)
 Scroll.Size = UDim2.new(0.95, 0, 0.95, 0)
 Scroll.Position = UDim2.new(0.025, 0, 0.025, 0)
@@ -235,28 +305,66 @@ end
 
 local function LoadStudio(name)
     for _, item in pairs(Scroll:GetChildren()) do
-        if item:IsA("TextButton") then item:Destroy() end
+        if item:IsA("Frame") then item:Destroy() end
     end
     Title.Text = name
     MainMenu.Visible = false
     MusicPage.Visible = true
     BackBtn.Visible = true
     TotalLabel.Visible = false
-    local ids = (name == "ขโมยเพลงรอบข้าง") and GetNearbyMusic() or StudioData[name]
+    
+    local ids = {}
+    if name == "ขโมยเพลงรอบข้าง" then ids = GetNearbyMusic()
+    elseif name == "รายการโปรด ⭐" then ids = Favorites
+    elseif name == "เล่นล่าสุด 🕒" then ids = RecentSongs
+    else ids = StudioData[name] end
+    
     Scroll.CanvasSize = UDim2.new(0, 0, 0, #ids * 45)
     for _, id in pairs(ids) do
-        local btn = Instance.new("TextButton", Scroll)
-        btn.Size = UDim2.new(1, -10, 0, 40)
+        local container = Instance.new("Frame", Scroll)
+        container.Size = UDim2.new(1, -10, 0, 40)
+        container.BackgroundTransparency = 1
+        
+        local btn = Instance.new("TextButton", container)
+        btn.Size = UDim2.new(0.8, -5, 1, 0)
         btn.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
         btn.Text = "โหลด... ["..id.."]"
         btn.TextColor3 = Color3.fromRGB(200, 200, 200)
         btn.TextSize = 10
         Instance.new("UICorner", btn)
+        
+        local favBtn = Instance.new("TextButton", container)
+        favBtn.Size = UDim2.new(0.2, 0, 1, 0)
+        favBtn.Position = UDim2.new(0.8, 0, 0, 0)
+        favBtn.BackgroundColor3 = table.find(Favorites, id) and Color3.fromRGB(150, 150, 0) or Color3.fromRGB(50, 50, 50)
+        favBtn.Text = "⭐"
+        favBtn.TextColor3 = Color3.new(1,1,1)
+        Instance.new("UICorner", favBtn)
+
         task.spawn(function()
             local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
             if success then btn.Text = info.Name btn.TextColor3 = Color3.fromRGB(255, 255, 255) end
         end)
-        btn.MouseButton1Click:Connect(function() setclipboard(id) UniversalPlay(id) end)
+        
+        btn.MouseButton1Click:Connect(function() 
+            ClickAnim(btn)
+            setclipboard(id) 
+            UniversalPlay(id) 
+        end)
+        
+        favBtn.MouseButton1Click:Connect(function()
+            ClickAnim(favBtn)
+            local index = table.find(Favorites, id)
+            if index then
+                table.remove(Favorites, index)
+                favBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                if name == "รายการโปรด ⭐" then container:Destroy() end
+            else
+                table.insert(Favorites, id)
+                favBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 0)
+            end
+            SaveFavs()
+        end)
     end
 end
 
@@ -264,24 +372,28 @@ end
 local MenuList = Instance.new("UIListLayout", MainMenu)
 MenuList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 MenuList.Padding = UDim.new(0, 10)
-local Categories = {"Youngguslayer", "Ibeam3rd", "Chamiyiy", "QKGR", "Youlikemebr4", "K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
+local Categories = {"รายการโปรด ⭐", "เล่นล่าสุด 🕒", "Youngguslayer", "Ibeam3rd", "Chamiyiy", "QKGR", "Youlikemebr4", "K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "kawaiicheeseburgerss", "Xytheraelsfxaxc", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
 MainMenu.CanvasSize = UDim2.new(0, 0, 0, #Categories * 55)
 
 for _, studioName in pairs(Categories) do
     local sBtn = Instance.new("TextButton", MainMenu)
     sBtn.Size = UDim2.new(0.8, 0, 0, 45)
-    sBtn.BackgroundColor3 = (studioName == "ขโมยเพลงรอบข้าง") and Color3.fromRGB(100, 0, 0) or Color3.fromRGB(40, 0, 0)
+    sBtn.BackgroundColor3 = (studioName == "ขโมยเพลงรอบข้าง") and Color3.fromRGB(100, 0, 0) or (studioName == "รายการโปรด ⭐" and Color3.fromRGB(80, 80, 0) or (studioName == "เล่นล่าสุด 🕒" and Color3.fromRGB(0, 80, 80) or Color3.fromRGB(40, 0, 0)))
     local count = StudioData[studioName] and #StudioData[studioName] or 0
-    sBtn.Text = (studioName == "ขโมยเพลงรอบข้าง") and studioName or studioName .. " [" .. count .. "]"
+    sBtn.Text = (studioName == "ขโมยเพลงรอบข้าง" or studioName == "รายการโปรด ⭐" or studioName == "เล่นล่าสุด 🕒") and studioName or studioName .. " [" .. count .. "]"
     sBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     sBtn.Font = Enum.Font.SourceSansBold
     sBtn.TextSize = 18
     Instance.new("UICorner", sBtn)
-    sBtn.MouseButton1Click:Connect(function() LoadStudio(studioName) end)
+    sBtn.MouseButton1Click:Connect(function() 
+        ClickAnim(sBtn)
+        LoadStudio(studioName) 
+    end)
 end
 
 -- [ Navigation ] --
 BackBtn.MouseButton1Click:Connect(function()
+    ClickAnim(BackBtn)
     MusicPage.Visible = false
     MainMenu.Visible = true
     BackBtn.Visible = false
@@ -306,5 +418,11 @@ CloseBtn.Text = "-"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.TextSize = 25
-CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false MiniIcon.Visible = true end)
-MiniIcon.MouseButton1Click:Connect(function() Main.Visible = true MiniIcon.Visible = false end)
+CloseBtn.MouseButton1Click:Connect(function() 
+    Main.Visible = false 
+    MiniIcon.Visible = true 
+end)
+MiniIcon.MouseButton1Click:Connect(function() 
+    Main.Visible = true 
+    MiniIcon.Visible = false 
+end)
