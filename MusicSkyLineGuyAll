@@ -1,4 +1,4 @@
--- [[ SkyLineGuy | Multi-Studio Music System (LITE) ]] --
+-- [[ SkyLineGuy | Multi-Studio Music System (FIXED POSITION) ]] --
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 
@@ -17,61 +17,67 @@ local function UniversalPlay(id)
     if not id or id == "" then return end
     local re = game:GetService("ReplicatedStorage"):WaitForChild("RE", 5)
     if re and re:FindFirstChild("PlayerToolEvent") then
-        local playArgs = {
-            "ToolMusicText",
-            tostring(id),
-            [4] = true
-        }
+        local playArgs = {"ToolMusicText", tostring(id), [4] = true}
         re.PlayerToolEvent:FireServer(unpack(playArgs))
     end
 end
 
--- [ Containers ] --
-local MainMenu = Instance.new("ScrollingFrame", Main) 
-MainMenu.Size = UDim2.new(1, 0, 1, -60)
-MainMenu.Position = UDim2.new(0, 0, 0, 50)
-MainMenu.BackgroundTransparency = 1
-MainMenu.ScrollBarThickness = 3
-MainMenu.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
-MainMenu.BorderSizePixel = 0
-
-local MusicPage = Instance.new("Frame", Main) 
-MusicPage.Size = UDim2.new(1, 0, 1, -60)
-MusicPage.Position = UDim2.new(0, 0, 0, 50)
-MusicPage.BackgroundTransparency = 1
-MusicPage.Visible = false
-
--- [ UI Elements ] --
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Text = "SkyLineGuy | Hub"
-Title.TextColor3 = Color3.fromRGB(255, 0, 0)
-Title.Font = Enum.Font.SpecialElite
-Title.TextSize = 14
-Title.BackgroundTransparency = 1
-
-local BackBtn = Instance.new("TextButton", Main)
-BackBtn.Size = UDim2.new(0, 60, 0, 25)
-BackBtn.Position = UDim2.new(0, 10, 0, 12)
-BackBtn.Text = "< ย้อนกลับ"
-BackBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
-BackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-BackBtn.Visible = false
-BackBtn.TextSize = 12
-Instance.new("UICorner", BackBtn)
-
--- [ Scroll for Music ] --
-local Scroll = Instance.new("ScrollingFrame", MusicPage)
-Scroll.Size = UDim2.new(0.95, 0, 0.95, 0)
-Scroll.Position = UDim2.new(0.025, 0, 0.025, 0)
-Scroll.BackgroundTransparency = 1
-Scroll.ScrollBarThickness = 3
-Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
-local ListLayout = Instance.new("UIListLayout", Scroll)
-ListLayout.Padding = UDim.new(0, 5)
-
 -- [ 🎶 Data Store ] --
 local StudioData = {
+    ["Youngguslayer"] = {
+        "75923946469071", "107467028901469", "71043124120627", "76756519044623",
+        "77149919429733", "78870133899454", "81290679697617", "82268015602309",
+        "83271233590423", "84637782975942", "88218150900826", "101969962395526",
+        "106307030467672", "109185692542976", "109249460275896", "117565816328446",
+        "119338842119089", "119781548194455", "120375440474631", "127465391801768",
+        "114078156952054", "135909717667883", "102699821006730", "87162024999355",
+        "103949886400704", "111958264066412", "108224592771155", "112453710105774",
+        "87591916827641", "98532955911226", "129087259637558", "119963873041057",
+        "116445489183611", "103063453850683", "77303838348809", "89769398236608",
+        "81244086617866", "135918232406180", "89140975391897", "130386581015899",
+        "135728284131835", "73878792375121", "130478926378862", "97160098218674", 
+        "75809575049778", "82493758094966", "81933610232830", "71359803903409", 
+        "134866197449676", "75883267071992", "137082661678890", "100955936377577", 
+        "129513958237400", "77079772840618", "125570800248263", "114248800788467", 
+        "82358033246435", "81877347221269", "98403758775264", "109906833143323", 
+        "137069780570013", "128866003633597", "80279608102503", "132460502830436", 
+        "87489900975617", "137652903056101"
+    },
+    ["Ibeam3rd"] = {
+        "85300760387852", "119522266662300", "110347737874659", "95796504549340",
+        "101255439740047", "132114031341541", "123055306215100", "78424397783913",
+        "115795458073016", "85729415298942", "98739294767412", "130838220880660",
+        "111835636697812", "128610541554300", "93457817476067", "128363709380383",
+        "79098157039100", "117331453344014", "100585504456856"
+    },
+    ["Chamiyiy"] = {
+        "102936148496865", "103001052289903", "103863169018775", "104192224479469",
+        "112666582385808", "114343063324644", "120001813945635", "120255584589934",
+        "122286576038306", "125755511535427", "126140800444986", "129988226070628",
+        "133264081361349", "139344869252915", "139590201617508", "87186576714912", 
+        "124694141059214", "74758860515324", "75038580640135", "76766869099028", 
+        "77647702569443", "77855967456690", "78245555528140", "78991269414103", 
+        "83919005919466", "84568605632436", "89325288821756", "91253824604131", 
+        "93310151880263", "93519960802493", "93904884639656", "94403836240383", 
+        "95342421407401", "98053641267248", "100375711235188", "102572315485834",
+        "99898461569597", "74357981764138", "107249069416114", "137982664156085",
+        "130081842972719", "104048341641021", "121362946861937", "138765729162919",
+        "78954682326720", "123347059891006", "140380438039459", "79999089664644",
+        "99960601736776", "80512451099660", "71901178173441", "115492336583856",
+        "78596441510872", "109722402543891", "132820291139725", "119254319180287",
+        "132049153370517", "84632466431875", "124327505221192", "114796813467187", 
+        "126380171075625", "86987612038693", "98523490642599", "135473905127296", 
+        "86524582645901", "125902207303673", "109192549525612", "83648751451059", 
+        "100451507679706", "72480594505111", "71406622961211", "132269954228136", 
+        "107571001738028", "110492925502767", "82527546792928", "72240516659471", 
+        "87027533709895", "114056884370316", "134041350719923", "129094836473103",
+        "96972693020663", "101326386144997", "119822943881590", "98360514812928",
+        "123756660035621", "105764391490058", "99555946575863", "71305893329994",
+        "90351002394284", "83822846210154", "98057205717847", "97905521003178",
+        "114822024415562"
+    },
+    ["QKGR"] = { "119589720384457" },
+    ["Youlikemebr4"] = { "123181826801671", "86415650923771", "139359745770703" },
     ["K9Gang"] = {
         "81085572531829", "71300382968073", "114349195177393", "104026572705664",
         "131489289833086", "87299594714360", "102325227710789", "139703408354207",
@@ -80,7 +86,6 @@ local StudioData = {
         "109139881417610", "104531371981996", "94945512075914", "100820739053058",
         "109803674481546", "85523458332774", "98958343928341", "122541919720420",
         "77153198982656", "89844239814587", "118176289123535", "128441181589899",
-        -- เพลงใหม่ที่เพิ่มเข้ามา --
         "109403817807062", "133040125049191", "125427159370184", "110018548814861",
         "82166345648025", "132490611408550", "79296417670515", "105438850576001",
         "138227481593967", "74821532812377", "95910058836795", "126328660351263",
@@ -148,14 +153,73 @@ local StudioData = {
         "131044753212759", "120035176007362", "104541766860873", "106992306961241", 
         "91041326396550", "125240034427593", "130661451408025"
     },
-    ["Soulbullets"] = {
-        "118674049815976", "113823503950366", "108009164504890", "115123430414003"
-    },
+    ["Soulbullets"] = { "118674049815976", "113823503950366", "108009164504890", "115123430414003" },
     ["ขโมยเพลงรอบข้าง"] = {},
-    ["ค่าย อื่นๆ"] = {
-        "1837016768", "1837017165"
-    }
+    ["ค่าย อื่นๆ"] = { "1837016768", "1837017165" }
 }
+
+-- [ 📊 Calculation Logic ] --
+local totalMusicCount = 0
+for studio, ids in pairs(StudioData) do
+    if studio ~= "ขโมยเพลงรอบข้าง" then
+        totalMusicCount = totalMusicCount + #ids
+    end
+end
+
+-- [ Containers ] --
+local MainMenu = Instance.new("ScrollingFrame", Main) 
+MainMenu.Size = UDim2.new(1, 0, 1, -60)
+MainMenu.Position = UDim2.new(0, 0, 0, 50)
+MainMenu.BackgroundTransparency = 1
+MainMenu.ScrollBarThickness = 3
+MainMenu.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+MainMenu.BorderSizePixel = 0
+
+local MusicPage = Instance.new("Frame", Main) 
+MusicPage.Size = UDim2.new(1, 0, 1, -60)
+MusicPage.Position = UDim2.new(0, 0, 0, 50)
+MusicPage.BackgroundTransparency = 1
+MusicPage.Visible = false
+
+-- [ UI Elements ] --
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "SkyLineGuy | Hub"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.TextSize = 14
+Title.BackgroundTransparency = 1
+
+-- [[ ✨ ปรับตำแหน่งตรงนี้ ✨ ]] --
+local TotalLabel = Instance.new("TextLabel", Main)
+TotalLabel.Size = UDim2.new(0, 100, 0, 20)
+TotalLabel.Position = UDim2.new(0.5, -50, 0, 32) -- ขยับลงมาใต้คำว่า Hub แต่อยู่เหนือค่ายเพลง
+TotalLabel.BackgroundTransparency = 1
+TotalLabel.Text = "All Songs: " .. totalMusicCount
+TotalLabel.TextColor3 = Color3.fromRGB(180, 0, 0)
+TotalLabel.Font = Enum.Font.SourceSansBold
+TotalLabel.TextSize = 11
+TotalLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+local BackBtn = Instance.new("TextButton", Main)
+BackBtn.Size = UDim2.new(0, 60, 0, 25)
+BackBtn.Position = UDim2.new(0, 10, 0, 12)
+BackBtn.Text = "< ย้อนกลับ"
+BackBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+BackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+BackBtn.Visible = false
+BackBtn.TextSize = 12
+Instance.new("UICorner", BackBtn)
+
+-- [ Scroll for Music ] --
+local Scroll = Instance.new("ScrollingFrame", MusicPage)
+Scroll.Size = UDim2.new(0.95, 0, 0.95, 0)
+Scroll.Position = UDim2.new(0.025, 0, 0.025, 0)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarThickness = 3
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+local ListLayout = Instance.new("UIListLayout", Scroll)
+ListLayout.Padding = UDim.new(0, 5)
 
 -- [ Functions ] --
 local function GetNearbyMusic()
@@ -163,9 +227,7 @@ local function GetNearbyMusic()
     for _, v in pairs(game:GetDescendants()) do
         if v:IsA("Sound") and v.Playing and v.SoundId:match("%d+") then
             local id = v.SoundId:match("%d+")
-            if not table.find(detected, id) then
-                table.insert(detected, id)
-            end
+            if not table.find(detected, id) then table.insert(detected, id) end
         end
     end
     return detected
@@ -175,15 +237,13 @@ local function LoadStudio(name)
     for _, item in pairs(Scroll:GetChildren()) do
         if item:IsA("TextButton") then item:Destroy() end
     end
-    
     Title.Text = name
     MainMenu.Visible = false
     MusicPage.Visible = true
     BackBtn.Visible = true
-    
+    TotalLabel.Visible = false
     local ids = (name == "ขโมยเพลงรอบข้าง") and GetNearbyMusic() or StudioData[name]
     Scroll.CanvasSize = UDim2.new(0, 0, 0, #ids * 45)
-    
     for _, id in pairs(ids) do
         local btn = Instance.new("TextButton", Scroll)
         btn.Size = UDim2.new(1, -10, 0, 40)
@@ -192,51 +252,32 @@ local function LoadStudio(name)
         btn.TextColor3 = Color3.fromRGB(200, 200, 200)
         btn.TextSize = 10
         Instance.new("UICorner", btn)
-        
         task.spawn(function()
             local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
-            if success then
-                btn.Text = info.Name
-                btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            end
+            if success then btn.Text = info.Name btn.TextColor3 = Color3.fromRGB(255, 255, 255) end
         end)
-        
-        btn.MouseButton1Click:Connect(function()
-            setclipboard(id)
-            UniversalPlay(id)
-        end)
+        btn.MouseButton1Click:Connect(function() setclipboard(id) UniversalPlay(id) end)
     end
 end
 
--- [ Create Main Menu Buttons ] --
+-- [ Menu Buttons ] --
 local MenuList = Instance.new("UIListLayout", MainMenu)
 MenuList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 MenuList.Padding = UDim.new(0, 10)
-
-local Categories = {"K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
-
+local Categories = {"Youngguslayer", "Ibeam3rd", "Chamiyiy", "QKGR", "Youlikemebr4", "K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
 MainMenu.CanvasSize = UDim2.new(0, 0, 0, #Categories * 55)
 
 for _, studioName in pairs(Categories) do
     local sBtn = Instance.new("TextButton", MainMenu)
     sBtn.Size = UDim2.new(0.8, 0, 0, 45)
     sBtn.BackgroundColor3 = (studioName == "ขโมยเพลงรอบข้าง") and Color3.fromRGB(100, 0, 0) or Color3.fromRGB(40, 0, 0)
-    
     local count = StudioData[studioName] and #StudioData[studioName] or 0
-    if studioName == "ขโมยเพลงรอบข้าง" then
-        sBtn.Text = studioName
-    else
-        sBtn.Text = studioName .. " [" .. count .. "]"
-    end
-    
+    sBtn.Text = (studioName == "ขโมยเพลงรอบข้าง") and studioName or studioName .. " [" .. count .. "]"
     sBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     sBtn.Font = Enum.Font.SourceSansBold
     sBtn.TextSize = 18
     Instance.new("UICorner", sBtn)
-    
-    sBtn.MouseButton1Click:Connect(function()
-        LoadStudio(studioName)
-    end)
+    sBtn.MouseButton1Click:Connect(function() LoadStudio(studioName) end)
 end
 
 -- [ Navigation ] --
@@ -244,6 +285,7 @@ BackBtn.MouseButton1Click:Connect(function()
     MusicPage.Visible = false
     MainMenu.Visible = true
     BackBtn.Visible = false
+    TotalLabel.Visible = true
     Title.Text = "SkyLineGuy | Hub"
 end)
 
@@ -264,6 +306,5 @@ CloseBtn.Text = "-"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.TextSize = 25
-
 CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false MiniIcon.Visible = true end)
 MiniIcon.MouseButton1Click:Connect(function() Main.Visible = true MiniIcon.Visible = false end)
