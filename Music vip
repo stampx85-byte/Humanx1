@@ -1,0 +1,428 @@
+-- [[ SkyLineGuy | Multi-Studio Music System (Updated with Animations & Recent) ]] --
+local Players = game:GetService("Players")
+local lplr = Players.LocalPlayer
+
+-- [ VIP System ] --
+local VIP_LIST = {
+    ["ffsww_1007"] = true,
+    ["Winwie001"] = true,
+    ["CGGG_PRJOOOO"] = true
+}
+
+if not VIP_LIST[lplr.Name] then 
+    warn("You are not in the VIP list.")
+    return 
+end
+
+local MarketplaceService = game:GetService("MarketplaceService")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService") 
+
+-- [ UI Setup ] --
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 280, 0, 350) 
+Main.Position = UDim2.new(0.5, -140, 0.5, -175)
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+-- [ ✨ Animation Function ] --
+local function ClickAnim(obj)
+    local originalSize = obj.Size
+    local originalColor = obj.BackgroundColor3
+    
+    local clickTween = TweenService:Create(obj, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(originalSize.X.Scale * 0.95, originalSize.X.Offset, originalSize.Y.Scale * 0.95, originalSize.Y.Offset),
+        BackgroundColor3 = Color3.fromRGB(originalColor.R * 255 + 20, originalColor.G * 255 + 20, originalColor.B * 255 + 20)
+    })
+    
+    local releaseTween = TweenService:Create(obj, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = originalSize,
+        BackgroundColor3 = originalColor
+    })
+    
+    clickTween:Play()
+    clickTween.Completed:Connect(function() releaseTween:Play() end)
+end
+
+-- [ 🎹 Private Player Logic ] --
+local RecentSongs = {} -- เก็บเพลงที่เพิ่งเล่นล่าสุด
+
+local function UniversalPlay(id)
+    if not id or id == "" then return end
+    
+    -- บันทึกลงรายการล่าสุด (ถ้ามีอยู่แล้วให้เลื่อนขึ้นมาบนสุด)
+    local existIndex = table.find(RecentSongs, id)
+    if existIndex then table.remove(RecentSongs, existIndex) end
+    table.insert(RecentSongs, 1, id)
+    if #RecentSongs > 20 then table.remove(RecentSongs, 21) end -- จำกัด 20 เพลง
+
+    local re = game:GetService("ReplicatedStorage"):WaitForChild("RE", 5)
+    if re and re:FindFirstChild("PlayerToolEvent") then
+        local playArgs = {"ToolMusicText", tostring(id), [4] = true}
+        re.PlayerToolEvent:FireServer(unpack(playArgs))
+    end
+end
+
+-- [ ⭐ Favorites Logic ] --
+local FAV_FILE = "SkyLineGuy_Favs.json"
+local Favorites = {}
+
+local function SaveFavs()
+    if writefile then
+        writefile(FAV_FILE, HttpService:JSONEncode(Favorites))
+    end
+end
+
+local function LoadFavs()
+    if isfile and isfile(FAV_FILE) then
+        local success, data = pcall(function() return HttpService:JSONDecode(readfile(FAV_FILE)) end)
+        if success then Favorites = data end
+    end
+end
+LoadFavs()
+
+-- [ 🎶 Data Store ] --
+local StudioData = {
+    ["Youngguslayer"] = {
+        "75923946469071", "107467028901469", "71043124120627", "76756519044623",
+        "77149919429733", "78870133899454", "81290679697617", "82268015602309",
+        "83271233590423", "84637782975942", "88218150900826", "101969962395526",
+        "106307030467672", "109185692542976", "109249460275896", "117565816328446",
+        "119338842119089", "119781548194455", "120375440474631", "127465391801768",
+        "114078156952054", "135909717667883", "102699821006730", "87162024999355",
+        "103949886400704", "111958264066412", "108224592771155", "112453710105774",
+        "87591916827641", "98532955911226", "129087259637558", "119963873041057",
+        "116445489183611", "103063453850683", "77303838348809", "89769398236608",
+        "81244086617866", "135918232406180", "89140975391897", "130386581015899",
+        "135728284131835", "73878792375121", "130478926378862", "97160098218674", 
+        "75809575049778", "82493758094966", "81933610232830", "71359803903409", 
+        "134866197449676", "75883267071992", "137082661678890", "100955936377577", 
+        "129513958237400", "77079772840618", "125570800248263", "114248800788467", 
+        "82358033246435", "81877347221269", "98403758775264", "109906833143323", 
+        "137069780570013", "128866003633597", "80279608102503", "132460502830436", 
+        "87489900975617", "137652903056101"
+    },
+    ["Ibeam3rd"] = {
+        "85300760387852", "119522266662300", "110347737874659", "95796504549340",
+        "101255439740047", "132114031341541", "123055306215100", "78424397783913",
+        "115795458073016", "85729415298942", "98739294767412", "130838220880660",
+        "111835636697812", "128610541554300", "93457817476067", "128363709380383",
+        "79098157039100", "117331453344014", "100585504456856"
+    },
+    ["Chamiyiy"] = {
+        "102936148496865", "103001052289903", "103863169018775", "104192224479469",
+        "112666582385808", "114343063324644", "120001813945635", "120255584589934",
+        "122286576038306", "125755511535427", "126140800444986", "129988226070628",
+        "133264081361349", "139344869252915", "139590201617508", "87186576714912", 
+        "124694141059214", "74758860515324", "75038580640135", "76766869099028", 
+        "77647702569443", "77855967456690", "78245555528140", "78991269414103", 
+        "83919005919466", "84568605632436", "89325288821756", "91253824604131", 
+        "93310151880263", "93519960802493", "93904884639656", "94403836240383", 
+        "95342421407401", "98053641267248", "100375711235188", "102572315485834",
+        "99898461569597", "74357981764138", "107249069416114", "137982664156085",
+        "130081842972719", "104048341641021", "121362946861937", "138765729162919",
+        "78954682326720", "123347059891006", "140380438039459", "79999089664644",
+        "99960601736776", "80512451099660", "71901178173441", "115492336583856",
+        "78596441510872", "109722402543891", "132820291139725", "119254319180287",
+        "132049153370517", "84632466431875", "124327505221192", "114796813467187", 
+        "126380171075625", "86987612038693", "98523490642599", "135473905127296", 
+        "86524582645901", "125902207303673", "109192549525612", "83648751451059", 
+        "100451507679706", "72480594505111", "71406622961211", "132269954228136", 
+        "107571001738028", "110492925502767", "82527546792928", "72240516659471", 
+        "87027533709895", "114056884370316", "134041350719923", "129094836473103",
+        "96972693020663", "101326386144997", "119822943881590", "98360514812928",
+        "123756660035621", "105764391490058", "99555946575863", "71305893329994",
+        "90351002394284", "83822846210154", "98057205717847", "97905521003178",
+        "114822024415562"
+    },
+    ["QKGR"] = { "119589720384457" },
+    ["Youlikemebr4"] = { "123181826801671", "86415650923771", "139359745770703" },
+    ["K9Gang"] = {
+        "81085572531829", "71300382968073", "114349195177393", "104026572705664",
+        "131489289833086", "87299594714360", "102325227710789", "139703408354207",
+        "94612192048094", "94792425600007", "104976012074245", "85087016969126",
+        "90079187096251", "134130716324734", "137114064879461", "128481329888021",
+        "109139881417610", "104531371981996", "94945512075914", "100820739053058",
+        "109803674481546", "85523458332774", "98958343928341", "122541919720420",
+        "77153198982656", "89844239814587", "118176289123535", "128441181589899",
+        "109403817807062", "133040125049191", "125427159370184", "110018548814861",
+        "82166345648025", "132490611408550", "79296417670515", "105438850576001",
+        "138227481593967", "74821532812377", "95910058836795", "126328660351263",
+        "123523295841944", "85012116688392", "113528148141473", "113917096240075",
+        "74032739929305"
+    },
+    ["NovaNest"] = {
+        "135839607956585", "93705681740825", "84441936909068", "114978779403393",
+        "129698446266923", "80831573940457", "94158159443291", "119126155527783",
+        "123215272743625", "74352991292367", "111524375744382"
+    },
+    ["AsdBands"] = {
+        "85014780788991", "101658851913310", "118482381305397", "140530013819453",
+        "92324248715401", "81130579221281", "130153552388407", "101882948595303",
+        "134707199749014", "113766043014562", "138090818340605", "84817374705304",
+        "95231249549633", "76983583262607", "113126476801890", "78428159733512",
+        "135729578171550", "123966959021175", "79581762870032", "91874603007591", 
+        "134090865452893", "100989716917693", "135336731319707", "97967863035215", 
+        "133190351316780", "79171571639664", "138742578556066", "105560536796330", 
+        "78614982249626", "89246057052047", "71619650167212", "138255704161585", 
+        "101615077952577", "74445075051686", "137107451922636"
+    },
+    ["ค่าย 1688"] = {
+        "70433420449192", "118088133904805", "88404154262740", "104079603511923",
+        "106427700620281", "130068145051017", "115957293934252", "70664764327260",
+        "139364859035367", "109213747545807", "104049068783505", "117956197901108",
+        "131783691173299", "89107787132559", "124421941339472", "71746449065680",
+        "80257250302898", "89391732870046", "135217873447796", "138880701865676",
+        "75575940953909", "78824616143993", "75715979100227", "140168985629311",
+        "74180212649765", "121586320453098", "116353720515544", "107311211041183",
+        "106494245379390", "136209869613095", "76147013236626", "83739340628456",
+        "80795041302103", "108165465224496", "128686634439921", "92539330883705",
+        "81293169027034", "117980812942988", "94466059598423", "128407285672851", 
+        "135033376729441", "136495355525978", "117573020828597", "112409903835101", 
+        "120774312900609", "107698257790582", "106672241567740", "123987566373062", 
+        "99684611000240", "102068629587339", "117674034798266", "138432087292357", 
+        "135282750884361", "137242217991210", "138832055693646", "124963397709797", 
+        "127357308077942", "120982716207340", "107782812721355", "80302234019139", 
+        "89325251642828", "127356451659099"
+    },
+    ["T44NZ"] = {
+        "88551883615429", "125020691118337", "78459095374647", "75419106843017",
+        "125003164596517", "100696491075057", "140487557549970", "107103411560767",
+        "130058959699214", "114290483414538"
+    },
+    ["MondayHater6739"] = {
+        "73528326631871", "83027502731555", "117377891709305", "119821788900570",
+        "100760581794255", "122054262186232", "74325832394369", "130829783911236",
+        "93536476841666", "75537884583498", "91554097572062", "112778340312662",
+        "111906625301659"
+    },
+    ["ctpvnkzz"] = {
+        "132691835472238", "91455530325972", "112118314351734", "84191674424261",
+        "117052775070870", "73109347387300", "123653786458144", "116624666332051",
+        "76585267180757", "79197528050085", "102211732616196", "79206138700303",
+        "108901872052669", "96975413167722", "126979944317491", "117587621005652",
+        "99383239300384", "95332682696521", "129898761032889", "130449561461006",
+        "137238067893446", "125857338935344", "113280471394005", "131810242244934",
+        "105099493128734", "111550226668144", "108099943758978", "92600182914620",
+        "74268569552074", "105753890983578", "89385270206204", "117871177617283",
+        "86086460137352", "128632250104556", "106339749917844", "78277809954878",
+        "136031925169350", "128721945288690", "103755574799033", "106295901248466",
+        "140734063182667", "134854589939292", "100399153668886", "88256036712017",
+        "107471039227392", "107917314623114", "91507003434396", "93832621463809",
+        "131044753212759", "120035176007362", "104541766860873", "106992306961241", 
+        "91041326396550", "125240034427593", "130661451408025"
+    },
+    ["Soulbullets"] = { "118674049815976", "113823503950366", "108009164504890", "115123430414003" },
+    ["kawaiicheeseburgerss"] = { 
+        "111382782362486", "100066791014499", "130018245556574", "126800942266130", 
+        "91200174347386", "75537152016286", "100281931368733", "126675097496707", 
+        "105943103820430", "105033417851625" 
+    },
+    ["Xytheraelsfxaxc"] = { 
+        "106159832309361", "78346339335501" 
+    },
+    ["รายการโปรด ⭐"] = {},
+    ["เล่นล่าสุด 🕒"] = {}, -- เมนูใหม่
+    ["ขโมยเพลงรอบข้าง"] = {},
+    ["ค่าย อื่นๆ"] = { "1837016768", "1837017165" }
+}
+
+-- [ 📊 Calculation Logic ] --
+local totalMusicCount = 0
+for studio, ids in pairs(StudioData) do
+    if studio ~= "ขโมยเพลงรอบข้าง" and studio ~= "รายการโปรด ⭐" and studio ~= "เล่นล่าสุด 🕒" then
+        totalMusicCount = totalMusicCount + #ids
+    end
+end
+
+-- [ Containers ] --
+local MainMenu = Instance.new("ScrollingFrame", Main) 
+MainMenu.Size = UDim2.new(1, 0, 1, -60)
+MainMenu.Position = UDim2.new(0, 0, 0, 50)
+MainMenu.BackgroundTransparency = 1
+MainMenu.ScrollBarThickness = 3
+MainMenu.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+MainMenu.BorderSizePixel = 0
+
+local MusicPage = Instance.new("Frame", Main) 
+MusicPage.Size = UDim2.new(1, 0, 1, -60)
+MusicPage.Position = UDim2.new(0, 0, 0, 50)
+MusicPage.BackgroundTransparency = 1
+MusicPage.Visible = false
+
+-- [ UI Elements ] --
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "SkyLineGuy | Hub"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.TextSize = 14
+Title.BackgroundTransparency = 1
+
+local TotalLabel = Instance.new("TextLabel", Main)
+TotalLabel.Size = UDim2.new(0, 100, 0, 20)
+TotalLabel.Position = UDim2.new(0.5, -50, 0, 32)
+TotalLabel.BackgroundTransparency = 1
+TotalLabel.Text = "All Songs: " .. totalMusicCount
+TotalLabel.TextColor3 = Color3.fromRGB(180, 0, 0)
+TotalLabel.Font = Enum.Font.SourceSansBold
+TotalLabel.TextSize = 11
+TotalLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+local BackBtn = Instance.new("TextButton", Main)
+BackBtn.Size = UDim2.new(0, 60, 0, 25)
+BackBtn.Position = UDim2.new(0, 10, 0, 12)
+BackBtn.Text = "< ย้อนกลับ"
+BackBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+BackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+BackBtn.Visible = false
+BackBtn.TextSize = 12
+Instance.new("UICorner", BackBtn)
+
+local Scroll = Instance.new("ScrollingFrame", MusicPage)
+Scroll.Size = UDim2.new(0.95, 0, 0.95, 0)
+Scroll.Position = UDim2.new(0.025, 0, 0.025, 0)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarThickness = 3
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+local ListLayout = Instance.new("UIListLayout", Scroll)
+ListLayout.Padding = UDim.new(0, 5)
+
+-- [ Functions ] --
+local function GetNearbyMusic()
+    local detected = {}
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Sound") and v.Playing and v.SoundId:match("%d+") then
+            local id = v.SoundId:match("%d+")
+            if not table.find(detected, id) then table.insert(detected, id) end
+        end
+    end
+    return detected
+end
+
+local function LoadStudio(name)
+    for _, item in pairs(Scroll:GetChildren()) do
+        if item:IsA("Frame") then item:Destroy() end
+    end
+    Title.Text = name
+    MainMenu.Visible = false
+    MusicPage.Visible = true
+    BackBtn.Visible = true
+    TotalLabel.Visible = false
+    
+    local ids = {}
+    if name == "ขโมยเพลงรอบข้าง" then ids = GetNearbyMusic()
+    elseif name == "รายการโปรด ⭐" then ids = Favorites
+    elseif name == "เล่นล่าสุด 🕒" then ids = RecentSongs
+    else ids = StudioData[name] end
+    
+    Scroll.CanvasSize = UDim2.new(0, 0, 0, #ids * 45)
+    for _, id in pairs(ids) do
+        local container = Instance.new("Frame", Scroll)
+        container.Size = UDim2.new(1, -10, 0, 40)
+        container.BackgroundTransparency = 1
+        
+        local btn = Instance.new("TextButton", container)
+        btn.Size = UDim2.new(0.8, -5, 1, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+        btn.Text = "โหลด... ["..id.."]"
+        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        btn.TextSize = 10
+        Instance.new("UICorner", btn)
+        
+        local favBtn = Instance.new("TextButton", container)
+        favBtn.Size = UDim2.new(0.2, 0, 1, 0)
+        favBtn.Position = UDim2.new(0.8, 0, 0, 0)
+        favBtn.BackgroundColor3 = table.find(Favorites, id) and Color3.fromRGB(150, 150, 0) or Color3.fromRGB(50, 50, 50)
+        favBtn.Text = "⭐"
+        favBtn.TextColor3 = Color3.new(1,1,1)
+        Instance.new("UICorner", favBtn)
+
+        task.spawn(function()
+            local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
+            if success then btn.Text = info.Name btn.TextColor3 = Color3.fromRGB(255, 255, 255) end
+        end)
+        
+        btn.MouseButton1Click:Connect(function() 
+            ClickAnim(btn)
+            setclipboard(id) 
+            UniversalPlay(id) 
+        end)
+        
+        favBtn.MouseButton1Click:Connect(function()
+            ClickAnim(favBtn)
+            local index = table.find(Favorites, id)
+            if index then
+                table.remove(Favorites, index)
+                favBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                if name == "รายการโปรด ⭐" then container:Destroy() end
+            else
+                table.insert(Favorites, id)
+                favBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 0)
+            end
+            SaveFavs()
+        end)
+    end
+end
+
+-- [ Menu Buttons ] --
+local MenuList = Instance.new("UIListLayout", MainMenu)
+MenuList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+MenuList.Padding = UDim.new(0, 10)
+local Categories = {"รายการโปรด ⭐", "เล่นล่าสุด 🕒", "Youngguslayer", "Ibeam3rd", "Chamiyiy", "QKGR", "Youlikemebr4", "K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "kawaiicheeseburgerss", "Xytheraelsfxaxc", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
+MainMenu.CanvasSize = UDim2.new(0, 0, 0, #Categories * 55)
+
+for _, studioName in pairs(Categories) do
+    local sBtn = Instance.new("TextButton", MainMenu)
+    sBtn.Size = UDim2.new(0.8, 0, 0, 45)
+    sBtn.BackgroundColor3 = (studioName == "ขโมยเพลงรอบข้าง") and Color3.fromRGB(100, 0, 0) or (studioName == "รายการโปรด ⭐" and Color3.fromRGB(80, 80, 0) or (studioName == "เล่นล่าสุด 🕒" and Color3.fromRGB(0, 80, 80) or Color3.fromRGB(40, 0, 0)))
+    local count = StudioData[studioName] and #StudioData[studioName] or 0
+    sBtn.Text = (studioName == "ขโมยเพลงรอบข้าง" or studioName == "รายการโปรด ⭐" or studioName == "เล่นล่าสุด 🕒") and studioName or studioName .. " [" .. count .. "]"
+    sBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sBtn.Font = Enum.Font.SourceSansBold
+    sBtn.TextSize = 18
+    Instance.new("UICorner", sBtn)
+    sBtn.MouseButton1Click:Connect(function() 
+        ClickAnim(sBtn)
+        LoadStudio(studioName) 
+    end)
+end
+
+-- [ Navigation ] --
+BackBtn.MouseButton1Click:Connect(function()
+    ClickAnim(BackBtn)
+    MusicPage.Visible = false
+    MainMenu.Visible = true
+    BackBtn.Visible = false
+    TotalLabel.Visible = true
+    Title.Text = "SkyLineGuy | Hub"
+end)
+
+-- [ Minimize & Close ] --
+local MiniIcon = Instance.new("ImageButton", ScreenGui)
+MiniIcon.Size = UDim2.new(0, 50, 0, 50)
+MiniIcon.Position = UDim2.new(0, 20, 0.5, -25)
+MiniIcon.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+MiniIcon.Image = "rbxassetid://97995702431216" 
+MiniIcon.Visible = false
+MiniIcon.Draggable = true
+Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
+
+local CloseBtn = Instance.new("TextButton", Main)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 10)
+CloseBtn.Text = "-"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.TextSize = 25
+CloseBtn.MouseButton1Click:Connect(function() 
+    Main.Visible = false 
+    MiniIcon.Visible = true 
+end)
+MiniIcon.MouseButton1Click:Connect(function() 
+    Main.Visible = true 
+    MiniIcon.Visible = false 
+end)
