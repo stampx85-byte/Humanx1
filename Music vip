@@ -6,7 +6,8 @@ local lplr = Players.LocalPlayer
 local VIP_LIST = {
     ["ffsww_1007"] = true,
     ["Winwie001"] = true,
-    ["CGGG_PRJOOOO"] = true
+    ["CGGG_PRJOOOO"] = true,
+    ["zx71828"] = true
 }
 
 if not VIP_LIST[lplr.Name] then 
@@ -224,6 +225,14 @@ local StudioData = {
     ["Xytheraelsfxaxc"] = { 
         "106159832309361", "78346339335501" 
     },
+    ["Pleng Khmer Fan"] = {
+        "113935344851972", "140470635390401", "126236820685705", "84316068617608",
+        "75698385099208", "97327786207738", "129320157832733", "118168843230565",
+        "126880551685099", "106618659684981", "86426271986946", "133516365459597",
+        "125243717487455", "87788888097091", "132662126936094", "95293709462676",
+        "87883211998984", "85603817400000", "109419165803267", "110427330905774",
+        "119221593445336", "122538236730676"
+    },
     ["รายการโปรด ⭐"] = {},
     ["เล่นล่าสุด 🕒"] = {}, -- เมนูใหม่
     ["ขโมยเพลงรอบข้าง"] = {},
@@ -372,7 +381,7 @@ end
 local MenuList = Instance.new("UIListLayout", MainMenu)
 MenuList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 MenuList.Padding = UDim.new(0, 10)
-local Categories = {"รายการโปรด ⭐", "เล่นล่าสุด 🕒", "Youngguslayer", "Ibeam3rd", "Chamiyiy", "QKGR", "Youlikemebr4", "K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "kawaiicheeseburgerss", "Xytheraelsfxaxc", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
+local Categories = {"รายการโปรด ⭐", "เล่นล่าสุด 🕒", "Youngguslayer", "Ibeam3rd", "Chamiyiy", "QKGR", "Youlikemebr4", "K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "kawaiicheeseburgerss", "Xytheraelsfxaxc", "Pleng Khmer Fan", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
 MainMenu.CanvasSize = UDim2.new(0, 0, 0, #Categories * 55)
 
 for _, studioName in pairs(Categories) do
