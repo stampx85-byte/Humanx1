@@ -1,0 +1,101 @@
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+local Title = Instance.new("TextLabel", Main)
+local RealIDInput = Instance.new("TextBox", Main)
+local FakeIDInput = Instance.new("TextBox", Main)
+local PlayBtn = Instance.new("TextButton", Main)
+local ToggleBtn = Instance.new("TextButton", Main)
+
+-- [ UI Setup ] --
+Main.Size = UDim2.new(0, 260, 0, 260)
+Main.Position = UDim2.new(0.5, -130, 0.5, -130)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main)
+
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.Text = "Music ID Spoofer"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.BackgroundTransparency = 1
+
+RealIDInput.Size = UDim2.new(0.85, 0, 0, 35)
+RealIDInput.Position = UDim2.new(0.075, 0, 0.2, 0)
+RealIDInput.PlaceholderText = "ไอดีเพลงที่จะเปิดจริง..."
+RealIDInput.Text = ""
+RealIDInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+RealIDInput.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", RealIDInput)
+
+FakeIDInput.Size = UDim2.new(0.85, 0, 0, 35)
+FakeIDInput.Position = UDim2.new(0.075, 0, 0.38, 0)
+FakeIDInput.PlaceholderText = "ไอดีปลอม (ให้คนอื่นเห็น)..."
+FakeIDInput.Text = "126171983182036"
+FakeIDInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+FakeIDInput.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", FakeIDInput)
+
+PlayBtn.Size = UDim2.new(0.85, 0, 0, 40)
+PlayBtn.Position = UDim2.new(0.075, 0, 0.58, 0)
+PlayBtn.Text = "เริ่มเปิดเพลง (Play)"
+PlayBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+PlayBtn.TextColor3 = Color3.new(1, 1, 1)
+PlayBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", PlayBtn)
+
+ToggleBtn.Size = UDim2.new(0.85, 0, 0, 40)
+ToggleBtn.Position = UDim2.new(0.075, 0, 0.78, 0)
+ToggleBtn.Text = "ระบบกั้น: ปิด (OFF)"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+ToggleBtn.TextColor3 = Color3.new(1, 1, 1)
+ToggleBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", ToggleBtn)
+
+-- [ Logic & Hooking ] --
+local isSpoofing = false
+local Remote = game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("PlayerToolEvent")
+
+-- ใช้ Metamethod Hook เพื่อเปลี่ยนค่า Argument ก่อนถึง Server
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+
+    -- ตรวจสอบว่าเป็นการเรียก Remote ตัวที่ต้องการหรือไม่
+    if not checkcaller() and self == Remote and method == "FireServer" then
+        if args[1] == "ToolMusicText" and isSpoofing then
+            -- เปลี่ยนไอดีใน Argument ที่ 2 เป็นไอดีปลอมจากช่องกรอก
+            args[2] = tostring(FakeIDInput.Text)
+            return oldNamecall(self, unpack(args))
+        end
+    end
+    return oldNamecall(self, ...)
+end)
+
+-- ปุ่มเปิด/ปิด ระบบกั้นไอดี
+ToggleBtn.MouseButton1Click:Connect(function()
+    isSpoofing = not isSpoofing
+    if isSpoofing then
+        ToggleBtn.Text = "ระบบกั้น: เปิด (ON)"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+    else
+        ToggleBtn.Text = "ระบบกั้น: ปิด (OFF)"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+    end
+end)
+
+-- ปุ่มเล่นเพลง
+PlayBtn.MouseButton1Click:Connect(function()
+    local realID = RealIDInput.Text
+    if realID ~= "" then
+        -- ส่งข้อมูลเพลงจริงไป (แต่จะถูก Hook เปลี่ยนเป็นไอดีปลอมถ้าเปิดระบบกั้นไว้)
+        local args = {
+            "ToolMusicText",
+            tostring(realID),
+            [4] = true
+        }
+        Remote:FireServer(unpack(args))
+    end
+end)
