@@ -1,0 +1,165 @@
+-- Horror Mini Executor V3.0 [Small UI Edition]
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local ScreenGui = Instance.new("ScreenGui")
+
+-- [[ คงเดิม: LOGIC ตบ (ห้ามเปลี่ยน) ]] --
+_G.GodSlap = false
+local function getRemotes()
+    local rems = {}
+    if lp.Character then
+        for _, tool in pairs(lp.Character:GetChildren()) do
+            if tool:IsA("Tool") and tool:FindFirstChild("Remote") then
+                table.insert(rems, tool.Remote)
+            end
+        end
+    end
+    return rems
+end
+
+task.spawn(function()
+    while true do
+        if _G.GodSlap then
+            local currentRemotes = getRemotes()
+            if #currentRemotes > 0 then
+                for _, target in pairs(Players:GetPlayers()) do
+                    if target ~= lp and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                        local targetPos = target.Character.HumanoidRootPart.Position
+                        for _, remote in pairs(currentRemotes) do
+                            remote:FireServer("LeftDown", targetPos)
+                            pcall(function()
+                                local handle = remote.Parent:FindFirstChild("Handle")
+                                if handle then
+                                    handle.Size = Vector3.new(150, 150, 150)
+                                    handle.CanCollide = false
+                                end
+                            end)
+                        end
+                    end
+                end
+            end
+        end
+        RunService.Heartbeat:Wait()
+    end
+end)
+
+-- [[ คงเดิม: LOGIC ต้านแอดมิน ]] --
+_G.AntiAdmin = true
+task.spawn(function()
+    while true do
+        if _G.AntiAdmin then
+            pcall(function()
+                local char = lp.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    char.Humanoid.Health = char.Humanoid.MaxHealth
+                    char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                end
+            end)
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- [[ สร้าง UI ใหม่ (ขนาดเล็ก + ปุ่มย่อ) ]] --
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "MiniHorror"
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+Main.Size = UDim2.new(0, 180, 0, 200) -- ปรับขนาดให้เล็กลง
+Main.Position = UDim2.new(0.5, -90, 0.4, 0)
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+
+-- ปุ่มย่อขนาด (Minimize)
+local MiniBtn = Instance.new("TextButton", Main)
+MiniBtn.Size = UDim2.new(0, 25, 0, 25)
+MiniBtn.Position = UDim2.new(1, -30, 0, 5)
+MiniBtn.Text = "-"
+MiniBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+MiniBtn.BackgroundTransparency = 1
+MiniBtn.TextSize = 30
+MiniBtn.Font = Enum.Font.SpecialElite
+
+-- ปุ่มเปิด (วงกลมตอนย่อ)
+local OpenBtn = Instance.new("ImageButton", ScreenGui)
+OpenBtn.Size = UDim2.new(0, 45, 0, 45)
+OpenBtn.Position = UDim2.new(0, 10, 0.5, 0)
+OpenBtn.Visible = false
+OpenBtn.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+OpenBtn.Image = "rbxassetid://14579989646" -- ไอคอนเดิม
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
+OpenBtn.Draggable = true
+
+-- หัวข้อ
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "R6 OVERLORD"
+Title.TextColor3 = Color3.fromRGB(200, 0, 0)
+Title.Font = Enum.Font.SpecialElite
+Title.TextSize = 14
+Title.BackgroundTransparency = 1
+
+-- ที่วางปุ่ม
+local List = Instance.new("Frame", Main)
+List.Position = UDim2.new(0.1, 0, 0.2, 0)
+List.Size = UDim2.new(0.8, 0, 0.7, 0)
+List.BackgroundTransparency = 1
+local Layout = Instance.new("UIListLayout", List)
+Layout.Padding = UDim.new(0, 10)
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function createBtn(txt, color)
+    local b = Instance.new("TextButton", List)
+    b.Size = UDim2.new(1, 0, 0, 40)
+    b.BackgroundColor3 = color
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.SpecialElite
+    b.TextSize = 11
+    Instance.new("UICorner", b)
+    return b
+end
+
+local GodSlapBtn = createBtn("GOD SLAP: OFF", Color3.fromRGB(40, 0, 0))
+local AntiAdminBtn = createBtn("ANTI-ADMIN: ON", Color3.fromRGB(100, 0, 0))
+local RefreshBtn = createBtn("REFRESH", Color3.fromRGB(30, 30, 30))
+
+-- [[ INTERACTION (ปุ่มกดต่างๆ) ]] --
+MiniBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    OpenBtn.Visible = true
+end)
+
+OpenBtn.MouseButton1Click:Connect(function()
+    Main.Visible = true
+    OpenBtn.Visible = false
+end)
+
+GodSlapBtn.MouseButton1Click:Connect(function()
+    _G.GodSlap = not _G.GodSlap
+    GodSlapBtn.Text = _G.GodSlap and "GOD SLAP: ON" or "GOD SLAP: OFF"
+    GodSlapBtn.BackgroundColor3 = _G.GodSlap and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(40, 0, 0)
+end)
+
+AntiAdminBtn.MouseButton1Click:Connect(function()
+    _G.AntiAdmin = not _G.AntiAdmin
+    AntiAdminBtn.Text = _G.AntiAdmin and "ANTI-ADMIN: ON" or "ANTI-ADMIN: OFF"
+    AntiAdminBtn.BackgroundColor3 = _G.AntiAdmin and Color3.fromRGB(100, 0, 0) or Color3.fromRGB(40, 40, 40)
+end)
+
+RefreshBtn.MouseButton1Click:Connect(function()
+    lp.Character.Humanoid.Health = 0
+end)
+
+-- Tag เล็กๆ
+local Tag = Instance.new("TextLabel", Main)
+Tag.Position = UDim2.new(0, 0, 1, -20)
+Tag.Size = UDim2.new(1, 0, 0, 20)
+Tag.Text = "Script Word [TH]"
+Tag.TextColor3 = Color3.fromRGB(100, 0, 0)
+Tag.Font = Enum.Font.SpecialElite
+Tag.TextSize = 8
+Tag.BackgroundTransparency = 1
