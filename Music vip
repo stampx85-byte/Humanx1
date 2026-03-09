@@ -7,7 +7,8 @@ local VIP_LIST = {
     ["ffsww_1007"] = true,
     ["Winwie001"] = true,
     ["CGGG_PRJOOOO"] = true,
-    ["zx71828"] = true
+    ["zx71828"] = true,
+    ["lol_wino444"] = true
 }
 
 if not VIP_LIST[lplr.Name] then 
@@ -54,11 +55,10 @@ local RecentSongs = {} -- เก็บเพลงที่เพิ่งเล
 local function UniversalPlay(id)
     if not id or id == "" then return end
     
-    -- บันทึกลงรายการล่าสุด (ถ้ามีอยู่แล้วให้เลื่อนขึ้นมาบนสุด)
     local existIndex = table.find(RecentSongs, id)
     if existIndex then table.remove(RecentSongs, existIndex) end
     table.insert(RecentSongs, 1, id)
-    if #RecentSongs > 20 then table.remove(RecentSongs, 21) end -- จำกัด 20 เพลง
+    if #RecentSongs > 20 then table.remove(RecentSongs, 21) end 
 
     local re = game:GetService("ReplicatedStorage"):WaitForChild("RE", 5)
     if re and re:FindFirstChild("PlayerToolEvent") then
@@ -189,6 +189,21 @@ local StudioData = {
         "127357308077942", "120982716207340", "107782812721355", "80302234019139", 
         "89325251642828", "127356451659099"
     },
+    ["RSOKO"] = {
+        "139912629461017", "88377173171353", "129986120122492", "134594657954536", "117865221990937"
+    },
+    ["prodluqi"] = { 
+        "102005596404833", "138805395570289", "82642209410386", "124012458015127", 
+        "78878448738118", "110007286636670", "138014625328561", "80520116507969", 
+        "108116176610334", "112406825739796", "117505747424162", "101247167429789", 
+        "79910195620356", "117515490834845", "75238212941636", "73937969824874", 
+        "123362183597598", "110176270788146", "135327809788134", "84526612275416", 
+        "128133152505121", "140655042547224", "93410392442726", "82303384245183", 
+        "123385158467400", "139582138143960", "96259351729049", "72640286505312", 
+        "96476309777409", "122292837904105", "85790066914222", "127870629973068", 
+        "119517077408920", "109337680029292", "73607045201707", "122871552019283", 
+        "76806862637459"
+    },
     ["T44NZ"] = {
         "88551883615429", "125020691118337", "78459095374647", "75419106843017",
         "125003164596517", "100696491075057", "140487557549970", "107103411560767",
@@ -234,7 +249,7 @@ local StudioData = {
         "119221593445336", "122538236730676"
     },
     ["รายการโปรด ⭐"] = {},
-    ["เล่นล่าสุด 🕒"] = {}, -- เมนูใหม่
+    ["เล่นล่าสุด 🕒"] = {}, 
     ["ขโมยเพลงรอบข้าง"] = {},
     ["ค่าย อื่นๆ"] = { "1837016768", "1837017165" }
 }
@@ -381,7 +396,7 @@ end
 local MenuList = Instance.new("UIListLayout", MainMenu)
 MenuList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 MenuList.Padding = UDim.new(0, 10)
-local Categories = {"รายการโปรด ⭐", "เล่นล่าสุด 🕒", "Youngguslayer", "Ibeam3rd", "Chamiyiy", "QKGR", "Youlikemebr4", "K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "kawaiicheeseburgerss", "Xytheraelsfxaxc", "Pleng Khmer Fan", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
+local Categories = {"รายการโปรด ⭐", "เล่นล่าสุด 🕒", "Youngguslayer", "Ibeam3rd", "Chamiyiy", "QKGR", "Youlikemebr4", "K9Gang", "NovaNest", "AsdBands", "ค่าย 1688", "RSOKO", "prodluqi", "T44NZ", "MondayHater6739", "ctpvnkzz", "Soulbullets", "kawaiicheeseburgerss", "Xytheraelsfxaxc", "Pleng Khmer Fan", "ขโมยเพลงรอบข้าง", "ค่าย อื่นๆ"}
 MainMenu.CanvasSize = UDim2.new(0, 0, 0, #Categories * 55)
 
 for _, studioName in pairs(Categories) do
