@@ -9,7 +9,8 @@ local VIP_LIST = {
     ["CGGG_PRJOOOO"] = true,
     ["zx71828"] = true,
     ["lol_wino444"] = true,
-    ["16xd5664"] = true
+    ["16xd5664"] = true,
+    ["burnserika"] = true -- เพิ่มชื่อเรียบร้อยแล้ว
 }
 
 if not VIP_LIST[lplr.Name] then 
