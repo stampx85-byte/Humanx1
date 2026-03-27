@@ -6,7 +6,6 @@ local lplr = Players.LocalPlayer
 local VIP_LIST = {
     ["ffsww_1007"] = true,
     ["Winwie001"] = true,
-    ["CGGG_PRJOOOO"] = true,
     ["zx71828"] = true,
     ["lol_wino444"] = true,
     ["16xd5664"] = true,
