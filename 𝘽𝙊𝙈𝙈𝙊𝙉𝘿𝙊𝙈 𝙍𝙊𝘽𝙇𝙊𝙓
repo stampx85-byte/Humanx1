@@ -43,7 +43,7 @@ Title.TextSize = 16
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.BackgroundTransparency = 1
 
--- [ NEW MINIMIZE BUTTON AT TOP RIGHT ]
+-- [ MINIMIZE BUTTON ]
 local MinBtn = Instance.new("TextButton", TopBar)
 MinBtn.Text = "[-]"
 MinBtn.Size = UDim2.new(0, 30, 0, 30)
@@ -74,12 +74,13 @@ local function CreateNavBtn(text)
     Btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     Btn.TextColor3 = ACCENT_COLOR
     Btn.Font = FONT_STYLE
-    Btn.TextSize = 12
+    Btn.TextSize = 11
     return Btn
 end
 
 local SnifferTabBtn = CreateNavBtn("MAIN SNIFFER")
 local CreatorTabBtn = CreateNavBtn("CREATORS")
+local BackendTabBtn = CreateNavBtn("BACKEND PIERCE")
 local MoreTabBtn = CreateNavBtn("MORE")
 local ClearBtn = CreateNavBtn("CLEAR LOGS")
 
@@ -88,6 +89,40 @@ local Pages = Instance.new("Frame", Main)
 Pages.Position = UDim2.new(0, 160, 0, 40)
 Pages.Size = UDim2.new(1, -170, 1, -50)
 Pages.BackgroundTransparency = 1
+
+-- [ SHARED UI FUNCTION ]
+local function CreateListEntry(parent, id, name)
+    local Frame = Instance.new("Frame", parent)
+    Frame.Size = UDim2.new(1, -6, 0, 35)
+    Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Frame.BorderColor3 = Color3.fromRGB(40, 40, 40)
+
+    local InfoText = Instance.new("TextLabel", Frame)
+    InfoText.Text = " > " .. name .. " [" .. id .. "]"
+    InfoText.Size = UDim2.new(0.75, 0, 1, 0)
+    InfoText.Position = UDim2.new(0, 5, 0, 0)
+    InfoText.TextColor3 = Color3.fromRGB(220, 220, 220)
+    InfoText.Font = FONT_STYLE
+    InfoText.TextSize = 10
+    InfoText.BackgroundTransparency = 1
+    InfoText.TextXAlignment = Enum.TextXAlignment.Left
+
+    local CopyBtn = Instance.new("TextButton", Frame)
+    CopyBtn.Text = "[GET]"
+    CopyBtn.Size = UDim2.new(0.2, 0, 0.7, 0)
+    CopyBtn.Position = UDim2.new(0.78, 0, 0.15, 0)
+    CopyBtn.BackgroundColor3 = SECONDARY_BG
+    CopyBtn.TextColor3 = ACCENT_COLOR
+    CopyBtn.Font = FONT_STYLE
+    CopyBtn.TextSize = 10
+    CopyBtn.MouseButton1Click:Connect(function()
+        if setclipboard then setclipboard(id) end
+        CopyBtn.Text = "[CPY]"
+        task.wait(0.5)
+        CopyBtn.Text = "[GET]"
+    end)
+    if parent:IsA("ScrollingFrame") then parent.CanvasSize = UDim2.new(0, 0, 0, parent:FindFirstChildOfClass("UIListLayout").AbsoluteContentSize.Y) end
+end
 
 -- Page 1: Sniffer
 local SnifferPage = Instance.new("Frame", Pages)
@@ -102,140 +137,142 @@ LogScroll.Size = UDim2.new(1, -10, 1, -10)
 LogScroll.BackgroundTransparency = 1
 LogScroll.ScrollBarThickness = 4
 LogScroll.ScrollBarImageColor3 = ACCENT_COLOR
-LogScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 Instance.new("UIListLayout", LogScroll).Padding = UDim.new(0, 4)
 
--- Page 2: Creators
-local CreatorPage = Instance.new("Frame", Pages)
-CreatorPage.Size = UDim2.new(1, 0, 1, 0)
-CreatorPage.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-CreatorPage.BorderSizePixel = 1
-CreatorPage.BorderColor3 = Color3.fromRGB(50, 50, 50)
-CreatorPage.Visible = false
+-- Page: Backend Pierce
+local BackendPage = Instance.new("Frame", Pages)
+BackendPage.Size = UDim2.new(1, 0, 1, 0)
+BackendPage.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+BackendPage.BorderSizePixel = 1
+BackendPage.BorderColor3 = Color3.fromRGB(50, 50, 50)
+BackendPage.Visible = false
 
-local function AddCreatorProfile(name, role, userId, pos)
-    local Container = Instance.new("Frame", CreatorPage)
-    Container.Size = UDim2.new(1, -10, 0, 80)
-    Container.Position = pos
-    Container.BackgroundTransparency = 1
+local BackendSearchInput = Instance.new("TextBox", BackendPage)
+BackendSearchInput.Size = UDim2.new(0.7, 0, 0, 30)
+BackendSearchInput.Position = UDim2.new(0.05, 0, 0, 10)
+BackendSearchInput.BackgroundColor3 = SECONDARY_BG
+BackendSearchInput.TextColor3 = Color3.new(1, 1, 1)
+BackendSearchInput.PlaceholderText = "Enter Name..."
+BackendSearchInput.Font = FONT_STYLE
+BackendSearchInput.TextSize = 11
+BackendSearchInput.BorderColor3 = ACCENT_COLOR
 
-    local Img = Instance.new("ImageLabel", Container)
-    Img.Size = UDim2.new(0, 60, 0, 60)
-    Img.BackgroundColor3 = SECONDARY_BG
-    Img.BorderColor3 = ACCENT_COLOR
-    Img.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..userId.."&width=420&height=420&format=png"
+local BackendStartBtn = Instance.new("TextButton", BackendPage)
+BackendStartBtn.Size = UDim2.new(0.2, 0, 0, 30)
+BackendStartBtn.Position = UDim2.new(0.77, 0, 0, 10)
+BackendStartBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+BackendStartBtn.TextColor3 = ACCENT_COLOR
+BackendStartBtn.Text = "PIERCE"
+BackendStartBtn.Font = FONT_STYLE
 
-    local NameLabel = Instance.new("TextLabel", Container)
-    NameLabel.Text = name .. "\n(" .. role .. ")"
-    NameLabel.Position = UDim2.new(0, 70, 0, 10)
-    NameLabel.Size = UDim2.new(0.7, 0, 0, 40)
-    NameLabel.TextColor3 = Color3.new(1, 1, 1)
-    NameLabel.Font = FONT_STYLE
-    NameLabel.TextSize = 14
-    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    NameLabel.BackgroundTransparency = 1
-end
+local BackendScroll = Instance.new("ScrollingFrame", BackendPage)
+BackendScroll.Position = UDim2.new(0, 5, 0, 50)
+BackendScroll.Size = UDim2.new(1, -10, 1, -55)
+BackendScroll.BackgroundTransparency = 1
+Instance.new("UIListLayout", BackendScroll).Padding = UDim.new(0, 4)
 
-task.spawn(function()
-    local id1 = pcall(function() return Players:GetUserIdFromNameAsync("ffsww_1007") end) and Players:GetUserIdFromNameAsync("ffsww_1007") or 1
-    local id2 = pcall(function() return Players:GetUserIdFromNameAsync("RUPS_my") end) and Players:GetUserIdFromNameAsync("RUPS_my") or 1
-    AddCreatorProfile("ffsww_1007", "OWNER", id1, UDim2.new(0, 10, 0, 20))
-    AddCreatorProfile("RUPS_my", "HELPER", id2, UDim2.new(0, 10, 0, 120))
-end)
-
--- Page 3: More
+-- Page 4: More (WITH ID PROTECTION)
 local MorePage = Instance.new("Frame", Pages)
 MorePage.Size = UDim2.new(1, 0, 1, 0)
+MorePage.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MorePage.BorderSizePixel = 1
+MorePage.BorderColor3 = Color3.fromRGB(50, 50, 50)
 MorePage.Visible = false
-MorePage.BackgroundTransparency = 1
+
+local ProtTitle = Instance.new("TextLabel", MorePage)
+ProtTitle.Text = " [ ID PROTECTION / FAKE SPOOFER ] "
+ProtTitle.Size = UDim2.new(1, 0, 0, 30)
+ProtTitle.TextColor3 = ACCENT_COLOR
+ProtTitle.Font = FONT_STYLE
+ProtTitle.TextSize = 12
+ProtTitle.BackgroundTransparency = 1
+
+local FakeIdBox = Instance.new("TextBox", MorePage)
+FakeIdBox.Size = UDim2.new(0.8, 0, 0, 35)
+FakeIdBox.Position = UDim2.new(0.1, 0, 0, 40)
+FakeIdBox.BackgroundColor3 = SECONDARY_BG
+FakeIdBox.TextColor3 = Color3.new(1, 1, 1)
+FakeIdBox.PlaceholderText = "Enter FAKE ID to show others..."
+FakeIdBox.Font = FONT_STYLE
+FakeIdBox.TextSize = 12
+
+local ProtToggle = Instance.new("TextButton", MorePage)
+ProtToggle.Size = UDim2.new(0.6, 0, 0, 35)
+ProtToggle.Position = UDim2.new(0.2, 0, 0, 85)
+ProtToggle.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ProtToggle.TextColor3 = Color3.fromRGB(200, 0, 0)
+ProtToggle.Text = "PROTECTION: OFF"
+ProtToggle.Font = FONT_STYLE
+ProtToggle.TextSize = 14
+
+-- [ PROTECTION LOGIC ]
+local ProtActive = false
+local FakeSound = nil
+
+ProtToggle.MouseButton1Click:Connect(function()
+    ProtActive = not ProtActive
+    if ProtActive then
+        ProtToggle.Text = "PROTECTION: ACTIVE"
+        ProtToggle.TextColor3 = ACCENT_COLOR
+        -- สร้าง Sound ปลอมหลอกชาวบ้าน
+        FakeSound = Instance.new("Sound")
+        FakeSound.Name = "GameMusic_Core" -- ชื่อเนียนๆ
+        FakeSound.SoundId = "rbxassetid://" .. (FakeIdBox.Text:match("%d+") or "1837832244")
+        FakeSound.Parent = game:GetService("RobloxReplicatedStorage")
+        FakeSound.Volume = 0.001 -- เบาจนไม่ได้ยิน
+        FakeSound.Looped = true
+        FakeSound:Play()
+    else
+        ProtToggle.Text = "PROTECTION: OFF"
+        ProtToggle.TextColor3 = Color3.fromRGB(200, 0, 0)
+        if FakeSound then FakeSound:Destroy() end
+    end
+end)
 
 -- [ TAB LOGIC ]
 local function SwitchPage(page)
     SnifferPage.Visible = (page == "Sniffer")
-    CreatorPage.Visible = (page == "Creator")
+    BackendPage.Visible = (page == "Backend")
     MorePage.Visible = (page == "More")
     SnifferTabBtn.TextColor3 = (page == "Sniffer") and ACCENT_COLOR or Color3.fromRGB(150, 150, 150)
-    CreatorTabBtn.TextColor3 = (page == "Creator") and ACCENT_COLOR or Color3.fromRGB(150, 150, 150)
+    BackendTabBtn.TextColor3 = (page == "Backend") and ACCENT_COLOR or Color3.fromRGB(150, 150, 150)
     MoreTabBtn.TextColor3 = (page == "More") and ACCENT_COLOR or Color3.fromRGB(150, 150, 150)
 end
 
 SnifferTabBtn.MouseButton1Click:Connect(function() SwitchPage("Sniffer") end)
-CreatorTabBtn.MouseButton1Click:Connect(function() SwitchPage("Creator") end)
+BackendTabBtn.MouseButton1Click:Connect(function() SwitchPage("Backend") end)
 MoreTabBtn.MouseButton1Click:Connect(function() SwitchPage("More") end)
 
--- [ MINIMIZE LOGIC ]
-local IsMin = false
-MinBtn.MouseButton1Click:Connect(function()
-    IsMin = not IsMin
-    Main.ClipsDescendants = true
-    if IsMin then
-        Main:TweenSize(UDim2.new(0, 500, 0, 30), "Out", "Quad", 0.3, true)
-        Sidebar.Visible = false
-        Pages.Visible = false
-        MinBtn.Text = "[+]"
-    else
-        Main:TweenSize(UDim2.new(0, 500, 0, 320), "Out", "Quad", 0.3, true)
-        Sidebar.Visible = true
-        Pages.Visible = true
-        MinBtn.Text = "[-]"
-    end
+-- [ BACKEND PIERCE ]
+BackendStartBtn.MouseButton1Click:Connect(function()
+    local target = BackendSearchInput.Text
+    if target == "" then return end
+    for _, v in pairs(BackendScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+    task.spawn(function()
+        local success, res = pcall(function() return game:HttpGet("https://catalog.roblox.com/v1/search/items/details?category=12&keyword=" .. HttpService:UrlEncode(target) .. "&limit=30") end)
+        if success then
+            local data = HttpService:JSONDecode(res)
+            if data and data.data then for _, item in pairs(data.data) do CreateListEntry(BackendScroll, tostring(item.id), item.name) end end
+        end
+    end)
 end)
 
--- [ SNIFFER CORE - UPDATED FILTER ]
+-- [ SNIFFER LOGIC ]
 local Captured = {}
-local function NewEntry(id, name)
-    if Captured[id] then return end
-    Captured[id] = true
-    
-    local Frame = Instance.new("Frame", LogScroll)
-    Frame.Size = UDim2.new(1, -6, 0, 35)
-    Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    Frame.BorderColor3 = Color3.fromRGB(40, 40, 40)
-
-    local InfoText = Instance.new("TextLabel", Frame)
-    InfoText.Text = " > " .. name .. " [" .. id .. "]"
-    InfoText.Size = UDim2.new(0.75, 0, 1, 0)
-    InfoText.Position = UDim2.new(0, 5, 0, 0)
-    InfoText.TextColor3 = Color3.fromRGB(220, 220, 220)
-    InfoText.Font = FONT_STYLE
-    InfoText.TextSize = 11
-    InfoText.BackgroundTransparency = 1
-    InfoText.TextXAlignment = Enum.TextXAlignment.Left
-    InfoText.TextTruncate = Enum.TextTruncate.AtEnd
-
-    local CopyBtn = Instance.new("TextButton", Frame)
-    CopyBtn.Text = "[GET]"
-    CopyBtn.Size = UDim2.new(0.2, 0, 0.7, 0)
-    CopyBtn.Position = UDim2.new(0.78, 0, 0.15, 0)
-    CopyBtn.BackgroundColor3 = SECONDARY_BG
-    CopyBtn.TextColor3 = ACCENT_COLOR
-    CopyBtn.Font = FONT_STYLE
-    CopyBtn.TextSize = 10
-
-    CopyBtn.MouseButton1Click:Connect(function()
-        setclipboard(id)
-        CopyBtn.Text = "[CPY]"
-        task.wait(0.5)
-        CopyBtn.Text = "[GET]"
-    end)
-
-    LogScroll.CanvasSize = UDim2.new(0, 0, 0, LogScroll:FindFirstChildOfClass("UIListLayout").AbsoluteContentSize.Y)
-end
-
 local function Scan(obj)
     if obj:IsA("Sound") then
+        -- ถ้าเปิดโหมดกั้น และเป็น Sound จริงของเรา ให้รีบซ่อน (เบื้องต้น)
+        if ProtActive and obj.Parent == Players.LocalPlayer.Character then
+            obj.Name = "..." -- ซ่อนชื่อ
+        end
+        
         local id = obj.SoundId:match("%d+")
-        if id then
+        if id and not Captured[id] then
             task.spawn(function()
                 local s, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
                 if s and info and info.AssetTypeId == 3 then
-                    -- กรอง: ไม่ใช่ของเจ้าของแมพ และ ไม่ใช่ของ Roblox Official (ID 1)
-                    if info.Creator.Id ~= CreatorID and info.Creator.Id ~= 1 then
-                        -- ตรวจสอบว่าเป็นเพลงยาว (ไม่ใช่ Sound Effect สั้นๆ)
-                        if obj.TimeLength > 0 or obj.IsLoaded then
-                             NewEntry(id, info.Name)
-                        end
-                    end
+                    Captured[id] = true
+                    CreateListEntry(LogScroll, id, info.Name)
                 end
             end)
         end
@@ -245,8 +282,21 @@ end
 ClearBtn.MouseButton1Click:Connect(function()
     for _, v in pairs(LogScroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
     Captured = {}
-    LogScroll.CanvasSize = UDim2.new(0,0,0,0)
 end)
 
 game.DescendantAdded:Connect(Scan)
 for _, v in pairs(game:GetDescendants()) do Scan(v) end
+
+-- [ MINIMIZE ]
+local IsMin = false
+MinBtn.MouseButton1Click:Connect(function()
+    IsMin = not IsMin
+    Main.ClipsDescendants = true
+    if IsMin then
+        Main:TweenSize(UDim2.new(0, 500, 0, 30), "Out", "Quad", 0.3, true)
+        MinBtn.Text = "[+]"
+    else
+        Main:TweenSize(UDim2.new(0, 500, 0, 320), "Out", "Quad", 0.3, true)
+        MinBtn.Text = "[-]"
+    end
+end)
