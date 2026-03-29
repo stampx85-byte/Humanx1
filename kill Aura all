@@ -21,7 +21,8 @@ local VIP_DATA = {
     ["poppeiie99"] = "VIP",
     ["Fitchburg968"] = "VIP",
     ["ice87997oh"] = "VIP",
-    ["LoveHee904"] = "VIP" -- เพิ่มชื่อเรียบร้อยครับ
+    ["LoveHee904"] = "VIP",
+    ["Libbyeli1091"] = "VIP" -- เพิ่มชื่อเรียบร้อยครับ
 }
 
 -- [[ FUNCTION: GLOBAL NOTIFICATION (Top Right) ]]
@@ -387,7 +388,8 @@ local function RunMainScript()
         ["poppeiie99"] = true,
         ["Fitchburg968"] = true,
         ["ice87997oh"] = true,
-        ["LoveHee904"] = true -- เพิ่มใน VIP_LIST เรียบร้อยครับ
+        ["LoveHee904"] = true,
+        ["Libbyeli1091"] = true -- เพิ่มใน VIP_LIST เรียบร้อยครับ
     }
     local ADMIN_COMMANDER = {["ffsww_1007"] = true, ["A_ASPD"] = true, ["Wsghoi2744"] = true} -- เพิ่มในกลุ่ม Admin
     local HAS_COMMAND_POWER, ACTIVE_USERS, VOID_TARGETS = {}, {}, {}
