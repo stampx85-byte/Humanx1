@@ -1,0 +1,425 @@
+-- [[ SkySound ☁ | Minecraft Font & Save Edition ]] --
+local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local lplr = Players.LocalPlayer
+
+-- [ VIP System ] --
+local VIP_LIST = {["ffsww_1007"] = true, ["Winwie001"] = true, ["zx71828"] = true}
+if not VIP_LIST[lplr.Name] then return end
+
+-- [ 💾 Data Saving System ] --
+local fileName = "SkySound_Favs.json"
+local timeFileName = "SkySound_Runtime.json"
+local Favorites = {}
+local totalRuntime = 0
+
+local function SaveData()
+    local success, content = pcall(function() return HttpService:JSONEncode(Favorites) end)
+    if success then writefile(fileName, content) end
+end
+
+local function SaveTime()
+    writefile(timeFileName, tostring(totalRuntime))
+end
+
+local function LoadData()
+    if isfile(fileName) then
+        local success, content = pcall(function() return HttpService:JSONDecode(readfile(fileName)) end)
+        if success then Favorites = content end
+    end
+    if isfile(timeFileName) then
+        totalRuntime = tonumber(readfile(timeFileName)) or 0
+    end
+end
+LoadData()
+
+-- [[ ✨ NEW ANIMATION HELPERS ]] --
+local function ClickAnim(obj)
+    local originalSize = obj.Size
+    obj:TweenSize(UDim2.new(originalSize.X.Scale, originalSize.X.Offset * 0.9, originalSize.Y.Scale, originalSize.Y.Offset * 0.9), "Out", "Quad", 0.1, true)
+    task.wait(0.1)
+    obj:TweenSize(originalSize, "Out", "Back", 0.2, true)
+end
+
+local function CopyEffect(pos)
+    local label = Instance.new("TextLabel", ScreenGui)
+    label.Size = UDim2.new(0, 80, 0, 20)
+    label.Position = UDim2.new(0, pos.X, 0, pos.Y - 20)
+    label.BackgroundTransparency = 1
+    label.Text = "COPIED!"
+    label.TextColor3 = Color3.fromRGB(255, 255, 0)
+    label.Font = Enum.Font.Arcade
+    label.TextSize = 14
+    TweenService:Create(label, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = label.Position - UDim2.new(0,0,0,30), TextTransparency = 1}):Play()
+    game:GetService("Debris"):AddItem(label, 0.7)
+end
+
+-- [ 🔊 Audio Preview System ] --
+local currentSound = nil
+local currentPlayBtn = nil
+local waveConnection = nil
+
+local function PlayPreview(id, btn)
+    if currentSound and currentSound.SoundId == "rbxassetid://"..id then
+        if waveConnection then waveConnection:Disconnect() end
+        currentSound:Stop()
+        currentSound:Destroy()
+        currentSound = nil
+        btn.Image = "rbxassetid://6031075931"
+        btn.Size = UDim2.new(0, 25, 0, 25)
+        return
+    end
+    if currentSound then 
+        if waveConnection then waveConnection:Disconnect() end
+        currentSound:Stop() 
+        currentSound:Destroy() 
+        if currentPlayBtn then 
+            currentPlayBtn.Image = "rbxassetid://6031075931" 
+            currentPlayBtn.Size = UDim2.new(0, 25, 0, 25)
+        end
+    end
+    currentSound = Instance.new("Sound")
+    currentSound.SoundId = "rbxassetid://"..id
+    currentSound.Parent = game:GetService("SoundService")
+    currentSound.Volume = 1
+    currentSound:Play()
+    currentPlayBtn = btn
+    btn.Image = "rbxassetid://6023455125"
+    waveConnection = RunService.RenderStepped:Connect(function()
+        if currentSound and currentSound.IsPlaying then
+            local scale = 1 + (math.sin(tick() * 10) * 0.2)
+            btn.Size = UDim2.new(0, 25 * scale, 0, 25 * scale)
+        else
+            if waveConnection then waveConnection:Disconnect() end
+        end
+    end)
+    currentSound.Ended:Connect(function()
+        btn.Image = "rbxassetid://6031075931"
+        btn.Size = UDim2.new(0, 25, 0, 25)
+        if currentSound then currentSound:Destroy() currentSound = nil end
+    end)
+end
+
+-- [ UI Root ] --
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
+-- [ 💠 Main UI ] --
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 280, 0, 360)
+Main.Position = UDim2.new(0.5, -140, 0.5, -180)
+Main.BackgroundColor3 = Color3.fromRGB(12, 1, 1)
+Main.Active = true
+Main.Draggable = true
+Main.ClipsDescendants = true
+local Border = Instance.new("UIStroke", Main)
+Border.Color = Color3.fromRGB(200, 0, 0)
+Border.Thickness = 1.8
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+-- [ ⚪ Minimize Icon ] --
+local MiniIcon = Instance.new("ImageButton", ScreenGui)
+MiniIcon.Size = UDim2.new(0, 50, 0, 50)
+MiniIcon.Position = UDim2.new(0.5, -25, 0.1, 0)
+MiniIcon.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+MiniIcon.Image = "rbxassetid://6031075931"
+MiniIcon.Visible = false
+MiniIcon.Active = true
+MiniIcon.Draggable = true
+Instance.new("UICorner", MiniIcon).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", MiniIcon).Color = Color3.new(1,1,1)
+
+-- [ 🕒 Persistent Run Timer ] --
+local TimeLabel = Instance.new("TextLabel", Main)
+TimeLabel.Size = UDim2.new(0, 150, 0, 20)
+TimeLabel.Position = UDim2.new(0.5, -75, 0, 35)
+TimeLabel.BackgroundTransparency = 1
+TimeLabel.Text = "00:00:00"
+TimeLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+TimeLabel.Font = Enum.Font.Arcade
+TimeLabel.TextSize = 14
+TimeLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+task.spawn(function()
+    while task.wait(1) do
+        totalRuntime = totalRuntime + 1
+        local h = math.floor(totalRuntime / 3600)
+        local m = math.floor((totalRuntime % 3600) / 60)
+        local s = totalRuntime % 60
+        TimeLabel.Text = string.format("%02d:%02d:%02d", h, m, s)
+        if totalRuntime % 10 == 0 then SaveTime() end
+    end
+end)
+
+-- [ 🎶 Music Data ] --
+local CustomMusic = {
+    ["THAI MUSIC 🇹🇭"] = {"129337963472308", "98553544063327"},
+    ["ENGLISH MUSIC 🇺🇸"] = {
+        "96734836797084", "80053116409343", "128171778496821", "134161957298316", "110793837800953", 
+        "114302429284484", "101528742055666", "123350212964973", "72161995174172", "75989174186845",
+        "78791396090669", "131249468293256", "87397943070128", "107618586795393", "131420943649448",
+        "83634531040869", "135719775466632", "116834067020243", "71523468466358", "123503963098046",
+        "136280433768751", "95207441935506", "140106439957691", "128274436581446", "113539646426730",
+        "81612464920963", "101169178272818", "93318803424839", "79949106030193", "133641687220838",
+        "72913180185803", "92680041982833", "95597460811407", "95533560356669", "106981693563794",
+        "9168750720326", "101442510615809", "135403707349057", "71013491834307", "126402034185327", 
+        "127639035492214", "117637618212476", "83382802359826", "117175898699257", "76809516663597", 
+        "94102932774094", "75402538960438", "77792604760686", "82581573003233", "109265683821244", 
+        "93692648578982", "95474545162667", "109453005596854", "71252722325753", "77009161582454", 
+        "111551362636063", "139464843266705", "108023859420986", "111225626845141", "120227522805516", 
+        "102349191755627", "75839538917529", "95674923139820", "132827213686172", "84349909808037"
+    }
+}
+
+-- [ UI Elements ] --
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "SkySound ☁"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.Font = Enum.Font.Arcade
+Title.TextSize = 22
+Title.BackgroundTransparency = 1
+
+local AddFrame = Instance.new("Frame", Main)
+AddFrame.Size = UDim2.new(1, -20, 0, 30)
+AddFrame.Position = UDim2.new(0, 10, 0, 50)
+AddFrame.BackgroundColor3 = Color3.fromRGB(25, 2, 2)
+AddFrame.Visible = false
+Instance.new("UICorner", AddFrame)
+Instance.new("UIStroke", AddFrame).Color = Color3.fromRGB(100, 0, 0)
+
+local InputID = Instance.new("TextBox", AddFrame)
+InputID.Size = UDim2.new(1, -65, 1, 0)
+InputID.Position = UDim2.new(0, 8, 0, 0)
+InputID.BackgroundTransparency = 1
+InputID.PlaceholderText = "Add Song ID..."
+InputID.TextColor3 = Color3.new(1,1,1)
+InputID.Font = Enum.Font.Arcade
+InputID.TextSize = 12
+InputID.TextXAlignment = Enum.TextXAlignment.Left
+
+local AddBtn = Instance.new("TextButton", AddFrame)
+AddBtn.Size = UDim2.new(0, 55, 0, 22)
+AddBtn.Position = UDim2.new(1, -60, 0.5, -11)
+AddBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+AddBtn.Text = "ADD"
+AddBtn.TextColor3 = Color3.new(1,1,1)
+AddBtn.Font = Enum.Font.Arcade
+AddBtn.TextSize = 12
+Instance.new("UICorner", AddBtn)
+
+local Container = Instance.new("ScrollingFrame", Main)
+Container.Size = UDim2.new(1, -16, 1, -65)
+Container.Position = UDim2.new(0, 8, 0, 60)
+Container.BackgroundTransparency = 1
+Container.ScrollBarThickness = 1
+Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Instance.new("UIListLayout", Container).Padding = UDim.new(0, 8)
+
+local BackBtn = Instance.new("TextButton", Main)
+BackBtn.Size = UDim2.new(0, 35, 0, 35)
+BackBtn.Position = UDim2.new(0, 5, 0, 5)
+BackBtn.Text = "<"
+BackBtn.TextColor3 = Color3.new(1,1,1)
+BackBtn.BackgroundTransparency = 1
+BackBtn.Visible = false
+BackBtn.Font = Enum.Font.Arcade
+BackBtn.TextSize = 25
+
+-- [ Animation Function ] --
+local function AnimateUI(obj, size, pos)
+    TweenService:Create(obj, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = size, Position = pos}):Play()
+end
+
+-- [ Main Logic ] --
+local function LoadMusic(cat)
+    for _, v in pairs(Container:GetChildren()) do if v:IsA("Frame") or v:IsA("TextButton") then v:Destroy() end end
+    BackBtn.Visible = true
+    Title.Text = cat
+    AddFrame.Visible = (cat == "FAVORITES ⭐️")
+    Container.Position = (cat == "FAVORITES ⭐️") and UDim2.new(0, 8, 0, 90) or UDim2.new(0, 8, 0, 60)
+    
+    local listSource = (cat == "FAVORITES ⭐️") and Favorites or CustomMusic[cat]
+    
+    for i, id in pairs(listSource) do
+        local Card = Instance.new("Frame", Container)
+        Card.Size = UDim2.new(1, 0, 0, 75)
+        Card.BackgroundColor3 = Color3.fromRGB(18, 2, 2)
+        Card.BackgroundTransparency = 1 -- Start transparent for animation
+        Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
+        Instance.new("UIStroke", Card).Color = Color3.fromRGB(60, 0, 0)
+        
+        -- Smooth Fade-In Animation
+        TweenService:Create(Card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, i * 0.05), {BackgroundTransparency = 0}):Play()
+
+        local Img = Instance.new("ImageLabel", Card)
+        Img.Size = UDim2.new(0, 55, 0, 55)
+        Img.Position = UDim2.new(0, 8, 0.5, -27.5)
+        Img.Image = "https://www.roblox.com/asset-thumbnail/image?assetId="..id.."&width=420&height=420&format=png"
+        Instance.new("UICorner", Img)
+
+        local Name = Instance.new("TextLabel", Card)
+        Name.Size = UDim2.new(1, -75, 0, 15)
+        Name.Position = UDim2.new(0, 70, 0, 10)
+        Name.Text = "Loading..."
+        Name.TextColor3 = Color3.new(1, 1, 1)
+        Name.Font = Enum.Font.Arcade
+        Name.TextSize = 10
+        Name.BackgroundTransparency = 1
+        Name.TextXAlignment = Enum.TextXAlignment.Left
+
+        local CreatedLabel = Instance.new("TextLabel", Card)
+        CreatedLabel.Size = UDim2.new(1, -75, 0, 12)
+        CreatedLabel.Position = UDim2.new(0, 70, 0, 25)
+        CreatedLabel.Text = "Date: --/--/--"
+        CreatedLabel.TextColor3 = Color3.fromRGB(180, 0, 0)
+        CreatedLabel.Font = Enum.Font.Arcade
+        CreatedLabel.TextSize = 8
+        CreatedLabel.BackgroundTransparency = 1
+        CreatedLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        local CopyBtn = Instance.new("TextButton", Card)
+        CopyBtn.Size = UDim2.new(0, 45, 0, 20)
+        CopyBtn.Position = UDim2.new(0, 70, 0, 45)
+        CopyBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+        CopyBtn.Text = "COPY"
+        CopyBtn.TextColor3 = Color3.new(1,1,1)
+        CopyBtn.Font = Enum.Font.Arcade
+        CopyBtn.TextSize = 8
+        Instance.new("UICorner", CopyBtn)
+
+        local ActionBtn = Instance.new("TextButton", Card)
+        ActionBtn.Size = UDim2.new(0, 45, 0, 20)
+        ActionBtn.Position = UDim2.new(0, 120, 0, 45)
+        ActionBtn.BackgroundColor3 = (cat == "FAVORITES ⭐️") and Color3.fromRGB(40, 40, 40) or Color3.fromRGB(150, 0, 0)
+        ActionBtn.Text = (cat == "FAVORITES ⭐️") and "DEL" or "SAVE"
+        ActionBtn.TextColor3 = Color3.new(1,1,1)
+        ActionBtn.Font = Enum.Font.Arcade
+        ActionBtn.TextSize = 8
+        Instance.new("UICorner", ActionBtn)
+
+        task.spawn(function()
+            local success, info = pcall(function() return MarketplaceService:GetProductInfo(tonumber(id)) end)
+            if success then 
+                Name.Text = info.Name 
+                CreatedLabel.Text = "Date: " .. string.sub(info.Created, 1, 10)
+            end
+        end)
+
+        CopyBtn.MouseButton1Click:Connect(function() 
+            ClickAnim(CopyBtn)
+            setclipboard(id) 
+            CopyEffect(Vector2.new(CopyBtn.AbsolutePosition.X, CopyBtn.AbsolutePosition.Y))
+        end)
+        
+        ActionBtn.MouseButton1Click:Connect(function()
+            ClickAnim(ActionBtn)
+            if cat == "FAVORITES ⭐️" then
+                for i,v in ipairs(Favorites) do if v == id then table.remove(Favorites, i) break end end
+                SaveData()
+                Card:Destroy()
+            else
+                table.insert(Favorites, id)
+                SaveData()
+                ActionBtn.Text = "OK" task.wait(0.5) ActionBtn.Text = "SAVE"
+            end
+        end)
+
+        local Play = Instance.new("ImageButton", Card)
+        Play.Size = UDim2.new(0, 25, 0, 25)
+        Play.Position = UDim2.new(1, -35, 1, -35)
+        Play.BackgroundTransparency = 1
+        Play.Image = "rbxassetid://6031075931"
+        Play.ImageColor3 = Color3.fromRGB(255, 0, 0)
+        Play.MouseButton1Click:Connect(function() 
+            ClickAnim(Play)
+            PlayPreview(id, Play) 
+        end)
+    end
+end
+
+local function LoadMenu()
+    for _, v in pairs(Container:GetChildren()) do if v:IsA("Frame") or v:IsA("TextButton") then v:Destroy() end end
+    BackBtn.Visible = false
+    AddFrame.Visible = false
+    Title.Text = "SkySound ☁"
+    for name, _ in pairs(CustomMusic) do
+        local btn = Instance.new("TextButton", Container)
+        btn.Size = UDim2.new(1, 0, 0, 45)
+        btn.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+        btn.Text = name
+        btn.TextColor3 = Color3.new(1,1,1)
+        btn.Font = Enum.Font.Arcade
+        btn.TextSize = 14
+        Instance.new("UICorner", btn)
+        btn.MouseButton1Click:Connect(function() 
+            ClickAnim(btn)
+            LoadMusic(name) 
+        end)
+    end
+    local Fav = Instance.new("TextButton", Container)
+    Fav.Size = UDim2.new(1, 0, 0, 45)
+    Fav.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+    Fav.Text = "FAVORITES ⭐️"
+    Fav.TextColor3 = Color3.new(1,1,1)
+    Fav.Font = Enum.Font.Arcade
+    Fav.TextSize = 14
+    Instance.new("UICorner", Fav)
+    Fav.MouseButton1Click:Connect(function() 
+        ClickAnim(Fav)
+        LoadMusic("FAVORITES ⭐️") 
+    end)
+end
+
+AddBtn.MouseButton1Click:Connect(function()
+    ClickAnim(AddBtn)
+    local id = InputID.Text:gsub("%D", "")
+    if id ~= "" then 
+        table.insert(Favorites, id) 
+        SaveData()
+        InputID.Text = "" 
+        LoadMusic("FAVORITES ⭐️") 
+    end
+end)
+
+BackBtn.MouseButton1Click:Connect(function()
+    ClickAnim(BackBtn)
+    LoadMenu()
+end)
+
+LoadMenu()
+
+-- [ ➖ Minimize Button Logic ] --
+local Minimize = Instance.new("TextButton", Main)
+Minimize.Size = UDim2.new(0, 25, 0, 25)
+Minimize.Position = UDim2.new(1, -30, 0, 12)
+Minimize.Text = "-"
+Minimize.TextColor3 = Color3.new(1,1,1)
+Minimize.BackgroundTransparency = 1
+Minimize.Font = Enum.Font.Arcade
+Minimize.TextSize = 35
+
+Minimize.MouseButton1Click:Connect(function()
+    ClickAnim(Minimize)
+    local oldPos = Main.Position
+    TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), Position = UDim2.new(oldPos.X.Scale, oldPos.X.Offset + 140, oldPos.Y.Scale, oldPos.Y.Offset + 180)}):Play()
+    task.wait(0.3)
+    Main.Visible = false
+    MiniIcon.Visible = true
+    MiniIcon.Size = UDim2.new(0,0,0,0)
+    TweenService:Create(MiniIcon, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0,50,0,50)}):Play()
+end)
+
+MiniIcon.MouseButton1Click:Connect(function()
+    ClickAnim(MiniIcon)
+    MiniIcon.Visible = false
+    Main.Visible = true
+    Main.Size = UDim2.new(0,0,0,0)
+    AnimateUI(Main, UDim2.new(0, 280, 0, 360), UDim2.new(0.5, -140, 0.5, -180))
+end)
+
+-- Initial Open Animation
+Main.Size = UDim2.new(0,0,0,0)
+AnimateUI(Main, UDim2.new(0, 280, 0, 360), UDim2.new(0.5, -140, 0.5, -180))
